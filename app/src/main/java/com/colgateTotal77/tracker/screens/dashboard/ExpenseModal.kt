@@ -1,71 +1,55 @@
 package com.colgateTotal77.tracker.screens.dashboard
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.background
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import com.colgateTotal77.tracker.core.database.transaction.TransactionEntity
 import com.colgateTotal77.tracker.core.enums.Currency
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.Dropdown
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import kotlin.math.roundToInt
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DisplayMode
-import androidx.compose.material3.rememberDatePickerState
+import com.colgateTotal77.tracker.core.formatMoney
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTransactionModal(
+fun TransactionModal(
+    transaction: TransactionEntity,
     onDismiss: () -> Unit,
-    onAdd: (amountMinor: Int, currency: Currency, date: Long?) -> Unit,
+    onUpdate: (amountMinor: Int, currency: Currency, date: Long?) -> Unit,
+    onDelete: () -> Unit,
 ) {
-    var isCameraOpen by remember { mutableStateOf(false) }
-    var amountInput by remember { mutableStateOf("") }
-    var currency by remember { mutableStateOf(Currency.UAH) }
-    val date = rememberDatePickerState(initialDisplayMode = DisplayMode.Input)
+    var amountInput by remember { mutableStateOf(formatMoney(transaction.amountMinor)) }
+    var currency by remember { mutableStateOf(transaction.currency) }
+    val date = rememberDatePickerState(
+        initialDisplayMode = DisplayMode.Input,
+        initialSelectedDateMillis = transaction.date
+    )
     val dimensions = LocalDimensions.current
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         CardWrapper {
             Column {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        "Add Transaction",
-                        modifier = Modifier.padding(bottom = dimensions.listItemSpacing),
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                    IconButton(onClick = { isCameraOpen = true }) {
-                        Icon(Icons.Default.QrCode2, contentDescription = "Open Camera")
-                    }
-                }
+                Text(
+                    "Transaction",
+                    modifier = Modifier.padding(bottom = dimensions.listItemSpacing),
+                    style = MaterialTheme.typography.titleLarge,
+                )
                 OutlinedTextField(
                     value = amountInput,
                     onValueChange = { amountInput = it },
@@ -93,33 +77,18 @@ fun AddTransactionModal(
                 Button(
                     onClick = {
                         val amountMinor = ((amountInput.toDoubleOrNull() ?: 0.0) * 100).roundToInt()
-                        onAdd(amountMinor, currency, date.selectedDateMillis)
+                        onUpdate(amountMinor, currency, date.selectedDateMillis)
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text("Save Transaction")
                 }
-            }
-        }
-    }
-
-    if (isCameraOpen) {
-        Dialog(
-            onDismissRequest = { isCameraOpen = false },
-            properties = DialogProperties(usePlatformDefaultWidth = false),
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black),
-            ) {
-                Camera(
-                    onQRCodeFound = { result ->
-                        amountInput = result
-                        isCameraOpen = false
-                    },
-                    onClose = { isCameraOpen = false },
-                )
+                Button(
+                    onClick = onDelete,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Delete")
+                }
             }
         }
     }

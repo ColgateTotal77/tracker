@@ -58,6 +58,12 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.bundles.camerax)
+    implementation(libs.mlkit.barcode.scanning)
+    implementation(libs.accompanist.permissions)
+    implementation(libs.androidx.paging.compose)
+    implementation(libs.androidx.room.paging)
 }
 
 tasks.register<Exec>("run") {

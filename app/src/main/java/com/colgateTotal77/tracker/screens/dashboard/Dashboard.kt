@@ -1,122 +1,143 @@
 package com.colgateTotal77.tracker.screens.dashboard
 
-import android.icu.number.Precision.currency
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.colgateTotal77.tracker.core.database.expense.ExpenseEntity
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
+import com.colgateTotal77.tracker.core.database.transaction.TransactionEntity
+import com.colgateTotal77.tracker.core.enums.TransactionSource
+import com.colgateTotal77.tracker.core.enums.TransactionStatus
+import com.colgateTotal77.tracker.core.formatMoney
 import com.colgateTotal77.tracker.core.ui.ProgressBar
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-
-fun formatTimestamp(timestamp: Long): String {
-    val formatter = SimpleDateFormat("dd.MMM.yyyy", Locale.getDefault())
-    return formatter.format(Date(timestamp))
-}
+import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
+import kotlin.math.roundToInt
 
 @Composable
-fun DashboardScreen(
+fun Dashboard(
     modifier: Modifier = Modifier,
-    viewModel: DashboardViewModel = viewModel(factory = DashboardViewModel.Factory)
+    viewModel: DashboardViewModel = viewModel(factory = DashboardViewModel.Factory),
 ) {
-    var isAddExpenseModalOpen by remember { mutableStateOf(false) }
-    val expenses by viewModel.expensesState.collectAsStateWithLifecycle()
+    var isAddTransactionModalOpen by remember { mutableStateOf(false) }
+    var isTransactionModalOpen by remember { mutableStateOf(false) }
+    var selectedTransaction by remember { mutableStateOf<TransactionEntity?>(null) }
+    val dimensions = LocalDimensions.current
 
-    val spent by remember(expenses) {
+    val transactions = viewModel.transactionsFlow.collectAsLazyPagingItems()
+    val target by viewModel.budgetState.collectAsStateWithLifecycle()
+
+    val spent by remember {
         derivedStateOf {
-            expenses
-                .filter { it.timestamp <= System.currentTimeMillis() }
-                .sumOf { it.amount }
+            transactions.itemSnapshotList.items.sumOf { it.amountMinor / 100.0 }
         }
     }
-
-    val budget = 1000.0
 
     Scaffold(
         modifier = modifier,
         floatingActionButton = {
-            FloatingActionButton(onClick = { isAddExpenseModalOpen = true }) {
+            FloatingActionButton(onClick = { isAddTransactionModalOpen = true }) {
                 Icon(Icons.Default.Add, contentDescription = null)
             }
         },
     ) { paddingValues ->
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(dimensions.screenPadding)
+                .padding(paddingValues),
         ) {
             ProgressBar(
-                spent,
-                budget,
-                "Budget: $spent / $budget",
-                color = if (spent > budget) MaterialTheme.colorScheme.error
-                        else MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .padding(16.dp)
+                current = spent,
+                target = target,
+                label = "Budget: ${formatMoney(spent.roundToInt())} / ${formatMoney(target.roundToInt())}",
+                color = if (spent <= target) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.primary
+                },
+                onUpdateTarget = { newBudget -> viewModel.updateBudget(newBudget) },
             )
+
             LazyColumn(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
-                items(expenses) { expense ->
-                    Row(
-                        modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = expense.category,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Text(
-                                text = formatTimestamp(expense.timestamp),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                        }
-                        Text(
-                            text = "-${expense.amount} ${expense.currency}",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                    }
+                items(
+                    count = transactions.itemCount,
+                    key = transactions.itemKey { it.id },
+                ) { index ->
+                    val transaction = transactions[index] ?: return@items
+                    TransactionCard(
+                        transaction = transaction,
+                        onClick = {
+                            selectedTransaction = transaction
+                            isTransactionModalOpen = true
+                        },
+                    )
                 }
             }
+        }
 
-            if (isAddExpenseModalOpen) {
-                AddExpenseModal(
-                    onDismiss = { isAddExpenseModalOpen = false },
-                    onAdd = { amount: Double, category: String ->
-                        isAddExpenseModalOpen = false
-                        val expense = ExpenseEntity(
-                            amount = amount,
-                            category = category,
-                            currency = "₴",
+        if (isAddTransactionModalOpen) {
+            AddTransactionModal(
+                onDismiss = { isAddTransactionModalOpen = false },
+                onAdd = { amountMinor, currency, date ->
+                    val now = System.currentTimeMillis()
+                    isAddTransactionModalOpen = false
+                    viewModel.addTransaction(
+                        TransactionEntity(
+                            amountMinor = amountMinor,
+                            currency = currency,
+                            note = null,
+                            status = TransactionStatus.DONE,
+                            source = TransactionSource.MANUAL,
+                            rawFiscalPayload = null,
+                            fiscalId = null,
+                            marketId = null,
+                            date = date ?: now,
+                            createdAt = now,
+                            updatedAt = now,
                         )
-                        viewModel.addExpense(expense)
-                    }
+                    )
+                },
+            )
+        }
+
+        selectedTransaction?.let { transaction ->
+            if (isTransactionModalOpen) {
+                TransactionModal(
+                    transaction = transaction,
+                    onDismiss = { isTransactionModalOpen = false },
+                    onUpdate = { amountMinor, currency, date ->
+                        isTransactionModalOpen = false
+                        viewModel.updateTransaction(
+                            transaction.copy(
+                                amountMinor = amountMinor,
+                                currency = currency,
+                                date = date ?: System.currentTimeMillis(),
+                                updatedAt = System.currentTimeMillis(),
+                            )
+                        )
+                    },
+                    onDelete = {
+                        isTransactionModalOpen = false
+                        viewModel.deleteTransactionById(transaction.id)
+                    },
                 )
             }
         }
