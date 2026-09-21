@@ -24,8 +24,8 @@ interface ProductDao {
             p.purchaseCount DESC
     """)
     fun query(
-        nameQuery: String?,
-        sortBy: ProductSort
+        nameQuery: String? = null,
+        sortBy: ProductSort = ProductSort.PURCHASE_COUNT_DESC
     ): PagingSource<Int, ProductEntity>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
@@ -44,9 +44,13 @@ interface ProductDao {
     suspend fun insertAllOrRestore(products: List<ProductEntity>) {
         val results = insertAllRaw(products)
 
-        results.forEachIndexed { index, resultId ->
-            if (resultId == -1L) restoreByNormalizedName(products[index].normalizedName)
+        val existingNormalizedNames = results.mapIndexed { index, resultId ->
+            if(resultId == -1L) products[index].normalizedName
+            return
         }
+        if (existingNormalizedNames.isEmpty()) return
+
+        restoreByNormalizedNames(existingNormalizedNames)
     }
 
     @Update(onConflict = OnConflictStrategy.IGNORE)
@@ -60,4 +64,10 @@ interface ProductDao {
 
     @Query("UPDATE products SET isArchived = 0 WHERE normalizedName = :normalizedName")
     suspend fun restoreByNormalizedName(normalizedName: String)
+
+    @Query("UPDATE products SET isArchived = 0 WHERE normalizedName IN (:normalizedNames)")
+    suspend fun restoreByNormalizedNames(normalizedNames: List<String>)
+
+    @Query("SELECT * FROM `products` WHERE normalizedName IN (:normalizedNames)")
+    suspend fun getByNormalizedNames(normalizedNames: List<String>): List<ProductEntity>
 }

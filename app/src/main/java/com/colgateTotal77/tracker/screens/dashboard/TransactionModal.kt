@@ -63,7 +63,7 @@ fun TransactionModal(
                     selected = currency,
                     onSelect = { currency = it },
                     displayText = { it.dropdownText },
-                    label = "Select Currency",
+                    itemName = "Currency",
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = dimensions.listItemSpacing),

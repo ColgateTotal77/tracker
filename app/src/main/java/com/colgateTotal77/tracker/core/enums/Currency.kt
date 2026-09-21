@@ -1,10 +1,12 @@
 package com.colgateTotal77.tracker.core.enums
 
+import com.colgateTotal77.tracker.core.ui.NamedItem
+
 enum class Currency(
     val code: String,
     val symbol: String,
     val displayName: String,
-) {
+): NamedItem {
     USD("USD", "$", "US Dollar"),
     EUR("EUR", "\u20ac", "Euro"),
     GBP("GBP", "\u00a3", "British Pound"),

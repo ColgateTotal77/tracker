@@ -36,9 +36,10 @@ abstract class AppDatabase : RoomDatabase() {
                     CREATE TRIGGER IF NOT EXISTS update_product_after_transaction_products_creation                                              
                     AFTER INSERT ON transaction_products                                                                                         
                     BEGIN                                                                                                                        
-                        UPDATE products                                                                                                          
+                        UPDATE products                                                                                                         
                         SET                                                                                                                      
                             lastPrice = NEW.unitPriceMinor,                                                                                      
+                            purchaseCount = purchaseCount + NEW.quantity,
                             averagePrice = (                                                                                                     
                                 SELECT COALESCE(CAST(AVG(unitPriceMinor) AS INTEGER), 0)                                                         
                                 FROM transaction_products                                                                                        
@@ -50,8 +51,8 @@ abstract class AppDatabase : RoomDatabase() {
 
                 db.execSQL("""
                     CREATE TRIGGER IF NOT EXISTS update_product_after_transaction_products_update
-                    AFTER UPDATE OF unitPriceMinor, productId ON transaction_products
-                    WHEN OLD.unitPriceMinor != NEW.unitPriceMinor OR OLD.productId != NEW.productId
+                    AFTER UPDATE OF unitPriceMinor, productId, quantity ON transaction_products
+                    WHEN OLD.unitPriceMinor != NEW.unitPriceMinor OR OLD.productId != NEW.productId OR OLD.quantity != NEW.quantity
                     BEGIN
                         UPDATE products SET
                             averagePrice = (SELECT COALESCE(CAST(AVG(unitPriceMinor) AS INTEGER), 0)
@@ -59,7 +60,10 @@ abstract class AppDatabase : RoomDatabase() {
                             lastPrice = (SELECT unitPriceMinor FROM transaction_products tp
                                          JOIN transactions t ON t.id = tp.transactionId
                                          WHERE tp.productId IN (OLD.productId, NEW.productId)
-                                         ORDER BY t.date DESC LIMIT 1)
+                                         ORDER BY t.date DESC LIMIT 1),
+                            purchaseCount = purchaseCount
+                                          + (CASE WHEN id = NEW.productId THEN NEW.quantity ELSE 0 END)
+                                          - (CASE WHEN id = OLD.productId THEN OLD.quantity ELSE 0 END)
                         WHERE id IN (OLD.productId, NEW.productId);
                     END;
                 """.trimIndent())
@@ -70,12 +74,13 @@ abstract class AppDatabase : RoomDatabase() {
                     BEGIN
                         UPDATE products SET
                             averagePrice = (SELECT COALESCE(CAST(AVG(unitPriceMinor) AS INTEGER), 0)
-                                            FROM transaction_products WHERE productId IN OLD.productId),
+                                            FROM transaction_products WHERE productId = OLD.productId),
                             lastPrice = (SELECT unitPriceMinor FROM transaction_products tp
                                          JOIN transactions t ON t.id = tp.transactionId
-                                         WHERE tp.productId IN OLD.productId
-                                         ORDER BY t.date DESC LIMIT 1)
-                        WHERE id IN OLD.productId;
+                                         WHERE tp.productId = OLD.productId
+                                         ORDER BY t.date DESC LIMIT 1),
+                            purchaseCount = purchaseCount - OLD.quantity
+                        WHERE id = OLD.productId;
                     END;
                 """.trimIndent())
             }

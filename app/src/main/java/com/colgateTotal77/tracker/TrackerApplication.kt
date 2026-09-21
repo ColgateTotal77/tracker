@@ -12,7 +12,9 @@ class TrackerApplication : Application() {
             this,
             AppDatabase::class.java,
             "tracker_database"
-        ).build()
+        )
+            .addCallback(AppDatabase.CALLBACK)
+            .build()
     }
 
     val userPreferencesRepository by lazy {

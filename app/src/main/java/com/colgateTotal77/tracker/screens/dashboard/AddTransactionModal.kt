@@ -36,16 +36,25 @@ import kotlin.math.roundToInt
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.rememberDatePickerState
+import com.colgateTotal77.tracker.core.database.market.MarketEntity
+import com.colgateTotal77.tracker.core.enums.TransactionSource
+import com.colgateTotal77.tracker.screens.dashboard.Camera.Camera
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTransactionModal(
+    markets: List<MarketEntity>,
     onDismiss: () -> Unit,
-    onAdd: (amountMinor: Int, currency: Currency, date: Long?) -> Unit,
+    onAdd: (TransactionDraft) -> Unit,
 ) {
     var isCameraOpen by remember { mutableStateOf(false) }
     var amountInput by remember { mutableStateOf("") }
     var currency by remember { mutableStateOf(Currency.UAH) }
+    var selectedMarket by remember { mutableStateOf<MarketEntity?>(null) }
+    var customMarket by remember { mutableStateOf<MarketEntity?>(null) }
+    val displayMarkets = remember(markets, customMarket) {
+        if (customMarket != null) markets + customMarket!! else markets
+    }
     val date = rememberDatePickerState(initialDisplayMode = DisplayMode.Input)
     val dimensions = LocalDimensions.current
 
@@ -79,7 +88,26 @@ fun AddTransactionModal(
                     selected = currency,
                     onSelect = { currency = it },
                     displayText = { it.dropdownText },
-                    label = "Select Currency",
+                    itemName = "Currency",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = dimensions.listItemSpacing),
+                )
+                Dropdown(
+                    items = displayMarkets.filter { it.name != null },
+                    selected = selectedMarket,
+                    onSelect = { selectedMarket = it },
+                    displayText = { it.name.orEmpty() },
+                    itemName = "Market",
+                    onCreateNewItem = { newMarketName ->
+                        val newMarket = MarketEntity(
+                            tin = newMarketName,
+                            name = newMarketName
+                        )
+
+                        customMarket = newMarket
+                        selectedMarket = newMarket
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = dimensions.listItemSpacing),
@@ -92,8 +120,21 @@ fun AddTransactionModal(
                 )
                 Button(
                     onClick = {
-                        val amountMinor = ((amountInput.toDoubleOrNull() ?: 0.0) * 100).roundToInt()
-                        onAdd(amountMinor, currency, date.selectedDateMillis)
+                        val transactionDraft = TransactionDraft(
+                            amountMinor = ((amountInput.toDoubleOrNull() ?: 0.0) * 100).roundToInt(),
+                            currency = currency,
+                            market = selectedMarket?.let {
+                                when {
+                                    it.id != 0 -> MarketChoice.Existing(it.id)
+                                    it.name != null -> MarketChoice.New(it.name)
+                                    else -> MarketChoice.None
+                                }
+                            } ?: MarketChoice.None,
+                            date = date.selectedDateMillis ?: System.currentTimeMillis(),
+                            source = TransactionSource.MANUAL,
+                        )
+
+                        onAdd(transactionDraft)
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -114,10 +155,7 @@ fun AddTransactionModal(
                     .background(Color.Black),
             ) {
                 Camera(
-                    onQRCodeFound = { result ->
-                        amountInput = result
-                        isCameraOpen = false
-                    },
+                    onAdd = onAdd,
                     onClose = { isCameraOpen = false },
                 )
             }

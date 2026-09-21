@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.paging.compose)
     implementation(libs.androidx.room.paging)
+    implementation(libs.okhttp)
 }
 
 tasks.register<Exec>("run") {

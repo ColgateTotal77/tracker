@@ -12,7 +12,7 @@ interface TransactionProductDao {
     @Query("SELECT * FROM `transaction_products` WHERE transactionId = :transactionId ORDER BY position ASC")
     fun query(transactionId: Int): Flow<List<TransactionProductEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE) //need to use if we add new product manually to transaction
     suspend fun insert(transactionProduct: TransactionProductEntity)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
