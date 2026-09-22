@@ -11,3 +11,10 @@ data class MarketEntity (
     val tin: String?,
     override val name: String?
 ): NamedItem
+
+sealed interface MarketChoice {
+    data class Existing(val marketId: Int) : MarketChoice
+    data class New(val name: String) : MarketChoice
+    data class ByTin(val tin: String) : MarketChoice
+    data object None : MarketChoice
+}

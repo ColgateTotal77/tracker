@@ -9,33 +9,42 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FlashlightOff
 import androidx.compose.material.icons.filled.FlashlightOn
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.colgateTotal77.tracker.screens.dashboard.Camera.fiscal.TaxApi.fetchFiscalCheck
-import com.colgateTotal77.tracker.screens.dashboard.TransactionDraft
-import com.colgateTotal77.tracker.screens.dashboard.toDraft
+import com.colgateTotal77.tracker.core.database.transaction.TransactionDraft
+import com.colgateTotal77.tracker.core.database.transaction.toDraft
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -118,9 +127,6 @@ fun ScannerPreview(
                     preview,
                     analysis
                 )
-
-                // Receipt QR codes are tiny — zoom in by default so they fill the frame.
-                // zoomState may not be ready at bind time, so observe it.
                 var zoomApplied = false
                 camera?.cameraInfo?.zoomState?.observe(lifecycleOwner) { state ->
                     if (!zoomApplied && state.maxZoomRatio > 1f) {
@@ -157,18 +163,40 @@ fun ScannerPreview(
             modifier = Modifier.align(Alignment.TopCenter),
         )
 
-        IconButton(
-            onClick = {
-                isTorchOn = !isTorchOn
-                camera?.cameraControl?.enableTorch(isTorchOn)
-            },
+        Row(
             modifier = Modifier.align(Alignment.TopEnd),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                if (isTorchOn) Icons.Default.FlashlightOn else Icons.Default.FlashlightOff,
-                contentDescription = "Toggle flashlight",
-                tint = Color.White,
-            )
+            if (hasScanned) {
+                var angle by remember { mutableFloatStateOf(0f) }
+                LaunchedEffect(Unit) {
+                    var last = 0L
+                    while (true) {
+                        withFrameNanos { now ->
+                            if (last != 0L) angle = (angle + (now - last) / 1_000_000f * 0.25f) % 360f
+                            last = now
+                        }
+                    }
+                }
+                Icon(
+                    Icons.Default.Refresh,
+                    contentDescription = "Processing",
+                    tint = Color(0xFF70BF73),
+                    modifier = Modifier.padding(end = 4.dp).size(22.dp).rotate(angle),
+                )
+            }
+            IconButton(
+                onClick = {
+                    isTorchOn = !isTorchOn
+                    camera?.cameraControl?.enableTorch(isTorchOn)
+                },
+            ) {
+                Icon(
+                    if (isTorchOn) Icons.Default.FlashlightOn else Icons.Default.FlashlightOff,
+                    contentDescription = "Toggle flashlight",
+                    tint = Color.White,
+                )
+            }
         }
 
         IconButton(

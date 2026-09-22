@@ -3,6 +3,7 @@ package com.colgateTotal77.tracker.core.ui
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -15,6 +16,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import com.colgateTotal77.tracker.core.filterDecimal
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,8 +38,9 @@ fun ProgressBarModal(
             )
             TextField(
                 value = amountInput,
-                onValueChange = { amountInput = it },
+                onValueChange = { amountInput = it.filterDecimal() },
                 placeholder = { Text("Amount") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = dimensions.listItemSpacing),

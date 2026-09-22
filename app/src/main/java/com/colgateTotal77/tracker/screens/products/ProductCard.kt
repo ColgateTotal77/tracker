@@ -21,9 +21,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.colgateTotal77.tracker.core.MeasureUnit
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
 import com.colgateTotal77.tracker.core.formatMoney
+import com.colgateTotal77.tracker.core.getMeasureUnit
 import com.colgateTotal77.tracker.core.ui.CardWrapper
+import java.text.DecimalFormat
+
+
+fun formatProductMeasure(quantity: Int, name: String): String {
+    val df = DecimalFormat("#.###")
+
+    val measureUnit = getMeasureUnit(quantity, name)
+
+    return when (measureUnit) {
+        MeasureUnit.PIECE -> "Bought ${quantity / 1000}x times"
+        MeasureUnit.KG -> "${df.format(quantity / 1000.0)} kg"
+        MeasureUnit.G -> "$quantity g"
+    }
+}
 
 @Composable
 fun ProductCard(
@@ -32,9 +48,7 @@ fun ProductCard(
 ) {
     CardWrapper(onClick = onClick) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -64,7 +78,7 @@ fun ProductCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "Bought ${product.purchaseCount} times",
+                    text = formatProductMeasure(product.purchaseCount, product.alias),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

@@ -8,9 +8,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 data class Dimensions(
-    val screenPadding: Dp = 0.dp,
+    val screenPadding: Dp = 4.dp,
+    val screenBottomPadding: Dp = 64.dp,
     val sectionSpacing: Dp = 0.dp,
-    val listItemSpacing: Dp = 0.dp,
+    val listItemSpacing: Dp = 16.dp,
     val buttonPaddingHorizontal: Dp = 0.dp,
     val buttonPaddingVertical: Dp = 0.dp,
 )

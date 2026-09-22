@@ -12,9 +12,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.colgateTotal77.tracker.TrackerApplication
 import com.colgateTotal77.tracker.core.UserPreferencesRepository
-import com.colgateTotal77.tracker.core.database.transaction.TransactionDao
 import com.colgateTotal77.tracker.core.database.transaction.TransactionEntity
-import com.colgateTotal77.tracker.screens.dashboard.Camera.fiscal.FiscalCheck
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,40 +23,36 @@ import androidx.room.withTransaction
 import com.colgateTotal77.tracker.core.database.AppDatabase
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
+import com.colgateTotal77.tracker.core.database.transaction.TransactionWithProducts
 import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductEntity
 import com.colgateTotal77.tracker.core.enums.TransactionStatus
+import androidx.paging.map
+import com.colgateTotal77.tracker.core.database.market.MarketChoice
+import com.colgateTotal77.tracker.core.database.transaction.TransactionDraft
+import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductDraft
+import kotlinx.coroutines.flow.map
 
 class DashboardViewModel(
     private val database: AppDatabase,
     private val preferencesRepository: UserPreferencesRepository,
 ) : ViewModel() {
 
-    val transactionsFlow: Flow<PagingData<TransactionEntity>> = Pager(
+    val transactionsFlow: Flow<PagingData<TransactionWithProducts>> = Pager(
         config = PagingConfig(pageSize = 20),
         pagingSourceFactory = database.transactionDao()::query,
-    ).flow.cachedIn(viewModelScope)
-
-    val budgetState: StateFlow<Double> = preferencesRepository.budgetFlow
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = 1000.0,
-        )
-
-    val marketsFlow: StateFlow<List<MarketEntity>> = database.marketDao().getAll()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
+    ).flow.map { pagingData ->
+        pagingData.map { transactionItem ->
+            transactionItem.copy(
+                items = transactionItem.items.sortedBy { it.transactionProduct.position }
+            )
+        }
+    }.cachedIn(viewModelScope)
 
     fun addTransaction(transaction: TransactionDraft) {
         viewModelScope.launch(Dispatchers.IO) {
             database.withTransaction {
-                val transactionDao = database.transactionDao()
                 val marketDao = database.marketDao()
                 val productDao = database.productDao()
-                val transactionProductDao = database.transactionProductDao()
                 val now = System.currentTimeMillis()
 
                 val marketId: Int? = when (val market = transaction.market) {
@@ -86,7 +80,7 @@ class DashboardViewModel(
                     MarketChoice.None -> null
                 }
 
-                val transactionId = transactionDao.insert(
+                val transactionId = database.transactionDao().insert(
                     TransactionEntity(
                         amountMinor = transaction.amountMinor,
                         currency = transaction.currency,
@@ -140,13 +134,14 @@ class DashboardViewModel(
                         unitPriceMinor = item.unitPriceMinor,
                         totalMinor = item.totalMinor ?: (item.unitPriceMinor * item.quantity),
                         taxGroup = item.taxGroup,
-                        position = item.position ?: index
+                        position = item.position ?: index,
+                        isManuallyCreated = false
                     )
                 }
 
                 if (transactionProducts.isEmpty()) return@withTransaction
 
-                transactionProductDao.insertAll(transactionProducts)
+                database.transactionProductDao().insertAll(transactionProducts)
             }
         }
     }
@@ -162,6 +157,79 @@ class DashboardViewModel(
             database.transactionDao().deleteById(id)
         }
     }
+
+    val marketsFlow: StateFlow<List<MarketEntity>> = database.marketDao().getAll()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    fun updateMarket(market: MarketEntity) {
+        viewModelScope.launch(Dispatchers.IO) {
+            database.marketDao().update(market)
+        }
+    }
+
+    fun addTransactionProduct(transactionProduct: TransactionProductDraft) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val productDao = database.productDao()
+            val normalizedName = transactionProduct.name.lowercase().replace(" ", "")
+            val now = System.currentTimeMillis()
+
+            database.withTransaction {
+                productDao.insertOrRestore(
+                    ProductEntity(
+                        normalizedName = normalizedName,
+                        alias = transactionProduct.name.trim(),
+                        lastPrice = transactionProduct.unitPriceMinor,
+                        barcode = null,
+                        createdAt = now,
+                        updatedAt = now,
+                    )
+                )
+
+                val productId = productDao.getByNormalizedName(normalizedName)?.id
+                    ?: return@withTransaction
+
+                val totalMinor = transactionProduct.unitPriceMinor * transactionProduct.quantity
+
+                database.transactionProductDao().insert(
+                    TransactionProductEntity(
+                        transactionId = transactionProduct.transactionId,
+                        productId = productId,
+                        quantity = transactionProduct.quantity,
+                        unitPriceMinor = transactionProduct.unitPriceMinor,
+                        totalMinor = totalMinor,
+                        taxGroup = null,
+                        position = transactionProduct.position,
+                        isManuallyCreated = transactionProduct.isManuallyCreated
+                    )
+                )
+
+                database.transactionDao().bumpAmountMinorById(transactionProduct.transactionId, totalMinor, now)
+            }
+        }
+    }
+
+    fun updateTransactionProduct(transactionProduct: TransactionProductEntity) {
+        viewModelScope.launch(Dispatchers.IO) {
+            database.transactionProductDao().update(transactionProduct)
+        }
+    }
+
+    fun deleteTransactionProductById(id: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            database.transactionProductDao().deleteById(id)
+        }
+    }
+
+    val budgetState: StateFlow<Double> = preferencesRepository.budgetFlow
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 1000.0,
+        )
 
     fun updateBudget(newBudget: Double) {
         viewModelScope.launch(Dispatchers.IO) {

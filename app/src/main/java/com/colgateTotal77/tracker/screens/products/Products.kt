@@ -2,6 +2,7 @@ package com.colgateTotal77.tracker.screens.products
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -53,7 +54,9 @@ fun Products(
                 }
             }
         } else {
-            LazyColumn {
+            LazyColumn(
+                contentPadding = PaddingValues(bottom = dimensions.screenBottomPadding)
+            ) {
                 items(
                     count = products.itemCount,
                     key = products.itemKey { it.id }

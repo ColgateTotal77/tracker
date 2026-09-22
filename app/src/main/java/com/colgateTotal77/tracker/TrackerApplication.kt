@@ -14,6 +14,7 @@ class TrackerApplication : Application() {
             "tracker_database"
         )
             .addCallback(AppDatabase.CALLBACK)
+            .addMigrations(AppDatabase.MIGRATION_2_3)
             .build()
     }
 

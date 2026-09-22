@@ -68,6 +68,9 @@ interface ProductDao {
     @Query("UPDATE products SET isArchived = 0 WHERE normalizedName IN (:normalizedNames)")
     suspend fun restoreByNormalizedNames(normalizedNames: List<String>)
 
+    @Query("SELECT * FROM `products` WHERE normalizedName = :normalizedName LIMIT 1")
+    suspend fun getByNormalizedName(normalizedName: String): ProductEntity?
+
     @Query("SELECT * FROM `products` WHERE normalizedName IN (:normalizedNames)")
     suspend fun getByNormalizedNames(normalizedNames: List<String>): List<ProductEntity>
 }
