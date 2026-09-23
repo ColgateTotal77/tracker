@@ -36,7 +36,8 @@ fun <T : NamedItem> Dropdown(
     displayText: (T) -> String,
     itemName: String,
     modifier: Modifier = Modifier,
-    onCreateNewItem: ((String) -> Unit)? = null
+    onCreateNewItem: ((String) -> Unit)? = null,
+    leadingIcon: (@Composable () -> Unit)? = null,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     var newItemText by remember { mutableStateOf("") }
@@ -69,6 +70,7 @@ fun <T : NamedItem> Dropdown(
             readOnly = true,
             singleLine = true,
             label = { Text("Select $itemName") },
+            leadingIcon = leadingIcon,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) },
         )
 
@@ -118,7 +120,7 @@ fun <T : NamedItem> Dropdown(
                         IconButton(
                             onClick = {
                                 if (newItemText.isBlank()) return@IconButton
-                                if (newItemText.lowercase().trim() in items.mapNotNull { it.name?.lowercase()?.trim() }) {
+                                if (newItemText.lowercase().trim() in items.map { displayText(it).lowercase().trim() }) {
                                     //toast
                                     return@IconButton
                                 }

@@ -56,7 +56,10 @@ class DashboardViewModel(
                 val now = System.currentTimeMillis()
 
                 val marketId: Int? = when (val market = transaction.market) {
-                    is MarketChoice.Existing -> market.marketId
+                    is MarketChoice.Existing -> {
+                        database.marketDao().update(market.market)
+                        market.market.id
+                    }
 
                     is MarketChoice.ByTin -> {
                         val existing = marketDao.getByTin(market.tin)
@@ -146,9 +149,12 @@ class DashboardViewModel(
         }
     }
 
-    fun updateTransaction(transaction: TransactionEntity) {
+    fun updateTransaction(transaction: TransactionEntity, market: MarketEntity?) {
         viewModelScope.launch(Dispatchers.IO) {
-            database.transactionDao().update(transaction)
+            database.withTransaction {
+                database.transactionDao().update(transaction)
+                if (market != null) database.marketDao().update(market)
+            }
         }
     }
 
@@ -164,12 +170,6 @@ class DashboardViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
-
-    fun updateMarket(market: MarketEntity) {
-        viewModelScope.launch(Dispatchers.IO) {
-            database.marketDao().update(market)
-        }
-    }
 
     fun addTransactionProduct(transactionProduct: TransactionProductDraft) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -212,9 +212,12 @@ class DashboardViewModel(
         }
     }
 
-    fun updateTransactionProduct(transactionProduct: TransactionProductEntity) {
+    fun updateTransactionProduct(transactionProduct: TransactionProductEntity, alias: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            database.transactionProductDao().update(transactionProduct)
+            database.withTransaction {
+                database.transactionProductDao().update(transactionProduct)
+                database.productDao().updateAlliesById(transactionProduct.productId, alias)
+            }
         }
     }
 

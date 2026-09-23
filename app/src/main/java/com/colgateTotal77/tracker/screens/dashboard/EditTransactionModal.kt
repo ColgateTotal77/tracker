@@ -20,24 +20,33 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.core.database.transaction.TransactionEntity
 import com.colgateTotal77.tracker.core.enums.Currency
 import com.colgateTotal77.tracker.core.filterDecimal
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.Dropdown
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
-import kotlin.math.roundToInt
 import com.colgateTotal77.tracker.core.formatMoney
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTransactionModal(
     transaction: TransactionEntity,
+    markets: List<MarketEntity>,
     onDismiss: () -> Unit,
-    onUpdate: (amountMinor: Int, currency: Currency, date: Long?) -> Unit,
+    onUpdate: (amountMinor: Int, currency: Currency, selectedMarket: MarketEntity?, date: Long?) -> Unit,
 ) {
     var amountInput by remember { mutableStateOf(formatMoney(transaction.amountMinor)) }
     var currency by remember { mutableStateOf(transaction.currency) }
+    var selectedMarket by remember { mutableStateOf(markets.find { it.id == transaction.marketId}) }
+
+    val displayMarkets = remember(markets, selectedMarket) {
+        val validMarkets = markets.filter { it.id == selectedMarket?.id || !it.name.isNullOrBlank() }
+        if (selectedMarket?.id == 0) validMarkets + selectedMarket!! else validMarkets
+    }
+
     val date = rememberDatePickerState(
         initialDisplayMode = DisplayMode.Input,
         initialSelectedDateMillis = transaction.date
@@ -52,6 +61,7 @@ fun EditTransactionModal(
                     modifier = Modifier.padding(bottom = dimensions.listItemSpacing),
                     style = MaterialTheme.typography.titleLarge,
                 )
+
                 OutlinedTextField(
                     value = amountInput,
                     onValueChange = { amountInput = it.filterDecimal() },
@@ -61,6 +71,7 @@ fun EditTransactionModal(
                         .fillMaxWidth()
                         .padding(bottom = dimensions.listItemSpacing),
                 )
+
                 Dropdown(
                     items = Currency.entries,
                     selected = currency,
@@ -71,16 +82,30 @@ fun EditTransactionModal(
                         .fillMaxWidth()
                         .padding(bottom = dimensions.listItemSpacing),
                 )
+
+                MarketDropdown(
+                    markets = displayMarkets,
+                    selectedMarketId = selectedMarket?.id,
+                    onSelect = { selectedMarket = it },
+                    onNameChange = { market ->
+                        selectedMarket = market
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = dimensions.listItemSpacing),
+                )
+
                 DatePicker(
                     state = date,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = dimensions.listItemSpacing),
                 )
+
                 Button(
                     onClick = {
                         val amountMinor = ((amountInput.toDoubleOrNull() ?: 0.0) * 100).roundToInt()
-                        onUpdate(amountMinor, currency, date.selectedDateMillis)
+                        onUpdate(amountMinor, currency, selectedMarket, date.selectedDateMillis)
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) {

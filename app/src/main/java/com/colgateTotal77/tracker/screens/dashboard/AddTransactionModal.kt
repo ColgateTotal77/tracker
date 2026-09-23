@@ -56,10 +56,12 @@ fun AddTransactionModal(
     var amountInput by remember { mutableStateOf("") }
     var currency by remember { mutableStateOf(Currency.UAH) }
     var selectedMarket by remember { mutableStateOf<MarketEntity?>(null) }
-    var customMarket by remember { mutableStateOf<MarketEntity?>(null) }
-    val displayMarkets = remember(markets, customMarket) {
-        if (customMarket != null) markets + customMarket!! else markets
+
+    val displayMarkets = remember(markets, selectedMarket) {
+        val validMarkets = markets.filter { !it.name.isNullOrBlank() }
+        if (selectedMarket?.id == 0) validMarkets + selectedMarket!! else validMarkets
     }
+
     val date = rememberDatePickerState(initialDisplayMode = DisplayMode.Input)
     val dimensions = LocalDimensions.current
 
@@ -98,24 +100,16 @@ fun AddTransactionModal(
                         .fillMaxWidth()
                         .padding(bottom = dimensions.listItemSpacing),
                 )
-                Dropdown(
-                    items = displayMarkets.filter { it.name != null },
-                    selected = selectedMarket,
+                MarketDropdown(
+                    markets = displayMarkets,
+                    selectedMarketId = selectedMarket?.id,
                     onSelect = { selectedMarket = it },
-                    displayText = { it.name.orEmpty() },
-                    itemName = "Market",
-                    onCreateNewItem = { newMarketName ->
-                        val newMarket = MarketEntity(
-                            tin = newMarketName,
-                            name = newMarketName
-                        )
-
-                        customMarket = newMarket
-                        selectedMarket = newMarket
-                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = dimensions.listItemSpacing),
+                    onNameChange = { market ->
+                        selectedMarket = market
+                    },
                 )
                 DatePicker(
                     state = date,
@@ -130,8 +124,8 @@ fun AddTransactionModal(
                             currency = currency,
                             market = selectedMarket?.let {
                                 when {
-                                    it.id != 0 -> MarketChoice.Existing(it.id)
-                                    it.name != null -> MarketChoice.New(it.name)
+                                    it.id != 0 -> MarketChoice.Existing(it)
+                                    !it.name.isNullOrBlank() -> MarketChoice.New(it.name!!)
                                     else -> MarketChoice.None
                                 }
                             } ?: MarketChoice.None,

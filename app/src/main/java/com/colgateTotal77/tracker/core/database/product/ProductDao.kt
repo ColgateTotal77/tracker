@@ -73,4 +73,7 @@ interface ProductDao {
 
     @Query("SELECT * FROM `products` WHERE normalizedName IN (:normalizedNames)")
     suspend fun getByNormalizedNames(normalizedNames: List<String>): List<ProductEntity>
+
+    @Query("UPDATE products SET alias = :alias WHERE id = :id")
+    suspend fun updateAlliesById(id: Int, alias: String)
 }

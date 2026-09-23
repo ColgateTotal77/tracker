@@ -22,10 +22,11 @@ fun TransactionProductCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val baseQuantityText = "${formatProductMeasure(item.transactionProduct.quantity, item.product.alias)} × ${formatMoney(item.transactionProduct.unitPriceMinor)}"
+
     CardWrapper {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
@@ -41,8 +42,7 @@ fun TransactionProductCard(
                 )
 
                 Text(
-                    text = "${formatProductMeasure(item.transactionProduct.quantity, item.product.alias)} × ${formatMoney(item.transactionProduct.unitPriceMinor)}",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = if (item.transactionProduct.isManuallyCreated) "$baseQuantityText • Created manually" else baseQuantityText,                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

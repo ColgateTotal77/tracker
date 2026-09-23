@@ -154,15 +154,17 @@ fun Dashboard(
         if (isEditTransactionModalOpen) {
             EditTransactionModal(
                 transaction = selectedTransaction!!,
+                markets = markets,
                 onDismiss = { isEditTransactionModalOpen = false },
-                onUpdate = { amountMinor, currency, date ->
+                onUpdate = { amountMinor, currency, selectedMarket, date ->
                     viewModel.updateTransaction(
                         selectedTransaction!!.copy(
                             amountMinor = amountMinor,
                             currency = currency,
                             date = date ?: System.currentTimeMillis(),
                             updatedAt = System.currentTimeMillis(),
-                        )
+                        ),
+                        market = selectedMarket,
                     )
                     isEditTransactionModalOpen = false
                 },
@@ -201,13 +203,14 @@ fun Dashboard(
             EditTransactionProductModal(
                 transactionProductWithProduct = selectedTransactionProduct!!,
                 onDismiss = { isEditTransactionProductModalOpen = false },
-                onUpdate = { quantity, unitPriceMinor ->
+                onUpdate = { alias, quantity, unitPriceMinor ->
                     viewModel.updateTransactionProduct(
                         selectedTransactionProduct!!.transactionProduct.copy(
                             quantity = quantity,
                             unitPriceMinor = unitPriceMinor,
                             totalMinor = unitPriceMinor * quantity
-                        )
+                        ),
+                        alias
                     )
                     isEditTransactionProductModalOpen = false
                 },

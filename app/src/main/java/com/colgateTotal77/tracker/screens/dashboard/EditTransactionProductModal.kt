@@ -32,10 +32,12 @@ import com.colgateTotal77.tracker.core.getMeasureUnit
 fun EditTransactionProductModal(
     transactionProductWithProduct: TransactionProductWithProduct,
     onDismiss: () -> Unit,
-    onUpdate: (quantity: Int, unitPriceMinor: Int) -> Unit,
+    onUpdate: (alias: String, quantity: Int, unitPriceMinor: Int) -> Unit,
 ) {
     val transactionProduct = transactionProductWithProduct.transactionProduct
     val product = transactionProductWithProduct.product
+
+    var nameInput by remember { mutableStateOf(product.alias) }
 
     var unitPriceInput by remember {
         mutableStateOf(formatMoney(transactionProduct.unitPriceMinor))
@@ -67,6 +69,15 @@ fun EditTransactionProductModal(
                     style = MaterialTheme.typography.titleLarge,
                 )
 
+                OutlinedTextField(
+                    value = nameInput,
+                    onValueChange = { nameInput = it },
+                    label = { Text("Product name") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = dimensions.listItemSpacing),
+                )
+
                 QuantityInputField(
                     value = quantityInput,
                     onValueChange = { quantityInput = it },
@@ -89,6 +100,7 @@ fun EditTransactionProductModal(
 
                 Button(
                     onClick = {
+                        val alias = nameInput.trim()
                         val rawQuantity = quantityInput.toDoubleOrNull() ?: return@Button
                         val unitPriceMinor = ((unitPriceInput.toDoubleOrNull() ?: return@Button) * 100).roundToInt()
 
@@ -96,9 +108,9 @@ fun EditTransactionProductModal(
                             if (selectedUnit != MeasureUnit.G) (rawQuantity * 1000).roundToInt()
                             else rawQuantity.roundToInt()
 
-                        if (quantity <= 0 || unitPriceMinor <= 0) return@Button
+                        if (alias.isEmpty() || quantity <= 0 || unitPriceMinor <= 0) return@Button
 
-                        onUpdate(quantity, unitPriceMinor)
+                        onUpdate(alias, quantity, unitPriceMinor)
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) {

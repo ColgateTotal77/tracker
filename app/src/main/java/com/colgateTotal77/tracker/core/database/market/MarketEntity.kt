@@ -9,11 +9,11 @@ import com.colgateTotal77.tracker.core.ui.NamedItem
 data class MarketEntity (
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val tin: String?,
-    override val name: String?
+    override var name: String?
 ): NamedItem
 
 sealed interface MarketChoice {
-    data class Existing(val marketId: Int) : MarketChoice
+    data class Existing(val market: MarketEntity) : MarketChoice
     data class New(val name: String) : MarketChoice
     data class ByTin(val tin: String) : MarketChoice
     data object None : MarketChoice

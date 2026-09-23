@@ -25,17 +25,20 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.colgateTotal77.tracker.core.MeasureUnit
 import com.colgateTotal77.tracker.core.filterDecimal
+import java.math.BigDecimal
 
 private fun convertQuantityString(currentValue: String, fromUnit: MeasureUnit, toUnit: MeasureUnit): String {
     if (fromUnit == toUnit) return currentValue
-    val value = currentValue.toDoubleOrNull() ?: return currentValue
+    val value = currentValue.toBigDecimalOrNull() ?: return currentValue
+
+    val thousand = BigDecimal("1000")
 
     val newValue = when (fromUnit) {
-        MeasureUnit.G -> value / 1000.0
-        MeasureUnit.KG, MeasureUnit.PIECE -> if (toUnit == MeasureUnit.G) value * 1000.0 else value
+        MeasureUnit.G -> value.divide(thousand)
+        MeasureUnit.KG, MeasureUnit.PIECE -> if (toUnit == MeasureUnit.G) value * thousand else value
     }
 
-    return if (newValue % 1 == 0.0) newValue.toInt().toString() else newValue.toString()
+    return newValue.stripTrailingZeros().toPlainString()
 }
 
 @Composable

@@ -49,7 +49,14 @@ data class TransactionWithProducts(
         parentColumn = "id",
         entityColumn = "transactionId"
     )
-    val items: List<TransactionProductWithProduct>
+    val items: List<TransactionProductWithProduct>,
+
+    @Relation(
+        entity = MarketEntity::class,
+        parentColumn = "marketId",
+        entityColumn = "id"
+    )
+    val market: MarketEntity?
 )
 
 data class TransactionDraft(
