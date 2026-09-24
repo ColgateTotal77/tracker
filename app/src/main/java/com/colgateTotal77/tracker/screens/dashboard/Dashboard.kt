@@ -208,7 +208,7 @@ fun Dashboard(
                         selectedTransactionProduct!!.transactionProduct.copy(
                             quantity = quantity,
                             unitPriceMinor = unitPriceMinor,
-                            totalMinor = unitPriceMinor * quantity
+                            totalMinor = unitPriceMinor * (quantity / 1000)
                         ),
                         alias
                     )

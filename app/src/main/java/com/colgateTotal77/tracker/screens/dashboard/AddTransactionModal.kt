@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material3.Button
@@ -36,13 +38,11 @@ import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.Dropdown
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import kotlin.math.roundToInt
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DisplayMode
-import androidx.compose.material3.rememberDatePickerState
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.core.database.market.MarketChoice
 import com.colgateTotal77.tracker.core.database.transaction.TransactionDraft
 import com.colgateTotal77.tracker.core.enums.TransactionSource
+import com.colgateTotal77.tracker.core.ui.DateTimeInputField
 import com.colgateTotal77.tracker.screens.dashboard.Camera.Camera
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,16 +58,39 @@ fun AddTransactionModal(
     var selectedMarket by remember { mutableStateOf<MarketEntity?>(null) }
 
     val displayMarkets = remember(markets, selectedMarket) {
-        val validMarkets = markets.filter { !it.name.isNullOrBlank() }
-        if (selectedMarket?.id == 0) validMarkets + selectedMarket!! else validMarkets
+        val updatedMarkets = markets.map {
+            if (it.id == selectedMarket?.id) selectedMarket!! else it
+        }
+
+        val validMarkets = updatedMarkets.filter {
+            it.id == selectedMarket?.id || !it.name.isNullOrBlank()
+        }
+
+        if (selectedMarket?.id == 0 && updatedMarkets.none { it.id == 0 }) {
+            validMarkets + selectedMarket!!
+        } else validMarkets
     }
 
-    val date = rememberDatePickerState(initialDisplayMode = DisplayMode.Input)
+    val formatter = java.text.SimpleDateFormat("ddMMyyyyHHmm", java.util.Locale.getDefault())
+    var dateTimeInput by remember { mutableStateOf(formatter.format(java.util.Date())) }
+    val isDateValid = remember(dateTimeInput) {
+        if (dateTimeInput.length < 12) false
+        else {
+            try {
+                val formatter = java.text.SimpleDateFormat("ddMMyyyyHHmm", java.util.Locale.getDefault())
+                formatter.isLenient = false
+                formatter.parse(dateTimeInput) != null
+            } catch (e: Exception) {
+                false
+            }
+        }
+    }
+
     val dimensions = LocalDimensions.current
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         CardWrapper {
-            Column {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(bottom = dimensions.listItemSpacing),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -81,6 +104,7 @@ fun AddTransactionModal(
                         Icon(Icons.Default.QrCode2, contentDescription = "Open Camera")
                     }
                 }
+
                 OutlinedTextField(
                     value = amountInput,
                     onValueChange = { amountInput = it.filterDecimal() },
@@ -90,6 +114,7 @@ fun AddTransactionModal(
                         .fillMaxWidth()
                         .padding(bottom = dimensions.listItemSpacing),
                 )
+
                 Dropdown(
                     items = Currency.entries,
                     selected = currency,
@@ -100,6 +125,7 @@ fun AddTransactionModal(
                         .fillMaxWidth()
                         .padding(bottom = dimensions.listItemSpacing),
                 )
+
                 MarketDropdown(
                     markets = displayMarkets,
                     selectedMarketId = selectedMarket?.id,
@@ -111,12 +137,14 @@ fun AddTransactionModal(
                         selectedMarket = market
                     },
                 )
-                DatePicker(
-                    state = date,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = dimensions.listItemSpacing),
+
+                DateTimeInputField(
+                    value = dateTimeInput,
+                    onValueChange = { dateTimeInput = it },
+                    isError = dateTimeInput.length == 12 && !isDateValid,
+                    modifier = Modifier.padding(bottom = dimensions.listItemSpacing)
                 )
+
                 Button(
                     onClick = {
                         val transactionDraft = TransactionDraft(
@@ -129,7 +157,7 @@ fun AddTransactionModal(
                                     else -> MarketChoice.None
                                 }
                             } ?: MarketChoice.None,
-                            date = date.selectedDateMillis ?: System.currentTimeMillis(),
+                            date = formatter.parse(dateTimeInput)!!.time,
                             source = TransactionSource.MANUAL,
                         )
 

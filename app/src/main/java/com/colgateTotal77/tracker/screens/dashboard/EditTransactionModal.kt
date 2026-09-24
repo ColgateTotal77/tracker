@@ -1,8 +1,11 @@
 package com.colgateTotal77.tracker.screens.dashboard
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DisplayMode
@@ -23,11 +26,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.core.database.transaction.TransactionEntity
 import com.colgateTotal77.tracker.core.enums.Currency
+import com.colgateTotal77.tracker.core.enums.TransactionSource
 import com.colgateTotal77.tracker.core.filterDecimal
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.Dropdown
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.core.formatMoney
+import com.colgateTotal77.tracker.core.ui.DateTimeInputField
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,19 +48,39 @@ fun EditTransactionModal(
     var selectedMarket by remember { mutableStateOf(markets.find { it.id == transaction.marketId}) }
 
     val displayMarkets = remember(markets, selectedMarket) {
-        val validMarkets = markets.filter { it.id == selectedMarket?.id || !it.name.isNullOrBlank() }
-        if (selectedMarket?.id == 0) validMarkets + selectedMarket!! else validMarkets
+        val updatedMarkets = markets.map {
+            if (it.id == selectedMarket?.id) selectedMarket!! else it
+        }
+
+        val validMarkets = updatedMarkets.filter {
+            it.id == selectedMarket?.id || !it.name.isNullOrBlank()
+        }
+
+        if (selectedMarket?.id == 0 && updatedMarkets.none { it.id == 0 }) {
+            validMarkets + selectedMarket!!
+        } else validMarkets
     }
 
-    val date = rememberDatePickerState(
-        initialDisplayMode = DisplayMode.Input,
-        initialSelectedDateMillis = transaction.date
-    )
+    val formatter = java.text.SimpleDateFormat("ddMMyyyyHHmm", java.util.Locale.getDefault())
+    var dateTimeInput by remember { mutableStateOf(formatter.format(java.util.Date(transaction.date))) }
+    val isDateValid = remember(dateTimeInput) {
+        if (dateTimeInput.length < 12) false
+        else {
+            try {
+                val formatter = java.text.SimpleDateFormat("ddMMyyyyHHmm", java.util.Locale.getDefault())
+                formatter.isLenient = false
+                formatter.parse(dateTimeInput) != null
+            } catch (e: Exception) {
+                false
+            }
+        }
+    }
+
     val dimensions = LocalDimensions.current
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         CardWrapper {
-            Column {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 Text(
                     "Transaction",
                     modifier = Modifier.padding(bottom = dimensions.listItemSpacing),
@@ -67,6 +92,7 @@ fun EditTransactionModal(
                     onValueChange = { amountInput = it.filterDecimal() },
                     label = { Text("Amount") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    enabled = transaction.source == TransactionSource.MANUAL,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = dimensions.listItemSpacing),
@@ -88,6 +114,7 @@ fun EditTransactionModal(
                     selectedMarketId = selectedMarket?.id,
                     onSelect = { selectedMarket = it },
                     onNameChange = { market ->
+                        Log.d("Transaction", market.toString())
                         selectedMarket = market
                     },
                     modifier = Modifier
@@ -95,18 +122,20 @@ fun EditTransactionModal(
                         .padding(bottom = dimensions.listItemSpacing),
                 )
 
-                DatePicker(
-                    state = date,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = dimensions.listItemSpacing),
+                DateTimeInputField(
+                    value = dateTimeInput,
+                    onValueChange = { dateTimeInput = it },
+                    isError = dateTimeInput.length == 12 && !isDateValid,
+                    modifier = Modifier.padding(bottom = dimensions.listItemSpacing)
                 )
 
                 Button(
                     onClick = {
+                        val parsedDateMillis = formatter.parse(dateTimeInput)!!.time
                         val amountMinor = ((amountInput.toDoubleOrNull() ?: 0.0) * 100).roundToInt()
-                        onUpdate(amountMinor, currency, selectedMarket, date.selectedDateMillis)
+                        onUpdate(amountMinor, currency, selectedMarket, parsedDateMillis)
                     },
+                    enabled = isDateValid && amountInput.isNotBlank(),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text("Save Transaction")

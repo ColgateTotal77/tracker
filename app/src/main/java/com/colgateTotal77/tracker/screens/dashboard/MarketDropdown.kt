@@ -112,14 +112,12 @@ private fun RenameField(
             if (isValid) {
                 IconButton(onClick = {
                     onNameChange(market.copy(name = trimmed))
-                    keyboardController?.hide()
                     onBackToDropdown()
                 }) {
                     Icon(Icons.Default.Check, contentDescription = "Save name")
                 }
             } else {
                 IconButton(onClick = {
-                    keyboardController?.hide()
                     onBackToDropdown()
                 }) {
                     Icon(Icons.Default.Close, contentDescription = "Cancel renaming")
