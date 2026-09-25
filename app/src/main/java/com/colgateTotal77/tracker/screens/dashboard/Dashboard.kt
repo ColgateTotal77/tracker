@@ -29,12 +29,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.colgateTotal77.tracker.core.database.transaction.TransactionEntity
+import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductDraft
 import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductWithProduct
 import com.colgateTotal77.tracker.core.formatMoney
 import com.colgateTotal77.tracker.core.ui.ProgressBar
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import kotlin.math.roundToInt
-import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductDraft
 
 @Composable
 fun Dashboard(
@@ -57,6 +57,7 @@ fun Dashboard(
     val transactions = viewModel.transactionsFlow.collectAsLazyPagingItems()
     val target by viewModel.budgetState.collectAsStateWithLifecycle()
     val markets by viewModel.marketsFlow.collectAsStateWithLifecycle()
+    val products by viewModel.productFlow.collectAsStateWithLifecycle()
 
     val spent: Double by remember {
         derivedStateOf {
@@ -123,6 +124,7 @@ fun Dashboard(
                                 isDeleteTransactionModalOpen = true
                             },
                             onAddTransactionProduct = { nextPosition ->
+                                selectedTransaction = transactionItem.transaction
                                 nextTransactionProductPosition = nextPosition
                                 isAddTransactionProductModalOpen = true
                             },
@@ -183,16 +185,17 @@ fun Dashboard(
 
         if (isAddTransactionProductModalOpen) {
             AddTransactionProductModal(
+                products = products,
                 onDismiss = { isAddTransactionProductModalOpen = false },
-                onAdd = { name, quantity, unitPriceMinor ->
+                onAdd = { productChoice, quantity, unitPriceMinor ->
                     viewModel.addTransactionProduct(
                         TransactionProductDraft(
                             transactionId = selectedTransaction!!.id,
                             position = nextTransactionProductPosition,
-                            name = name,
                             quantity = quantity,
                             unitPriceMinor = unitPriceMinor,
-                        )
+                        ),
+                        productChoice
                     )
                     isAddTransactionProductModalOpen = false
                 },

@@ -28,6 +28,7 @@ import com.colgateTotal77.tracker.core.database.transaction_product.TransactionP
 import com.colgateTotal77.tracker.core.enums.TransactionStatus
 import androidx.paging.map
 import com.colgateTotal77.tracker.core.database.market.MarketChoice
+import com.colgateTotal77.tracker.core.database.product.ProductChoice
 import com.colgateTotal77.tracker.core.database.transaction.TransactionDraft
 import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductDraft
 import kotlinx.coroutines.flow.map
@@ -171,28 +172,32 @@ class DashboardViewModel(
             initialValue = emptyList()
         )
 
-    fun addTransactionProduct(transactionProduct: TransactionProductDraft) {
+    fun addTransactionProduct(transactionProduct: TransactionProductDraft, productChoice: ProductChoice) {
         viewModelScope.launch(Dispatchers.IO) {
             val productDao = database.productDao()
-            val normalizedName = transactionProduct.name.lowercase().replace(" ", "")
             val now = System.currentTimeMillis()
 
             database.withTransaction {
-                productDao.insertOrRestore(
-                    ProductEntity(
-                        normalizedName = normalizedName,
-                        alias = transactionProduct.name.trim(),
-                        lastPrice = transactionProduct.unitPriceMinor,
-                        barcode = null,
-                        createdAt = now,
-                        updatedAt = now,
-                    )
-                )
+                val productId = when (productChoice) {
+                    is ProductChoice.Existing -> productChoice.product.id
+                    is ProductChoice.New -> {
+                        val normalizedName = productChoice.alias.lowercase().replace(" ", "")
 
-                val productId = productDao.getByNormalizedName(normalizedName)?.id
-                    ?: return@withTransaction
+                        productDao.insertOrRestore(
+                            ProductEntity(
+                                normalizedName = normalizedName,
+                                alias = productChoice.alias.trim(),
+                                lastPrice = transactionProduct.unitPriceMinor,
+                                createdAt = now,
+                                updatedAt = now,
+                            )
+                        )
 
-                val totalMinor = transactionProduct.unitPriceMinor * transactionProduct.quantity
+                        productDao.getByNormalizedName(normalizedName)?.id ?: return@withTransaction
+                    }
+                }
+
+                val totalMinor = transactionProduct.unitPriceMinor * (transactionProduct.quantity / 1000)
 
                 database.transactionProductDao().insert(
                     TransactionProductEntity(
@@ -226,6 +231,13 @@ class DashboardViewModel(
             database.transactionProductDao().deleteById(id)
         }
     }
+
+    val productFlow: StateFlow<List<ProductEntity>> = database.productDao().getAllActive()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     val budgetState: StateFlow<Double> = preferencesRepository.budgetFlow
         .stateIn(

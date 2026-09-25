@@ -7,15 +7,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +33,7 @@ import com.colgateTotal77.tracker.core.ui.Dropdown
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.core.formatMoney
 import com.colgateTotal77.tracker.core.ui.DateTimeInputField
+import com.colgateTotal77.tracker.core.ui.DropdownInput
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,25 +102,36 @@ fun EditTransactionModal(
                 Dropdown(
                     items = Currency.entries,
                     selected = currency,
-                    onSelect = { currency = it },
-                    displayText = { it.dropdownText },
+                    onSelect = { selectedCurrency ->
+                        selectedCurrency?.let { currency = it }
+                    },
+                    itemText = { it.dropdownText },
                     itemName = "Currency",
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = dimensions.listItemSpacing),
                 )
 
-                MarketDropdown(
-                    markets = displayMarkets,
-                    selectedMarketId = selectedMarket?.id,
+                DropdownInput(
+                    items = displayMarkets,
+                    itemName = "Market",
+                    inputLabel = "Rename market",
+                    itemText = { it?.name ?: "" },
+                    selected = selectedMarket,
                     onSelect = { selectedMarket = it },
-                    onNameChange = { market ->
-                        Log.d("Transaction", market.toString())
-                        selectedMarket = market
-                    },
+                    isInputEnabled = selectedMarket != null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = dimensions.listItemSpacing),
+                    onCreateNewItem = { name ->
+                        selectedMarket = MarketEntity(tin = null, name = name)
+                    },
+                    leadingIcon = if(selectedMarket != null) {
+                        { Icon(Icons.Default.Edit, contentDescription = "Rename market") }
+                    } else null,
+                    onInputDone = { name ->
+                        selectedMarket = selectedMarket?.copy(name = name)
+                    }
                 )
 
                 DateTimeInputField(

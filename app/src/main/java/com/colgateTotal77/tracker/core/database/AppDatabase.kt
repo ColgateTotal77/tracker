@@ -62,14 +62,14 @@ abstract class AppDatabase : RoomDatabase() {
                 BEGIN
                     UPDATE products SET
                         averagePrice = (SELECT COALESCE(CAST(AVG(unitPriceMinor) AS INTEGER), 0)
-                                        FROM transaction_products WHERE productId IN (OLD.productId, NEW.productId)),
-                        lastPrice = (SELECT unitPriceMinor FROM transaction_products tp
+                                        FROM transaction_products WHERE productId = products.id),
+                        lastPrice = COALESCE((SELECT tp.unitPriceMinor FROM transaction_products tp
                                      JOIN transactions t ON t.id = tp.transactionId
-                                     WHERE tp.productId IN (OLD.productId, NEW.productId)
-                                     ORDER BY t.date DESC LIMIT 1),
+                                     WHERE tp.productId = products.id
+                                     ORDER BY t.date DESC LIMIT 1), lastPrice),
                         purchaseCount = purchaseCount
-                                      + (CASE WHEN id = NEW.productId THEN NEW.quantity ELSE 0 END)
-                                      - (CASE WHEN id = OLD.productId THEN OLD.quantity ELSE 0 END),
+                                      + (CASE WHEN products.id = NEW.productId THEN NEW.quantity ELSE 0 END)
+                                      - (CASE WHEN products.id = OLD.productId THEN OLD.quantity ELSE 0 END),
                         updatedAt = (strftime('%s','now') * 1000)
                     WHERE id IN (OLD.productId, NEW.productId);
                 END;
@@ -82,10 +82,10 @@ abstract class AppDatabase : RoomDatabase() {
                     UPDATE products SET
                         averagePrice = (SELECT COALESCE(CAST(AVG(unitPriceMinor) AS INTEGER), 0)
                                         FROM transaction_products WHERE productId = OLD.productId),
-                        lastPrice = (SELECT unitPriceMinor FROM transaction_products tp
+                        lastPrice = COALESCE((SELECT tp.unitPriceMinor FROM transaction_products tp
                                      JOIN transactions t ON t.id = tp.transactionId
                                      WHERE tp.productId = OLD.productId
-                                     ORDER BY t.date DESC LIMIT 1),
+                                     ORDER BY t.date DESC LIMIT 1), lastPrice),
                         purchaseCount = purchaseCount - OLD.quantity,
                         updatedAt = (strftime('%s','now') * 1000)
                     WHERE id = OLD.productId;

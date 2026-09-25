@@ -49,7 +49,6 @@ data class TransactionProductWithProduct(
 data class TransactionProductDraft(
     val transactionId: Int,
     val position: Int,
-    val name: String,
     val quantity: Int,
     val unitPriceMinor: Int,
     val isManuallyCreated: Boolean = true

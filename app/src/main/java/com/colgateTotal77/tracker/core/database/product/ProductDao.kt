@@ -8,6 +8,7 @@ import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Transaction
 import com.colgateTotal77.tracker.core.enums.ProductSort
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProductDao {
@@ -27,6 +28,9 @@ interface ProductDao {
         nameQuery: String? = null,
         sortBy: ProductSort = ProductSort.PURCHASE_COUNT_DESC
     ): PagingSource<Int, ProductEntity>
+
+    @Query("SELECT * FROM products WHERE isArchived = 0 ORDER BY purchaseCount DESC")
+    fun getAllActive(): Flow<List<ProductEntity>>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertRaw(product: ProductEntity): Long

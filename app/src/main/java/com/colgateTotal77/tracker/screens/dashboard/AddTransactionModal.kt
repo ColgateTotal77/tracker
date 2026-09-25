@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material3.Button
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,7 +44,11 @@ import com.colgateTotal77.tracker.core.database.market.MarketChoice
 import com.colgateTotal77.tracker.core.database.transaction.TransactionDraft
 import com.colgateTotal77.tracker.core.enums.TransactionSource
 import com.colgateTotal77.tracker.core.ui.DateTimeInputField
+import com.colgateTotal77.tracker.core.ui.DropdownInput
 import com.colgateTotal77.tracker.screens.dashboard.Camera.Camera
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,13 +76,13 @@ fun AddTransactionModal(
         } else validMarkets
     }
 
-    val formatter = java.text.SimpleDateFormat("ddMMyyyyHHmm", java.util.Locale.getDefault())
-    var dateTimeInput by remember { mutableStateOf(formatter.format(java.util.Date())) }
+    val formatter = SimpleDateFormat("ddMMyyyyHHmm", Locale.getDefault())
+    var dateTimeInput by remember { mutableStateOf(formatter.format(Date())) }
     val isDateValid = remember(dateTimeInput) {
         if (dateTimeInput.length < 12) false
         else {
             try {
-                val formatter = java.text.SimpleDateFormat("ddMMyyyyHHmm", java.util.Locale.getDefault())
+                val formatter = SimpleDateFormat("ddMMyyyyHHmm", Locale.getDefault())
                 formatter.isLenient = false
                 formatter.parse(dateTimeInput) != null
             } catch (e: Exception) {
@@ -92,7 +97,9 @@ fun AddTransactionModal(
         CardWrapper {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = dimensions.listItemSpacing),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = dimensions.listItemSpacing),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -118,23 +125,35 @@ fun AddTransactionModal(
                 Dropdown(
                     items = Currency.entries,
                     selected = currency,
-                    onSelect = { currency = it },
-                    displayText = { it.dropdownText },
+                    onSelect = { selectedCurrency ->
+                        selectedCurrency?.let { currency = it }
+                    },
+                    itemText = { it.dropdownText },
                     itemName = "Currency",
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = dimensions.listItemSpacing),
                 )
 
-                MarketDropdown(
-                    markets = displayMarkets,
-                    selectedMarketId = selectedMarket?.id,
+                DropdownInput(
+                    items = displayMarkets,
+                    itemName = "Market",
+                    inputLabel = "Rename market",
+                    itemText = { it?.name ?: "" },
+                    selected = selectedMarket,
                     onSelect = { selectedMarket = it },
+                    isInputEnabled = selectedMarket != null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = dimensions.listItemSpacing),
-                    onNameChange = { market ->
-                        selectedMarket = market
+                    onCreateNewItem = { name ->
+                        selectedMarket = MarketEntity(tin = null, name = name)
+                    },
+                    leadingIcon = if (selectedMarket != null) {
+                        { Icon(Icons.Default.Edit, contentDescription = "Rename market") }
+                    } else null,
+                    onInputDone = { name ->
+                        selectedMarket = selectedMarket?.copy(name = name)
                     },
                 )
 
