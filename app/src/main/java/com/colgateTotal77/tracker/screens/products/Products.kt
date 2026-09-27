@@ -9,12 +9,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.colgateTotal77.tracker.core.ProductNameNormalizer
+import com.colgateTotal77.tracker.core.database.product.ProductEntity
 import com.colgateTotal77.tracker.core.enums.ProductSort
 import com.colgateTotal77.tracker.core.ui.DropdownPopup
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
@@ -25,6 +30,11 @@ fun Products(
     modifier: Modifier = Modifier,
     viewModel: ProductViewModel = viewModel(factory = ProductViewModel.Factory),
 ) {
+    var isAddProductModalOpen by remember { mutableStateOf(false) }
+    var isEditProductModalOpen by remember { mutableStateOf(false) }
+    var isArchiveProductModalOpen by remember { mutableStateOf(false) }
+    var selectedProduct by remember { mutableStateOf<ProductEntity?>(null) }
+
     val dimensions = LocalDimensions.current
 
     val products = viewModel.productFlow.collectAsLazyPagingItems()
@@ -34,7 +44,7 @@ fun Products(
     Scaffold(
         modifier = modifier,
         floatingActionButton = {
-            FloatingActionButton(onClick = {  }) {
+            FloatingActionButton(onClick = { isAddProductModalOpen = true }) {
                 Icon(Icons.Default.Add, contentDescription = "Add Product")
             }
         },
@@ -101,11 +111,67 @@ fun Products(
 
                         ProductCard(
                             product = product,
-                            onClick = {}
+                            onGetProductHistory = { id ->
+                                viewModel.getProductHistoryFlow(id)
+                            },
+                            onEdit = {
+                                selectedProduct = product
+                                isEditProductModalOpen = true
+                            },
+                            onArchive = {
+                                selectedProduct = product
+                                isArchiveProductModalOpen = true
+                            }
                         )
                     }
                 }
             }
+        }
+
+        if (isAddProductModalOpen) {
+            AddProductModal(
+                onDismiss = { isAddProductModalOpen = false },
+                onAdd = { name ->
+                    val now = System.currentTimeMillis()
+
+                    viewModel.insertProduct(
+                        ProductEntity(
+                            normalizedName = ProductNameNormalizer.normalize(name),
+                            alias = name,
+                            lastPrice = 0,
+                            createdAt = now,
+                            updatedAt = now,
+                        )
+                    )
+                    isAddProductModalOpen = false
+                },
+            )
+        }
+
+        if (isEditProductModalOpen) {
+            EditProductModal(
+                product = selectedProduct!!,
+                onDismiss = { isEditProductModalOpen = false },
+                onUpdate = { alias ->
+                    viewModel.updateProduct(
+                        selectedProduct!!.copy(
+                            alias = alias
+                        )
+                    )
+                    isEditProductModalOpen = false
+                },
+            )
+        }
+
+        if (isArchiveProductModalOpen) {
+            ArchiveProductModal(
+                product = selectedProduct!!,
+                onDismiss = { isArchiveProductModalOpen = false },
+                onArchive = { id ->
+                    viewModel.archiveProductById(id)
+                    isArchiveProductModalOpen = false
+                }
+            )
         }
     }
 }

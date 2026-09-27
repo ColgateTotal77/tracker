@@ -83,24 +83,3 @@ fun TransactionProductCard(
         }
     }
 }
-
-@Composable
-fun AddTransactionProductButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        contentPadding = PaddingValues(16.dp)
-    ) {
-        Icon(
-            imageVector = Icons.Rounded.Add,
-            contentDescription = "Add Product",
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text("Add Product")
-    }
-}

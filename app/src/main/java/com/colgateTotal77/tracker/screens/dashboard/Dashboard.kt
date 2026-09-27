@@ -154,12 +154,14 @@ fun Dashboard(
                 markets = markets,
                 onDismiss = { isEditTransactionModalOpen = false },
                 onUpdate = { amountMinor, currency, selectedMarket, date ->
+                    val now = System.currentTimeMillis()
+
                     viewModel.updateTransaction(
                         selectedTransaction!!.copy(
                             amountMinor = amountMinor,
                             currency = currency,
-                            date = date ?: System.currentTimeMillis(),
-                            updatedAt = System.currentTimeMillis(),
+                            date = date ?: now,
+                            updatedAt = now,
                         ),
                         market = selectedMarket,
                     )

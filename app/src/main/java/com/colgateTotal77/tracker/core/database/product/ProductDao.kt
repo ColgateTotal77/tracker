@@ -79,4 +79,19 @@ interface ProductDao {
 
     @Query("UPDATE products SET alias = :alias WHERE id = :id")
     suspend fun updateAlliesById(id: Int, alias: String)
+
+    @Query("""
+        SELECT tp.unitPriceMinor, t.date, tp.quantity
+        FROM transaction_products tp
+        JOIN transactions t ON t.id = tp.transactionId  
+        WHERE productId = :id 
+        ORDER BY t.date ASC
+    """)
+    fun getHistoryById(id: Int): Flow<List<PricePoint>>
 }
+
+data class PricePoint(
+    val unitPriceMinor: Int,
+    val quantity: Int,
+    val date: Long
+)

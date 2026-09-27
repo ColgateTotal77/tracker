@@ -13,10 +13,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,13 +38,12 @@ import com.colgateTotal77.tracker.core.formatTimestamp
 import com.colgateTotal77.tracker.core.getMeasureUnit
 import com.colgateTotal77.tracker.core.ui.ActionDropdownMenu
 import com.colgateTotal77.tracker.core.ui.CardWrapper
+import com.colgateTotal77.tracker.core.ui.CustomButton
 import java.text.DecimalFormat
 
 fun formatProductMeasure(quantity: Int, name: String): String {
     val df = DecimalFormat("#.###")
-
     val measureUnit = getMeasureUnit(quantity, name)
-
     return when (measureUnit) {
         MeasureUnit.PIECE -> "${quantity / 1000}x"
         MeasureUnit.KG -> "${df.format(quantity / 1000.0)} kg"
@@ -162,12 +161,14 @@ fun TransactionCard(
                         )
                     }
 
-                    AddTransactionProductButton(
+                    CustomButton(
                         onClick = {
                             val nextPosition = (transactionItem.items.maxOfOrNull { it.transactionProduct.position } ?: -1) + 1
                             onAddTransactionProduct(nextPosition)
                         },
-                        modifier = Modifier.padding(top = 8.dp)
+                        buttonText = "Add Product",
+                        icon = Icons.Rounded.Add,
+                        modifier = Modifier.padding(top = 8.dp).weight(1f)
                     )
                 }
             }

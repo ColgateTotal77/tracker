@@ -18,7 +18,7 @@ fun CardWrapper(
     if (onClick != null) {
         Surface(
             onClick = onClick,
-            modifier = modifier.fillMaxWidth().padding(4.dp), // Outer margin
+            modifier = modifier.fillMaxWidth().padding(4.dp),
             shape = RoundedCornerShape(8.dp),
         ) {
             Box(modifier = Modifier.padding(12.dp)) {

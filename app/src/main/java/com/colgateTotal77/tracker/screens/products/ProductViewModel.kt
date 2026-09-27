@@ -11,6 +11,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.colgateTotal77.tracker.TrackerApplication
+import com.colgateTotal77.tracker.core.database.product.PricePoint
 import com.colgateTotal77.tracker.core.database.product.ProductDao
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
 import com.colgateTotal77.tracker.core.enums.ProductSort
@@ -82,6 +83,10 @@ class ProductViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             productDao.restoreById(id)
         }
+    }
+
+    fun getProductHistoryFlow(id: Int): Flow<List<PricePoint>> {
+        return productDao.getHistoryById(id)
     }
 
     companion object {
