@@ -14,7 +14,6 @@ data class ProductEntity(
     val alias: String,
     val lastPrice: Int,
     val averagePrice: Int = lastPrice,
-    val barcode: String? = null,
     val purchaseCount: Int = 0,
     val isArchived: Boolean = false,
     val createdAt: Long,

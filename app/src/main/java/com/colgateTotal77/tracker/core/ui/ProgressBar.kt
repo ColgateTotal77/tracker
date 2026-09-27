@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.core.ui
 
+import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
@@ -18,18 +19,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.colgateTotal77.tracker.core.ProgressBarPreferences
+import com.colgateTotal77.tracker.screens.dashboard.ProgressBarModal
+
+data class ProgressBarState(
+    val settings: ProgressBarPreferences = ProgressBarPreferences(),
+    val currentSpending: Long = 0L,
+    val targetForFilter: Double = 0.0
+)
 
 @Composable
 fun ProgressBar(
-    current: Double,
-    target: Double,
+    progressState: ProgressBarState,
     label: String,
     color: Color,
     trackColor: Color = MaterialTheme.colorScheme.surfaceVariant,
-    onUpdateTarget: (Double) -> Unit,
+    updateProgressBarPreferences: (settings: ProgressBarPreferences) -> Unit,
 ) {
     var isModalOpen by remember { mutableStateOf(false) }
-    val rawProgress = (current / target).toFloat().coerceIn(0.0f, 1.0f)
+    val rawProgress =
+        if (progressState.targetForFilter > 0.0) {
+            (progressState.currentSpending / progressState.targetForFilter).toFloat().coerceIn(0.0f, 1.0f)
+        } else 0.0f
+
+    Log.d("Temp", color.toString())
 
     val animatedProgress by animateFloatAsState(
         targetValue = rawProgress,
@@ -57,10 +70,11 @@ fun ProgressBar(
 
     if (isModalOpen) {
         ProgressBarModal(
+            settings = progressState.settings,
             onDismiss = { isModalOpen = false },
-            onChangeProgress = { newTarget ->
+            onProgressBarPreferences = { settings ->
                 isModalOpen = false
-                onUpdateTarget(newTarget)
+                updateProgressBarPreferences(settings)
             },
         )
     }

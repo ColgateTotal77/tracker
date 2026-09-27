@@ -71,7 +71,7 @@ data class TransactionDraft(
     val rawFiscalPayload: String? = null,
 )
 
-fun FiscalCheck.toDraft(): TransactionDraft = TransactionDraft(
+fun FiscalCheck.toDraft(rawFiscalPayload: String? = null): TransactionDraft = TransactionDraft(
     amountMinor = amountMinor
         ?: items.sumOf { it.unitPriceMinor * it.quantity },
     currency = Currency.UAH,
@@ -81,5 +81,5 @@ fun FiscalCheck.toDraft(): TransactionDraft = TransactionDraft(
     items = items,
     fiscalId = listOfNotNull(fiscalNumber, tin, receiptNumber)
         .joinToString("-").ifEmpty { null },
-    rawFiscalPayload = toString(),
+    rawFiscalPayload = rawFiscalPayload,
 )

@@ -16,7 +16,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -55,15 +54,12 @@ fun Dashboard(
     val dimensions = LocalDimensions.current
 
     val transactions = viewModel.transactionsFlow.collectAsLazyPagingItems()
-    val target by viewModel.budgetState.collectAsStateWithLifecycle()
     val markets by viewModel.marketsFlow.collectAsStateWithLifecycle()
     val products by viewModel.productFlow.collectAsStateWithLifecycle()
 
-    val spent: Double by remember {
-        derivedStateOf {
-            transactions.itemSnapshotList.items.sumOf { it.transaction.amountMinor / 100.0 }
-        }
-    }
+    val progressState by viewModel.progressBarState.collectAsStateWithLifecycle()
+    val settings = progressState.settings
+    val spending = progressState.currentSpending
 
     Scaffold(
         modifier = modifier,
@@ -80,15 +76,14 @@ fun Dashboard(
                 .padding(paddingValues),
         ) {
             ProgressBar(
-                current = spent,
-                target = target,
-                label = "Budget: ${formatMoney(spent.roundToInt())} / ${formatMoney(target.roundToInt())}",
-                color = if (spent <= target) {
-                    MaterialTheme.colorScheme.error
-                } else {
-                    MaterialTheme.colorScheme.primary
+                progressState = progressState,
+                label = "Budget (${settings.selectedFilter.label}): ${formatMoney(spending)} / ${formatMoney(progressState.targetForFilter)}",
+                color =
+                    if (spending > progressState.targetForFilter) MaterialTheme.colorScheme.error
+                    else MaterialTheme.colorScheme.primary,
+                updateProgressBarPreferences = { settings ->
+                    viewModel.updateProgressBarPreferences(settings)
                 },
-                onUpdateTarget = { newBudget -> viewModel.updateBudget(newBudget) },
             )
 
             if (transactions.itemCount == 0) {

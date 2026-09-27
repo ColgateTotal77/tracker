@@ -7,6 +7,7 @@ import androidx.room.Update
 import androidx.paging.PagingSource
 import androidx.room.OnConflictStrategy
 import androidx.room.Transaction
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TransactionDao {
@@ -25,4 +26,7 @@ interface TransactionDao {
 
     @Query("DELETE FROM `transactions` WHERE id = :id")
     suspend fun deleteById(id: Int)
+
+    @Query("SELECT COALESCE(SUM(amountMinor), 0) FROM transactions WHERE date BETWEEN :startTime AND :endTime")
+    fun getTotalSpendingFlow(startTime: Long, endTime: Long): Flow<Long>
 }

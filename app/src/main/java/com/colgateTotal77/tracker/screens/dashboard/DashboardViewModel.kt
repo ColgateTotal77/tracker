@@ -11,7 +11,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.colgateTotal77.tracker.TrackerApplication
-import com.colgateTotal77.tracker.core.UserPreferencesRepository
+import com.colgateTotal77.tracker.core.ProductNameNormalizer
 import com.colgateTotal77.tracker.core.database.transaction.TransactionEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -27,15 +27,22 @@ import com.colgateTotal77.tracker.core.database.transaction.TransactionWithProdu
 import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductEntity
 import com.colgateTotal77.tracker.core.enums.TransactionStatus
 import androidx.paging.map
+import com.colgateTotal77.tracker.core.ProgressBarPreferences
+import com.colgateTotal77.tracker.core.ProgressBarPreferencesRepository
+import com.colgateTotal77.tracker.core.calculateTargetBudget
 import com.colgateTotal77.tracker.core.database.market.MarketChoice
 import com.colgateTotal77.tracker.core.database.product.ProductChoice
 import com.colgateTotal77.tracker.core.database.transaction.TransactionDraft
 import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductDraft
+import com.colgateTotal77.tracker.core.enums.toTimeRange
+import com.colgateTotal77.tracker.core.ui.ProgressBarState
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 
 class DashboardViewModel(
     private val database: AppDatabase,
-    private val preferencesRepository: UserPreferencesRepository,
+    private val preferencesRepository: ProgressBarPreferencesRepository,
 ) : ViewModel() {
 
     val transactionsFlow: Flow<PagingData<TransactionWithProducts>> = Pager(
@@ -103,7 +110,7 @@ class DashboardViewModel(
 
                 val distinctProducts = transaction.items.mapNotNull { item ->
                     val name = item.name ?: return@mapNotNull null
-                    val normalizedName = name.lowercase().replace(" ", "")
+                    val normalizedName = ProductNameNormalizer.normalize(name)
                     normalizedName to item
                 }.toMap()
                 if (distinctProducts.isEmpty()) return@withTransaction
@@ -113,7 +120,6 @@ class DashboardViewModel(
                         normalizedName = normalizedName,
                         alias = item.name!!,
                         lastPrice = item.unitPriceMinor,
-                        barcode = item.barcode,
                         createdAt = now,
                         updatedAt = now
                     )
@@ -127,7 +133,7 @@ class DashboardViewModel(
 
                 val transactionProducts = transaction.items.mapIndexedNotNull { index, item ->
                     val name = item.name ?: return@mapIndexedNotNull null
-                    val normalizedName = name.lowercase().replace(" ", "")
+                    val normalizedName = ProductNameNormalizer.normalize(name)
 
                     val productId = productIdMap[normalizedName] ?: return@mapIndexedNotNull null
 
@@ -139,7 +145,8 @@ class DashboardViewModel(
                         totalMinor = item.totalMinor ?: (item.unitPriceMinor * item.quantity),
                         taxGroup = item.taxGroup,
                         position = item.position ?: index,
-                        isManuallyCreated = false
+                        isManuallyCreated = false,
+                        barcode = item.barcode
                     )
                 }
 
@@ -181,7 +188,7 @@ class DashboardViewModel(
                 val productId = when (productChoice) {
                     is ProductChoice.Existing -> productChoice.product.id
                     is ProductChoice.New -> {
-                        val normalizedName = productChoice.alias.lowercase().replace(" ", "")
+                        val normalizedName = ProductNameNormalizer.normalize(productChoice.alias)
 
                         productDao.insertOrRestore(
                             ProductEntity(
@@ -239,16 +246,28 @@ class DashboardViewModel(
             initialValue = emptyList()
         )
 
-    val budgetState: StateFlow<Double> = preferencesRepository.budgetFlow
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val progressBarState: StateFlow<ProgressBarState> = preferencesRepository.progressBarSettingsFlow
+        .flatMapLatest { settings ->
+            val range = settings.selectedFilter.toTimeRange()
+            val spendingFlow = database.transactionDao().getTotalSpendingFlow(range.start, range.end)
+            spendingFlow.map { spendingAmount ->
+                ProgressBarState(
+                    settings = settings,
+                    currentSpending = spendingAmount,
+                    targetForFilter = calculateTargetBudget(settings.selectedFilter, settings.targetBudget)
+                )
+            }
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = 1000.0,
+            initialValue = ProgressBarState()
         )
 
-    fun updateBudget(newBudget: Double) {
-        viewModelScope.launch(Dispatchers.IO) {
-            preferencesRepository.updateBudget(newBudget)
+    fun updateProgressBarPreferences(settings: ProgressBarPreferences) {
+        viewModelScope.launch {
+            preferencesRepository.updateProgressBarPreferences(settings)
         }
     }
 

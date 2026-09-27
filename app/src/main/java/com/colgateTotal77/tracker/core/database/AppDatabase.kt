@@ -23,7 +23,7 @@ import com.colgateTotal77.tracker.core.database.transaction_product.TransactionP
         ProductEntity::class,
         TransactionProductEntity::class,
     ],
-    version = 3,
+    version = 4,
     autoMigrations = [
         AutoMigration(from = 1, to = 2)
     ],
@@ -148,6 +148,39 @@ abstract class AppDatabase : RoomDatabase() {
                 connection.execSQL("ALTER TABLE `_new_transaction_products` RENAME TO `transaction_products`")
                 connection.execSQL("CREATE INDEX IF NOT EXISTS `index_transaction_products_transactionId` ON `transaction_products` (`transactionId`)")
                 connection.execSQL("CREATE INDEX IF NOT EXISTS `index_transaction_products_productId` ON `transaction_products` (`productId`)")
+            }
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(connection: SQLiteConnection) {
+                for ((name, _) in TRIGGERS) connection.execSQL("DROP TRIGGER IF EXISTS `$name`")
+
+                connection.execSQL("""
+                    CREATE TABLE `_new_products` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `normalizedName` TEXT NOT NULL,
+                        `alias` TEXT NOT NULL,
+                        `lastPrice` INTEGER NOT NULL,
+                        `averagePrice` INTEGER NOT NULL,
+                        `purchaseCount` INTEGER NOT NULL,
+                        `isArchived` INTEGER NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL
+                    )
+                """.trimIndent())
+                connection.execSQL("""
+                    INSERT INTO `_new_products`
+                        (`id`, `normalizedName`, `alias`, `lastPrice`, `averagePrice`,
+                         `purchaseCount`, `isArchived`, `createdAt`, `updatedAt`)
+                    SELECT `id`, `normalizedName`, `alias`, `lastPrice`, `averagePrice`,
+                           `purchaseCount`, `isArchived`, `createdAt`, `updatedAt`
+                    FROM `products`
+                """.trimIndent())
+                connection.execSQL("DROP TABLE `products`")
+                connection.execSQL("ALTER TABLE `_new_products` RENAME TO `products`")
+                connection.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_products_normalizedName` ON `products` (`normalizedName`)")
+
+                connection.execSQL("ALTER TABLE `transaction_products` ADD COLUMN `barcode` TEXT")
             }
         }
 

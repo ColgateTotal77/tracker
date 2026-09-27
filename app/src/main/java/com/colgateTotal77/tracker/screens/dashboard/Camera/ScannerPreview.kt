@@ -44,7 +44,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.colgateTotal77.tracker.screens.dashboard.Camera.fiscal.TaxApi.fetchFiscalCheck
 import com.colgateTotal77.tracker.core.database.transaction.TransactionDraft
-import com.colgateTotal77.tracker.core.database.transaction.toDraft
+import com.colgateTotal77.tracker.screens.dashboard.Camera.fiscal.toDraft
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode

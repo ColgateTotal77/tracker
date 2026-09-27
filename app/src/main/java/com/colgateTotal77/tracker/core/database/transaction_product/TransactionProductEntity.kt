@@ -32,7 +32,8 @@ data class TransactionProductEntity(
     val position: Int,
 
     @ColumnInfo(defaultValue = "0")
-    val isManuallyCreated: Boolean
+    val isManuallyCreated: Boolean,
+    val barcode: String? = null
 )
 
 data class TransactionProductWithProduct(

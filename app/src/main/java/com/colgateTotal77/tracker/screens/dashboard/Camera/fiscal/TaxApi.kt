@@ -2,6 +2,8 @@ package com.colgateTotal77.tracker.screens.dashboard.Camera.fiscal
 
 import android.util.Base64
 import android.util.Log
+import com.colgateTotal77.tracker.core.database.transaction.TransactionDraft
+import com.colgateTotal77.tracker.core.database.transaction.toDraft
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -12,6 +14,7 @@ import okhttp3.Request
 import org.json.JSONObject
 import java.io.IOException
 import java.net.URLDecoder
+import java.nio.charset.Charset
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -21,20 +24,24 @@ private const val CHECK_TYPE = "3"
 
 data class FiscalQrParams(
     val date: String,
-    val time: String,
+    val time: String?,
     val id: String,
     val sm: String,
     val fn: String,
 ) {
     val apiDateTime: String
-        get() = "${date.take(4)}-${date.substring(4, 6)}-${date.substring(6, 8)} " +
-            buildString {
-                append(time.take(2))
-                append(':')
-                if (time.length >= 4) append(time.substring(2, 4)) else append("00")
-                append(':')
-                if (time.length >= 6) append(time.substring(4, 6)) else append("00")
-            }
+        get() {
+            val d = date.filter(Char::isDigit)
+            val t = time.orEmpty().filter(Char::isDigit)
+            return "${d.take(4)}-${d.substring(4, 6)}-${d.substring(6, 8)} " +
+                buildString {
+                    append(t.take(2))
+                    append(':')
+                    if (t.length >= 4) append(t.substring(2, 4)) else append("00")
+                    append(':')
+                    if (t.length >= 6) append(t.substring(4, 6)) else append("00")
+                }
+        }
 }
 
 object TaxApi {
@@ -78,7 +85,7 @@ object TaxApi {
             .addQueryParameter("sm", params.sm)
             .build()
 
-    suspend fun fetchCheckXml(params: FiscalQrParams, captcha: String?): ByteArray {
+    suspend fun fetchCheckXml(params: FiscalQrParams, captcha: String?): Pair<String, ByteArray> {
         val request = Request.Builder()
             .url(buildRequestUrl(params, captcha))
             .header(
@@ -95,15 +102,20 @@ object TaxApi {
                 delay((1000L * attempt).milliseconds)
             }
             try {
-                return fetchOnce(request)
+                val (body, xmlBytes) = fetchOnce(request)
+                return body to xmlBytes
             } catch (e: IOException) {
+                if (e.message?.contains("Tax API HTTP 4") == true ||
+                    e.message?.contains("Tax API:") == true ||
+                    e.message?.contains("Check not found") == true
+                ) throw e
                 lastError = e
             }
         }
         throw IOException("Tax API unreachable after 3 attempts", lastError)
     }
 
-    private suspend fun fetchOnce(request: Request): ByteArray = withContext(Dispatchers.IO) {
+    private suspend fun fetchOnce(request: Request): Pair<String, ByteArray> = withContext(Dispatchers.IO) {
         client.newBuilder().build().newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw IOException("Tax API HTTP ${response.code}")
 
@@ -112,31 +124,50 @@ object TaxApi {
 
             val json = JSONObject(body)
 
-            fun optField(name: String): String? =
-                json.optString(name).takeIf { it.isNotBlank() && it != "null" }
+            fun optField(name: String) = json.optString(name).takeIf { it.isNotBlank() && it != "null" }
 
             val resultCode = optField("resultCode")
             val resultText = optField("resultText")
 
-            // Tax API asks for a captcha when it can't verify the client
             val captchaUrl = optField("captchaUrl")
-            if (captchaUrl != null && resultCode == null) {
-                throw IOException("Tax API: captcha required: $captchaUrl")
-            }
-
+            if (captchaUrl != null && resultCode == null) throw IOException("Tax API: captcha required: $captchaUrl")
             if (resultCode != null && resultCode != "0") throw IOException("Tax API error code=$resultCode text=$resultText")
 
-            val checkXml = optField("checkXml")
+            val apiError = optField("error_description")
+            if (apiError != null) throw IOException("Check not found in the tax archive (likely expired): $apiError")
+
+            val checkXml = optField("checkXml") ?: optField("check")
                 ?: throw IOException("Tax API: missing checkXml, body=${body.take(500)}")
 
-            Base64.decode(checkXml, Base64.DEFAULT)
+            body to Base64.decode(checkXml, Base64.DEFAULT)
         }
     }
 
-    suspend fun fetchFiscalCheck(qrLink: String, captcha: String? = null): FiscalCheck =
+    suspend fun fetchFiscalCheck(qrLink: String, captcha: String? = null): FetchedCheck =
         withContext(Dispatchers.IO) {
             val params = requireNotNull(parseQrLink(qrLink)) { "Invalid QR link: $qrLink" }
-            val xmlBytes = fetchCheckXml(params, captcha)
-            CheckXmlParser.parse(xmlBytes)
+            val (responseBody, xmlBytes) = fetchCheckXml(params, captcha)
+            val check = CheckXmlParser.parse(xmlBytes)
+
+            val json = JSONObject(responseBody)
+            val visual = json.optString("check")
+                .takeIf { it.isNotBlank() }
+                ?.let { String(Base64.decode(it, Base64.DEFAULT), Charsets.UTF_8) }
+            val rawPayload = JSONObject().apply {
+                put("xml", String(xmlBytes, CP1251).trim())
+                if (visual != null) put("visual", visual)
+            }.toString()
+
+            FetchedCheck(check = check, rawPayload = rawPayload)
         }
+
+    private val CP1251 = Charset.forName("windows-1251")
 }
+
+data class FetchedCheck(
+    val check: FiscalCheck,
+    val rawPayload: String,
+)
+
+fun FetchedCheck.toDraft(): TransactionDraft =
+    check.toDraft(rawFiscalPayload = rawPayload)

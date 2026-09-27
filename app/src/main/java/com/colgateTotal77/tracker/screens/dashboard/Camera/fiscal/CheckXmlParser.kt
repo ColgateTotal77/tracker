@@ -1,11 +1,12 @@
 package com.colgateTotal77.tracker.screens.dashboard.Camera.fiscal
 
-import java.io.ByteArrayInputStream
+import javax.xml.parsers.DocumentBuilderFactory
+import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
-import javax.xml.parsers.DocumentBuilderFactory
 import org.w3c.dom.Element
+import java.io.IOException
 
 object CheckXmlParser {
 
@@ -22,67 +23,39 @@ object CheckXmlParser {
             }
         }
 
-        val document = factory.newDocumentBuilder().parse(ByteArrayInputStream(xmlBytes))
+        val document = factory.newDocumentBuilder().parse(xmlBytes.inputStream())
         document.documentElement.normalize()
         val root = document.documentElement
 
-        val dat = firstElement(root, "DAT")
-        val entry = firstElement(root, "E")
-        val mac = firstElement(root, "MAC")
-        val payments = elements(root, "M")
-
-        return FiscalCheck(
-            fiscalNumber = dat?.getAttribute("FN")?.takeIf { it.isNotBlank() },
-            tin = dat?.getAttribute("TN")?.filter { it.isDigit() }?.takeIf { it.isNotBlank() },
-            registrarSerial = dat?.getAttribute("ZN")?.takeIf { it.isNotBlank() },
-            receiptNumber = entry?.getAttribute("NO")?.takeIf { it.isNotBlank() },
-            date = entry?.getAttribute("TS")?.takeIf { it.isNotBlank() }?.toEpochMillis() ?: System.currentTimeMillis(),
-            amountMinor = entry?.getAttribute("SM")?.toIntOrNull(),
-            payments = payments.map(::parsePayment),
-            items = elements(root, "P").map(::parseItem),
-            mac = mac?.textContent?.trim()?.takeIf { it.isNotBlank() },
-            macDi = mac?.getAttribute("DI")?.takeIf { it.isNotBlank() },
-        )
+        return when {
+            root.tagName.equals("CHECK", ignoreCase = true) -> PrroCheckParser.parse(root)
+            root.tagName.equals("RQ", ignoreCase = true)    -> RroCheckParser.parse(root)
+            else -> throw IOException("Unknown check format: root <${root.tagName}>")
+        }
     }
+}
 
-    private fun parseItem(element: Element): FiscalItem {
-        val totalMinor = element.getAttribute("SM").toIntOrNull()
-        val quantity = element.getAttribute("Q").toIntOrNull() ?: 1000
-        val unitPriceMinor = element.getAttribute("PRC").toIntOrNull()
-            ?: ((totalMinor ?: 0) * 1000L / quantity).toInt()
-        return FiscalItem(
-            position = element.getAttribute("N").toIntOrNull(),
-            name = element.getAttribute("NM").takeIf { it.isNotBlank() },
-            barcode = element.getAttribute("CD").takeIf { it.isNotBlank() },
-            quantity = quantity,
-            unitPriceMinor = unitPriceMinor,
-            totalMinor = totalMinor,
-            taxGroup = element.getAttribute("TX").takeIf { it.isNotBlank() },
-        )
-    }
+internal fun elements(parent: Element, tag: String): List<Element> {
+    val list = parent.getElementsByTagName(tag)
+    return (0 until list.length).mapNotNull { list.item(it) as? Element }
+}
 
-    private fun parsePayment(element: Element) = FiscalPayment(
-        name = element.getAttribute("NM").takeIf { it.isNotBlank() },
-        description = element.getAttribute("PC").takeIf { it.isNotBlank() },
-        cardNumber = element.getAttribute("PD").takeIf { it.isNotBlank() },
-        systemName = element.getAttribute("PSNM").takeIf { it.isNotBlank() },
-        rrn = element.getAttribute("RRN").takeIf { it.isNotBlank() },
-        amountMinor = element.getAttribute("SM").toIntOrNull(),
-    )
+internal fun firstElement(parent: Element, tag: String): Element? =
+    elements(parent, tag).firstOrNull()
 
-    private fun String.toEpochMillis(): Long? = try {
-        val format = SimpleDateFormat("yyyyMMddHHmmss", Locale.US)
-        format.timeZone = TimeZone.getDefault()
-        format.parse(this)?.time
-    } catch (_: Exception) {
-        null
-    }
+internal fun Element.textOf(tag: String): String? =
+    elements(this, tag).firstOrNull()?.textContent
 
-    private fun elements(parent: Element, tag: String): List<Element> {
-        val list = parent.getElementsByTagName(tag)
-        return (0 until list.length).mapNotNull { list.item(it) as? Element }
-    }
+internal fun Element.attr(name: String): String? =
+    getAttribute(name).takeIf { it.isNotBlank() }
 
-    private fun firstElement(parent: Element, tag: String): Element? =
-        elements(parent, tag).firstOrNull()
+internal fun String.toMinorMinor(): Int? =
+    toBigDecimalOrNull()?.multiply(BigDecimal(100))?.toInt()
+
+internal fun String.toEpochMillis(pattern: String): Long? = try {
+    val format = SimpleDateFormat(pattern, Locale.US)
+    format.timeZone = TimeZone.getDefault()
+    format.parse(this)?.time
+} catch (_: Exception) {
+    null
 }

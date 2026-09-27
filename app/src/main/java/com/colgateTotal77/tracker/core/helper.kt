@@ -11,8 +11,8 @@ fun formatTimestamp(timestamp: Long): String {
     return formatter.format(Date(timestamp))
 }
 
-fun formatMoney(minorUnits: Int): String {
-    return BigDecimal(minorUnits)
+fun formatMoney(minorUnits: Number): String {
+    return BigDecimal(minorUnits.toLong())
         .divide(BigDecimal(100))
         .setScale(2, RoundingMode.HALF_UP)
         .toPlainString()

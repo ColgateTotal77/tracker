@@ -25,8 +25,8 @@ interface ProductDao {
             p.purchaseCount DESC
     """)
     fun query(
-        nameQuery: String? = null,
-        sortBy: ProductSort = ProductSort.PURCHASE_COUNT_DESC
+        nameQuery: String?,
+        sortBy: ProductSort
     ): PagingSource<Int, ProductEntity>
 
     @Query("SELECT * FROM products WHERE isArchived = 0 ORDER BY purchaseCount DESC")
@@ -48,9 +48,8 @@ interface ProductDao {
     suspend fun insertAllOrRestore(products: List<ProductEntity>) {
         val results = insertAllRaw(products)
 
-        val existingNormalizedNames = results.mapIndexed { index, resultId ->
-            if(resultId == -1L) products[index].normalizedName
-            return
+        val existingNormalizedNames = results.mapIndexedNotNull { index, resultId ->
+            products[index].normalizedName.takeIf { resultId == -1L }
         }
         if (existingNormalizedNames.isEmpty()) return
 
