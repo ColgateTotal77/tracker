@@ -20,6 +20,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.colgateTotal77.tracker.core.ProductNameNormalizer
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
+import com.colgateTotal77.tracker.core.enums.DateFilter
 import com.colgateTotal77.tracker.core.enums.ProductSort
 import com.colgateTotal77.tracker.core.ui.DropdownPopup
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
@@ -40,6 +41,7 @@ fun Products(
     val products = viewModel.productFlow.collectAsLazyPagingItems()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val currentSort by viewModel.sortBy.collectAsState()
+    val currentDateFilter by viewModel.dateFilter.collectAsState()
 
     Scaffold(
         modifier = modifier,
@@ -54,33 +56,46 @@ fun Products(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = dimensions.screenPadding, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            Column(
+                modifier = Modifier.padding(dimensions.screenPadding),
+                verticalArrangement = Arrangement.spacedBy(dimensions.screenPadding)
             ) {
                 OutlinedTextField(
-                    value = searchQuery ?: "",
+                    value = searchQuery,
                     onValueChange = { viewModel.onSearchQueryChanged(it) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text("Search products...") },
                     singleLine = true
                 )
 
-                DropdownPopup(
-                    items = ProductSort.entries,
-                    selected = currentSort,
-                    onSelect = { selectedSort ->
-                        selectedSort?.let { viewModel.onSortChanged(it) }
-                    },
-                    itemText = { sort -> sort.label },
-                    itemName = "Sort",
-                    modifier = Modifier.width(140.dp)
-                )
-            }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(dimensions.screenPadding)
+                ) {
+                    DropdownPopup(
+                        items = ProductSort.entries,
+                        selected = currentSort,
+                        onSelect = { selectedSort ->
+                            selectedSort?.let { viewModel.onSortChanged(it) }
+                        },
+                        itemText = { sort -> sort.label },
+                        itemName = "Sort",
+                        modifier = Modifier.weight(1f),
+                    )
 
+                    DropdownPopup(
+                        items = DateFilter.entries,
+                        selected = currentDateFilter,
+                        onSelect = { selectedDateFilter ->
+                            selectedDateFilter?.let { viewModel.onDateFilterChange(it) }
+                        },
+                        itemText = { dateFilter -> dateFilter.label },
+                        itemName = "Date filter",
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
             if (products.itemCount == 0) {
                 Box(
                     modifier = Modifier

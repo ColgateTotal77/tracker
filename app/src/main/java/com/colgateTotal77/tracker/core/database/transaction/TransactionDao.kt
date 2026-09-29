@@ -27,6 +27,11 @@ interface TransactionDao {
     @Query("DELETE FROM `transactions` WHERE id = :id")
     suspend fun deleteById(id: Int)
 
-    @Query("SELECT COALESCE(SUM(amountMinor), 0) FROM transactions WHERE date BETWEEN :startTime AND :endTime")
-    fun getTotalSpendingFlow(startTime: Long, endTime: Long): Flow<Long>
+    @Query("""
+        SELECT COALESCE(SUM(amountMinor), 0) 
+        FROM transactions 
+        WHERE (:startTime IS NULL OR date >= :startTime)
+        AND (:endTime IS NULL OR date <= :endTime)
+    """)
+    fun getTotalSpendingFlow(startTime: Long?, endTime: Long?): Flow<Long>
 }

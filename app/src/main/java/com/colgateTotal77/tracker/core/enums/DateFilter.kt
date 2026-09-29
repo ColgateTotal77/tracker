@@ -2,9 +2,10 @@ package com.colgateTotal77.tracker.core.enums
 
 import java.util.Calendar
 
-data class TimeRange(val start: Long, val end: Long)
+data class TimeRange(val start: Long?, val end: Long?)
 
 enum class DateFilter(val label: String) {
+    AllTime("All Time"),
     Month("Current month"),
     PrevMonth("Previous month"),
     SixMonth("Last 6 months"),
@@ -31,10 +32,14 @@ fun DateFilter.toTimeRange(): TimeRange {
         set(Calendar.MILLISECOND, 999)
     }
 
-    var startTime: Long = 0
-    var endTime: Long = now
+    var startTime: Long? = 0
+    var endTime: Long? = now
 
     when (this) {
+        DateFilter.AllTime -> {
+            startTime = null
+            endTime = null
+        }
         DateFilter.Month -> {
             calendar.set(Calendar.DAY_OF_MONTH, 1)
             calendar.setToStartOfDay()

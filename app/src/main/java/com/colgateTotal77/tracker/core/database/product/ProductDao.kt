@@ -29,6 +29,50 @@ interface ProductDao {
         sortBy: ProductSort
     ): PagingSource<Int, ProductEntity>
 
+    @Query("""
+    SELECT 
+        p.id, 
+        p.normalizedName, 
+        p.alias, 
+        p.isArchived, 
+        p.createdAt, 
+        p.updatedAt,
+        COALESCE(CAST(AVG(tp.unitPriceMinor) AS INTEGER), 0) AS averagePrice, 
+        COALESCE(SUM(tp.quantity), 0) AS purchaseCount,
+        COALESCE((
+            SELECT tp2.unitPriceMinor 
+            FROM transaction_products tp2 
+            JOIN transactions t2 ON t2.id = tp2.transactionId 
+            WHERE tp2.productId = p.id 
+                AND (:startTime IS NULL OR t2.date >= :startTime)
+                AND (:endTime IS NULL OR t2.date <= :endTime)
+            ORDER BY t2.date DESC 
+            LIMIT 1
+        ), 0) AS lastPrice
+    FROM products p
+    JOIN transaction_products tp ON tp.productId = p.id 
+    JOIN transactions t ON t.id = tp.transactionId 
+    WHERE p.isArchived = 0 
+        AND (:nameQuery IS NULL OR p.normalizedName LIKE '%' || :nameQuery || '%')
+        AND (:startTime IS NULL OR t.date >= :startTime)
+        AND (:endTime IS NULL OR t.date <= :endTime)
+    GROUP BY p.id
+    ORDER BY
+        CASE WHEN :sortBy = 'AVG_PRICE_ASC' THEN averagePrice END ASC,
+        CASE WHEN :sortBy = 'AVG_PRICE_DESC' THEN averagePrice END DESC,
+        CASE WHEN :sortBy = 'LAST_PRICE_ASC' THEN lastPrice END ASC,
+        CASE WHEN :sortBy = 'LAST_PRICE_DESC' THEN lastPrice END DESC,
+        CASE WHEN :sortBy = 'PURCHASE_COUNT_ASC' THEN purchaseCount END ASC,
+        CASE WHEN :sortBy = 'PURCHASE_COUNT_DESC' THEN purchaseCount END DESC,
+        purchaseCount DESC
+""")
+    fun queryWithTransactionProductFilters(
+        nameQuery: String?,
+        sortBy: ProductSort,
+        startTime: Long?,
+        endTime: Long?
+    ): PagingSource<Int, ProductEntity>
+
     @Query("SELECT * FROM products WHERE isArchived = 0 ORDER BY purchaseCount DESC")
     fun getAllActive(): Flow<List<ProductEntity>>
 

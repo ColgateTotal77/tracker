@@ -14,7 +14,9 @@ import com.colgateTotal77.tracker.TrackerApplication
 import com.colgateTotal77.tracker.core.database.product.PricePoint
 import com.colgateTotal77.tracker.core.database.product.ProductDao
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
+import com.colgateTotal77.tracker.core.enums.DateFilter
 import com.colgateTotal77.tracker.core.enums.ProductSort
+import com.colgateTotal77.tracker.core.enums.toTimeRange
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -29,36 +31,47 @@ import kotlinx.coroutines.launch
 class ProductViewModel(
     private val productDao: ProductDao,
 ): ViewModel() {
-    private val _searchQuery = MutableStateFlow<String?>(null)
-    val searchQuery: StateFlow<String?> = _searchQuery.asStateFlow()
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
     private val _sortBy = MutableStateFlow(ProductSort.PURCHASE_COUNT_DESC)
     val sortBy: StateFlow<ProductSort> = _sortBy.asStateFlow()
 
+    private val _dateFilter = MutableStateFlow(DateFilter.AllTime)
+    val dateFilter = _dateFilter.asStateFlow()
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val productFlow: Flow<PagingData<ProductEntity>> = combine(
         _searchQuery,
-        _sortBy
-    ) { query, sort ->
-        Pair(query, sort)
-    }.flatMapLatest { (query, sort) ->
+        _sortBy,
+            _dateFilter,
+    ) { query, sort, date ->
+        Triple(query, sort, date)
+    }.flatMapLatest { (query, sort, date) ->
         Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
-                productDao.query(
-                    nameQuery = query,
-                    sortBy = sort
-                )
+                if(date == DateFilter.AllTime) productDao.query(nameQuery = query, sortBy = sort)
+                else {
+                    val range = date.toTimeRange()
+                    productDao.queryWithTransactionProductFilters(
+                        nameQuery = query, sortBy = sort, range.start, range.end
+                    )
+                }
             }
         ).flow
     }.cachedIn(viewModelScope)
 
     fun onSearchQueryChanged(query: String) {
-        _searchQuery.value = query.takeIf { it.isNotBlank() }
+        _searchQuery.value = query
     }
 
     fun onSortChanged(sort: ProductSort) {
         _sortBy.value = sort
+    }
+
+    fun onDateFilterChange(dateFilter: DateFilter) {
+        _dateFilter.value = dateFilter
     }
 
     fun insertProduct(product: ProductEntity) {

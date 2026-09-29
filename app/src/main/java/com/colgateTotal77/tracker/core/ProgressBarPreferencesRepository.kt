@@ -42,6 +42,7 @@ class ProgressBarPreferencesRepository(
 
 fun calculateTargetBudget (selectedFilter: DateFilter, rawTargetBudget: Double): Double {
     return when(selectedFilter) {
+        DateFilter.AllTime -> -1.0
         DateFilter.Month,
         DateFilter.PrevMonth -> rawTargetBudget
         DateFilter.SixMonth,
