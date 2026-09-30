@@ -27,7 +27,6 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
@@ -40,8 +39,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.colgateTotal77.tracker.core.ui.theme.dimensions
 
-private val DropdownPanelShape = RoundedCornerShape(4.dp)
 private val DropdownItemHeight = 48.dp
 private const val MaxVisibleDropdownItems = 6
 private val MaxPanelHeight = DropdownItemHeight * MaxVisibleDropdownItems
@@ -58,6 +57,9 @@ fun <T> Dropdown(
     onCreateNewItem: ((name: String) -> Unit)? = null,
     leadingIcon: (@Composable () -> Unit)? = null,
 ) {
+    val dimensions = MaterialTheme.dimensions
+    val panelShape = RoundedCornerShape(dimensions.cornerRadius)
+
     val initialItem = remember { selected }
     var isExpanded by remember { mutableStateOf(false) }
     var newItemText by remember { mutableStateOf("") }
@@ -98,7 +100,7 @@ fun <T> Dropdown(
                 trailingIcon = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         if (selected != initialItem) {
-                            IconButton(onClick = { onSelect(initialItem) }) {
+                            CustomIconButton(onClick = { onSelect(initialItem) }) {
                                 Icon(
                                     imageVector = Icons.Default.Clear,
                                     contentDescription = "Reset selection"
@@ -120,22 +122,25 @@ fun <T> Dropdown(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 4.dp)
-                    .border(1.dp, MaterialTheme.colorScheme.outline, DropdownPanelShape)
-                    .background(MaterialTheme.colorScheme.surface, DropdownPanelShape)
+                    .padding(top = dimensions.elementSpacing)
+                    .border(1.dp, MaterialTheme.colorScheme.outline, panelShape)
+                    .background(MaterialTheme.colorScheme.surface, panelShape)
                     .heightIn(max = MaxPanelHeight)
             ) {
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (items.size > 6) {
+                    if (items.size > MaxVisibleDropdownItems) {
                         item {
                             OutlinedTextField(
                                 value = searchQuery,
                                 onValueChange = { searchQuery = it },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                    .padding(
+                                        horizontal = dimensions.contentPadding,
+                                        vertical = dimensions.elementSpacing,
+                                    ),
                                 placeholder = { Text("Search...") },
                                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
                                 singleLine = true
@@ -160,14 +165,19 @@ fun <T> Dropdown(
                                 value = newItemText,
                                 onValueChange = { newItemText = it },
                                 label = { Text("Add new $itemName") },
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        horizontal = dimensions.contentPadding,
+                                        vertical = dimensions.elementSpacing,
+                                    ),
                                 trailingIcon = {
-                                    IconButton(
+                                    CustomIconButton(
                                         onClick = {
-                                            if (newItemText.isBlank()) return@IconButton
+                                            if (newItemText.isBlank()) return@CustomIconButton
                                             if (newItemText.lowercase().trim() in items.map { itemText(it).lowercase().trim() }) {
                                                 // toast
-                                                return@IconButton
+                                                return@CustomIconButton
                                             }
                                             onCreateNewItem(newItemText)
                                             newItemText = ""

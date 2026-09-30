@@ -6,7 +6,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -58,7 +57,7 @@ fun <T> DropdownInput(
             onCreateNewItem = onCreateNewItem,
             leadingIcon = if (leadingIcon != null) {
                 {
-                    IconButton(
+                    CustomIconButton(
                         onClick = { isInputOpen = true },
                         enabled = isInputEnabled
                     ) {
@@ -86,8 +85,8 @@ private fun <T> RenameField(
     val focusRequester = remember { FocusRequester() }
 
     val trimmed = nameInput.trim()
-    val isUnchanged = trimmed.equals(itemText(selected).trim(), ignoreCase = true)
-    val isDuplicate = otherNames.any { it.equals(trimmed, ignoreCase = true) && !isUnchanged }
+    val isUnchanged = trimmed == itemText(selected).trim()
+    val isDuplicate = otherNames.any { it == trimmed && !isUnchanged }
     val isValid = trimmed.isNotEmpty() && !isUnchanged && !isDuplicate
 
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
@@ -110,14 +109,14 @@ private fun <T> RenameField(
         }),
         trailingIcon = {
             if (isValid) {
-                IconButton(onClick = {
+                CustomIconButton(onClick = {
                     onInputDone(trimmed)
                     onBackToDropdown()
                 }) {
                     Icon(Icons.Default.Check, contentDescription = "Save name")
                 }
             } else {
-                IconButton(onClick = {
+                CustomIconButton(onClick = {
                     onBackToDropdown()
                 }) {
                     Icon(Icons.Default.Close, contentDescription = "Cancel renaming")

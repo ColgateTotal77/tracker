@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.screens.dashboard
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -74,6 +75,7 @@ fun Dashboard(
                 .fillMaxSize()
                 .padding(dimensions.screenPadding)
                 .padding(paddingValues),
+            verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing),
         ) {
             ProgressBar(
                 progressState = progressState,
@@ -93,7 +95,10 @@ fun Dashboard(
                         .fillMaxWidth(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(dimensions.elementSpacing),
+                    ) {
                         Icon(Icons.AutoMirrored.Default.ReceiptLong, contentDescription = null)
                         Text("No transactions yet", style = MaterialTheme.typography.bodyLarge)
                         Text("Tap + to add your first transaction")
@@ -101,7 +106,8 @@ fun Dashboard(
                 }
             } else {
                 LazyColumn(
-                    contentPadding = PaddingValues(bottom = dimensions.screenBottomPadding)
+                    contentPadding = PaddingValues(bottom = dimensions.screenBottomPadding),
+                    verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing),
                 ) {
                     items(
                         count = transactions.itemCount,
@@ -153,7 +159,7 @@ fun Dashboard(
                 transaction = selectedTransaction!!,
                 markets = markets,
                 onDismiss = { isEditTransactionModalOpen = false },
-                onUpdate = { amountMinor, currency, selectedMarket, date ->
+                onUpdate = { amountMinor, currency, market, date ->
                     val now = System.currentTimeMillis()
 
                     viewModel.updateTransaction(
@@ -163,7 +169,7 @@ fun Dashboard(
                             date = date ?: now,
                             updatedAt = now,
                         ),
-                        market = selectedMarket,
+                        market = market,
                     )
                     isEditTransactionModalOpen = false
                 },

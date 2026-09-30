@@ -11,10 +11,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductWithProduct
 import com.colgateTotal77.tracker.core.formatMoney
 import com.colgateTotal77.tracker.core.ui.CardWrapper
+import com.colgateTotal77.tracker.core.ui.CustomIconButton
+import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
 @Composable
 fun TransactionProductCard(
@@ -22,16 +23,18 @@ fun TransactionProductCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val dimensions = LocalDimensions.current
     val baseQuantityText = "${formatProductMeasure(item.transactionProduct.quantity, item.product.alias)} × ${formatMoney(item.transactionProduct.unitPriceMinor)}"
 
     CardWrapper {
         Row(
             modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(dimensions.elementSpacing),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(dimensions.elementSpacing)
             ) {
                 Text(
                     text = item.product.alias,
@@ -55,13 +58,10 @@ fun TransactionProductCard(
             )
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(dimensions.elementSpacing),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(
-                    onClick = onEdit,
-                    modifier = Modifier.size(40.dp)
-                ) {
+                CustomIconButton(onClick = onEdit) {
                     Icon(
                         imageVector = Icons.Rounded.Edit,
                         contentDescription = "Edit product",
@@ -69,10 +69,7 @@ fun TransactionProductCard(
                     )
                 }
 
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier.size(40.dp)
-                ) {
+                CustomIconButton(onClick = onDelete) {
                     Icon(
                         imageVector = Icons.Rounded.DeleteOutline,
                         contentDescription = "Delete product",

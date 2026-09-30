@@ -1,10 +1,10 @@
 package com.colgateTotal77.tracker.screens.dashboard
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -22,6 +22,7 @@ import com.colgateTotal77.tracker.core.filterDecimal
 import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductWithProduct
 import com.colgateTotal77.tracker.core.formatMoney
 import com.colgateTotal77.tracker.core.ui.CardWrapper
+import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.QuantityInputField
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import kotlin.math.roundToInt
@@ -61,11 +62,10 @@ fun EditTransactionProductModal(
     val dimensions = LocalDimensions.current
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
-        CardWrapper {
-            Column {
+        CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
+            Column(verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)) {
                 Text(
                     text = product.alias,
-                    modifier = Modifier.padding(bottom = dimensions.listItemSpacing),
                     style = MaterialTheme.typography.titleLarge,
                 )
 
@@ -73,9 +73,7 @@ fun EditTransactionProductModal(
                     value = nameInput,
                     onValueChange = { nameInput = it },
                     label = { Text("Product name") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = dimensions.listItemSpacing),
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 QuantityInputField(
@@ -83,9 +81,7 @@ fun EditTransactionProductModal(
                     onValueChange = { quantityInput = it },
                     selectedUnit = selectedUnit,
                     onUnitChange = { selectedUnit = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = dimensions.listItemSpacing),
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 OutlinedTextField(
@@ -93,29 +89,26 @@ fun EditTransactionProductModal(
                     onValueChange = { unitPriceInput = it.filterDecimal() },
                     label = { Text("Unit price") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = dimensions.listItemSpacing),
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
-                Button(
+                CustomButton(
                     onClick = {
                         val alias = nameInput.trim()
-                        val rawQuantity = quantityInput.toDoubleOrNull() ?: return@Button
-                        val unitPriceMinor = ((unitPriceInput.toDoubleOrNull() ?: return@Button) * 100).roundToInt()
+                        val rawQuantity = quantityInput.toDoubleOrNull() ?: return@CustomButton
+                        val unitPriceMinor = ((unitPriceInput.toDoubleOrNull() ?: return@CustomButton) * 100).roundToInt()
 
                         val quantity =
                             if (selectedUnit != MeasureUnit.G) (rawQuantity * 1000).roundToInt()
                             else rawQuantity.roundToInt()
 
-                        if (alias.isEmpty() || quantity <= 0 || unitPriceMinor <= 0) return@Button
+                        if (alias.isEmpty() || quantity <= 0 || unitPriceMinor <= 0) return@CustomButton
 
                         onUpdate(alias, quantity, unitPriceMinor)
                     },
+                    buttonText = "Save Product",
                     modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("Save Product")
-                }
+                )
             }
         }
     }

@@ -1,9 +1,9 @@
 package com.colgateTotal77.tracker.screens.products
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
 import com.colgateTotal77.tracker.core.ui.CardWrapper
+import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,11 +32,10 @@ fun EditProductModal(
     val dimensions = LocalDimensions.current
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
-        CardWrapper {
-            Column {
+        CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
+            Column(verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)) {
                 Text(
                     text = product.alias,
-                    modifier = Modifier.padding(bottom = dimensions.listItemSpacing),
                     style = MaterialTheme.typography.titleLarge,
                 )
 
@@ -43,21 +43,18 @@ fun EditProductModal(
                     value = nameInput,
                     onValueChange = { nameInput = it },
                     label = { Text("Product name") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = dimensions.listItemSpacing),
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
-                Button(
+                CustomButton(
                     onClick = {
                         val alias = nameInput.trim()
                         if (alias.isNotEmpty()) onUpdate(alias)
                     },
+                    buttonText = "Save Product",
                     enabled = nameInput.isNotBlank(),
                     modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("Save Product")
-                }
+                )
             }
         }
     }

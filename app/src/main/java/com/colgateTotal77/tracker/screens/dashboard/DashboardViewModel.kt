@@ -65,7 +65,7 @@ class DashboardViewModel(
 
                 val marketId: Int? = when (val market = transaction.market) {
                     is MarketChoice.Existing -> {
-                        database.marketDao().update(market.market)
+                        marketDao.update(market.market)
                         market.market.id
                     }
 
@@ -88,7 +88,7 @@ class DashboardViewModel(
                         }
                     }
 
-                    MarketChoice.None -> null
+                    is MarketChoice.None -> null
                 }
 
                 val transactionId = database.transactionDao().insert(
@@ -157,11 +157,30 @@ class DashboardViewModel(
         }
     }
 
-    fun updateTransaction(transaction: TransactionEntity, market: MarketEntity?) {
+    fun updateTransaction(transaction: TransactionEntity, market: MarketChoice) {
         viewModelScope.launch(Dispatchers.IO) {
             database.withTransaction {
-                database.transactionDao().update(transaction)
-                if (market != null) database.marketDao().update(market)
+                val marketDao = database.marketDao()
+
+                val marketId: Int? = when (market) {
+                    is MarketChoice.Existing -> {
+                        marketDao.update(market.market)
+                        market.market.id
+                    }
+
+                    is MarketChoice.New -> {
+                        val normalizedName = market.name.lowercase().trim()
+                        val existing = marketDao.getByNormalizedName(normalizedName)
+                        existing?.id ?: run {
+                            val insertId = marketDao.insert(MarketEntity(tin = null, name = normalizedName))
+                            if (insertId != -1L) insertId.toInt()
+                            else marketDao.getByNormalizedName(normalizedName)?.id
+                        }
+                    }
+
+                    else -> null
+                }
+                database.transactionDao().update(transaction.copy(marketId = marketId))
             }
         }
     }

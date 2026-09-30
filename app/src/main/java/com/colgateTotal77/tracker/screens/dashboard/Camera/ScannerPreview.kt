@@ -19,7 +19,6 @@ import androidx.compose.material.icons.filled.FlashlightOff
 import androidx.compose.material.icons.filled.FlashlightOn
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,8 +41,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.colgateTotal77.tracker.screens.dashboard.Camera.fiscal.TaxApi.fetchFiscalCheck
 import com.colgateTotal77.tracker.core.database.transaction.TransactionDraft
+import com.colgateTotal77.tracker.core.ui.CustomIconButton
+import com.colgateTotal77.tracker.screens.dashboard.Camera.fiscal.TaxApi.fetchFiscalCheck
 import com.colgateTotal77.tracker.screens.dashboard.Camera.fiscal.toDraft
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
@@ -185,7 +185,7 @@ fun ScannerPreview(
                     modifier = Modifier.padding(end = 4.dp).size(22.dp).rotate(angle),
                 )
             }
-            IconButton(
+            CustomIconButton(
                 onClick = {
                     isTorchOn = !isTorchOn
                     camera?.cameraControl?.enableTorch(isTorchOn)
@@ -199,7 +199,7 @@ fun ScannerPreview(
             }
         }
 
-        IconButton(
+        CustomIconButton(
             onClick = onClose,
             modifier = Modifier.align(Alignment.TopStart),
         ) {

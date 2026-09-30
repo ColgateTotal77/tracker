@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.screens.dashboard
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -7,7 +8,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +26,7 @@ import com.colgateTotal77.tracker.core.database.product.ProductChoice
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
 import com.colgateTotal77.tracker.core.filterDecimal
 import com.colgateTotal77.tracker.core.ui.CardWrapper
+import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.DropdownInput
 import com.colgateTotal77.tracker.core.ui.QuantityInputField
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
@@ -46,11 +47,10 @@ fun AddTransactionProductModal(
     val dimensions = LocalDimensions.current
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
-        CardWrapper {
-            Column {
+        CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
+            Column(verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)) {
                 Text(
                     "Add Product",
-                    modifier = Modifier.padding(bottom = dimensions.listItemSpacing),
                     style = MaterialTheme.typography.titleLarge,
                 )
 
@@ -60,10 +60,11 @@ fun AddTransactionProductModal(
                     inputLabel = "New product name",
                     itemText = { it?.alias ?: ""},
                     selected = selectedProduct,
-                    onSelect = { selectedProduct = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = dimensions.listItemSpacing),
+                    onSelect = {
+                        selectedProduct = it
+                        if (unitPriceInput == "") unitPriceInput = selectedProduct!!.lastPrice.toString()
+                   },
+                    modifier = Modifier.fillMaxWidth(),
                     isInputEnabled = selectedProduct == null || selectedProduct!!.id == 0,
                     leadingIcon = {
                         Icon(
@@ -93,9 +94,7 @@ fun AddTransactionProductModal(
                     onValueChange = { quantityInput = it },
                     selectedUnit = selectedUnit,
                     onUnitChange = { selectedUnit = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = dimensions.listItemSpacing),
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 OutlinedTextField(
@@ -103,35 +102,32 @@ fun AddTransactionProductModal(
                     onValueChange = { unitPriceInput = it.filterDecimal() },
                     label = { Text("Unit price") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = dimensions.listItemSpacing),
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
-                Button(
+                CustomButton(
                     onClick = {
-                        if (selectedProduct?.alias.isNullOrBlank()) return@Button
+                        if (selectedProduct?.alias.isNullOrBlank()) return@CustomButton
 
                         val productChoice =
                             if (selectedProduct?.id == 0) ProductChoice.New(selectedProduct!!.alias)
                             else ProductChoice.Existing(selectedProduct!!)
 
-                        val rawQuantity = quantityInput.toDoubleOrNull() ?: return@Button
-                        val unitPriceMinor = ((unitPriceInput.toDoubleOrNull() ?: return@Button) * 100).roundToInt()
+                        val rawQuantity = quantityInput.toDoubleOrNull() ?: return@CustomButton
+                        val unitPriceMinor = ((unitPriceInput.toDoubleOrNull() ?: return@CustomButton) * 100).roundToInt()
 
                         val quantity =
                             if (selectedUnit != MeasureUnit.G) (rawQuantity * 1000).roundToInt()
                             else rawQuantity.roundToInt()
 
-                        if (quantity <= 0 || unitPriceMinor <= 0) return@Button
+                        if (quantity <= 0 || unitPriceMinor <= 0) return@CustomButton
 
                         onAdd(productChoice, quantity, unitPriceMinor)
                     },
+                    buttonText = "Save Product",
                     enabled = !selectedProduct?.alias.isNullOrBlank(),
                     modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("Save Product")
-                }
+                )
             }
         }
     }

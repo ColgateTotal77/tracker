@@ -14,7 +14,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
@@ -54,12 +53,11 @@ fun Products(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(dimensions.screenPadding)
+                .padding(paddingValues),
+            verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing),
         ) {
-            Column(
-                modifier = Modifier.padding(dimensions.screenPadding),
-                verticalArrangement = Arrangement.spacedBy(dimensions.screenPadding)
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)) {
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { viewModel.onSearchQueryChanged(it) },
@@ -71,7 +69,7 @@ fun Products(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(dimensions.screenPadding)
+                    horizontalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)
                 ) {
                     DropdownPopup(
                         items = ProductSort.entries,
@@ -98,12 +96,13 @@ fun Products(
             }
             if (products.itemCount == 0) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(dimensions.screenPadding),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(dimensions.elementSpacing),
+                    ) {
                         Icon(Icons.Default.ProductionQuantityLimits, contentDescription = null)
                         Text("No Product yet", style = MaterialTheme.typography.bodyLarge)
                         Text("Tap + to add your first transaction")
@@ -111,12 +110,8 @@ fun Products(
                 }
             } else {
                 LazyColumn(
-                    contentPadding = PaddingValues(
-                        bottom = dimensions.screenBottomPadding,
-                        start = dimensions.screenPadding,
-                        end = dimensions.screenPadding
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    contentPadding = PaddingValues(bottom = dimensions.screenBottomPadding),
+                    verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)
                 ) {
                     items(
                         count = products.itemCount,

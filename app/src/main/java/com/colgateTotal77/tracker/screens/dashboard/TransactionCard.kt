@@ -6,11 +6,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.Add
@@ -39,6 +40,7 @@ import com.colgateTotal77.tracker.core.getMeasureUnit
 import com.colgateTotal77.tracker.core.ui.ActionDropdownMenu
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
+import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import java.text.DecimalFormat
 
 fun formatProductMeasure(quantity: Int, name: String): String {
@@ -61,21 +63,24 @@ fun TransactionCard(
     onDeleteTransactionProduct: (transactionProduct: TransactionProductWithProduct) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val dimensions = LocalDimensions.current
     val transaction = transactionItem.transaction
 
-    CardWrapper {
+    CardWrapper(contentPadding = PaddingValues(0.dp)) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { expanded = !expanded },
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    .clip(RoundedCornerShape(dimensions.cornerRadius))
+                    .clickable { expanded = !expanded }
+                    .padding(dimensions.contentPadding),
+                horizontalArrangement = Arrangement.spacedBy(dimensions.itemSpacing),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
+                        .size(dimensions.leadingIconSize)
+                        .clip(RoundedCornerShape(dimensions.cornerRadius))
                         .background(MaterialTheme.colorScheme.secondaryContainer),
                     contentAlignment = Alignment.Center
                 ) {
@@ -88,7 +93,7 @@ fun TransactionCard(
 
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(dimensions.elementSpacing)
                 ) {
                     Text(
                         text = transactionItem.market?.name.orEmpty().ifBlank { "Receipt" },
@@ -98,21 +103,23 @@ fun TransactionCard(
                         overflow = TextOverflow.Ellipsis
                     )
 
-                    Text(
-                        text = transaction.source.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Row {
+                        Text(
+                            text = formatTimestamp(transaction.date),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
 
-                    Text(
-                        text = formatTimestamp(transaction.date),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                        Text(
+                            text = transaction.source.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
 
                 Text(
@@ -145,11 +152,10 @@ fun TransactionCard(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(dimensions.contentPadding),
+                    verticalArrangement = Arrangement.spacedBy(dimensions.elementSpacing)
                 ) {
                     HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 8.dp),
                         color = MaterialTheme.colorScheme.surfaceVariant
                     )
 
@@ -168,7 +174,7 @@ fun TransactionCard(
                         },
                         buttonText = "Add Product",
                         icon = Icons.Rounded.Add,
-                        modifier = Modifier.padding(top = 8.dp).weight(1f)
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }

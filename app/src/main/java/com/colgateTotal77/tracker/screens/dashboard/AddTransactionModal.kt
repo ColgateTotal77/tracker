@@ -12,12 +12,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.QrCode2
-import androidx.compose.material3.Button
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -36,6 +34,8 @@ import androidx.compose.ui.window.DialogProperties
 import com.colgateTotal77.tracker.core.enums.Currency
 import com.colgateTotal77.tracker.core.filterDecimal
 import com.colgateTotal77.tracker.core.ui.CardWrapper
+import com.colgateTotal77.tracker.core.ui.CustomButton
+import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.Dropdown
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import kotlin.math.roundToInt
@@ -94,12 +94,13 @@ fun AddTransactionModal(
     val dimensions = LocalDimensions.current
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
-        CardWrapper {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing),
+            ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = dimensions.listItemSpacing),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -107,7 +108,7 @@ fun AddTransactionModal(
                         "Add Transaction",
                         style = MaterialTheme.typography.titleLarge,
                     )
-                    IconButton(onClick = { isCameraOpen = true }) {
+                    CustomIconButton(onClick = { isCameraOpen = true }) {
                         Icon(Icons.Default.QrCode2, contentDescription = "Open Camera")
                     }
                 }
@@ -117,9 +118,7 @@ fun AddTransactionModal(
                     onValueChange = { amountInput = it.filterDecimal() },
                     label = { Text("Amount") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = dimensions.listItemSpacing),
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 Dropdown(
@@ -130,9 +129,7 @@ fun AddTransactionModal(
                     },
                     itemText = { it.dropdownText },
                     itemName = "Currency",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = dimensions.listItemSpacing),
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 DropdownInput(
@@ -143,9 +140,7 @@ fun AddTransactionModal(
                     selected = selectedMarket,
                     onSelect = { selectedMarket = it },
                     isInputEnabled = selectedMarket != null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = dimensions.listItemSpacing),
+                    modifier = Modifier.fillMaxWidth(),
                     onCreateNewItem = { name ->
                         selectedMarket = MarketEntity(tin = null, name = name)
                     },
@@ -161,10 +156,9 @@ fun AddTransactionModal(
                     value = dateTimeInput,
                     onValueChange = { dateTimeInput = it },
                     isError = dateTimeInput.length == 12 && !isDateValid,
-                    modifier = Modifier.padding(bottom = dimensions.listItemSpacing)
                 )
 
-                Button(
+                CustomButton(
                     onClick = {
                         val transactionDraft = TransactionDraft(
                             amountMinor = ((amountInput.toDoubleOrNull() ?: 0.0) * 100).roundToInt(),
@@ -182,10 +176,9 @@ fun AddTransactionModal(
 
                         onAdd(transactionDraft)
                     },
+                    buttonText = "Save Transaction",
                     modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("Save Transaction")
-                }
+                )
             }
         }
     }

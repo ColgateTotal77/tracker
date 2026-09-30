@@ -6,12 +6,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Archive
 import androidx.compose.material.icons.rounded.Edit
@@ -40,6 +41,7 @@ import com.colgateTotal77.tracker.core.formatMoney
 import com.colgateTotal77.tracker.core.getMeasureUnit
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
+import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import java.text.DecimalFormat
@@ -91,6 +93,7 @@ fun ProductCard(
     onArchive: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val dimensions = LocalDimensions.current
 
     val history by remember(expanded, product.id) {
         if (expanded) onGetProductHistory(product.id)
@@ -99,19 +102,21 @@ fun ProductCard(
 
     val measureUnit = getMeasureUnit(product.purchaseCount, product.alias)
 
-    CardWrapper {
+    CardWrapper(contentPadding = PaddingValues(0.dp)) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { expanded = !expanded },
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    .clip(RoundedCornerShape(dimensions.cornerRadius))
+                    .clickable { expanded = !expanded }
+                    .padding(dimensions.contentPadding),
+                horizontalArrangement = Arrangement.spacedBy(dimensions.itemSpacing),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
+                        .size(dimensions.leadingIconSize)
+                        .clip(RoundedCornerShape(dimensions.cornerRadius))
                         .background(MaterialTheme.colorScheme.secondaryContainer),
                     contentAlignment = Alignment.Center
                 ) {
@@ -124,7 +129,7 @@ fun ProductCard(
 
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(dimensions.elementSpacing)
                 ) {
                     Text(
                         text = product.alias,
@@ -142,7 +147,7 @@ fun ProductCard(
 
                 Column(
                     horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                    verticalArrangement = Arrangement.spacedBy(dimensions.elementSpacing)
                 ) {
                     Text(
                         text = formatMoney(product.lastPrice),
@@ -162,11 +167,10 @@ fun ProductCard(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, top = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(dimensions.contentPadding),
+                    verticalArrangement = Arrangement.spacedBy(dimensions.elementSpacing)
                 ) {
                     HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 8.dp),
                         color = MaterialTheme.colorScheme.surfaceVariant
                     )
 
@@ -243,8 +247,8 @@ fun ProductCard(
                     }
 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(top = 8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(dimensions.elementSpacing),
+                        modifier = Modifier.padding(top = dimensions.elementSpacing)
                     ) {
                         CustomButton(
                             onClick = onEdit,

@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -25,6 +26,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.colgateTotal77.tracker.core.MeasureUnit
 import com.colgateTotal77.tracker.core.filterDecimal
+import com.colgateTotal77.tracker.core.ui.theme.dimensions
 import java.math.BigDecimal
 
 private fun convertQuantityString(currentValue: String, fromUnit: MeasureUnit, toUnit: MeasureUnit): String {
@@ -50,6 +52,7 @@ fun QuantityInputField(
     modifier: Modifier = Modifier,
     label: String = "Quantity"
 ) {
+    val dimensions = MaterialTheme.dimensions
     var unitMenuExpanded by remember { mutableStateOf(false) }
 
     OutlinedTextField(
@@ -65,7 +68,7 @@ fun QuantityInputField(
                 Box {
                     TextButton(
                         onClick = { unitMenuExpanded = true },
-                        modifier = Modifier.padding(end = 4.dp)
+                        modifier = Modifier.padding(end = dimensions.elementSpacing)
                     ) {
                         Text(selectedUnit.label)
                         Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Unit")
