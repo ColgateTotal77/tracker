@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.core.database.product
 
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Index
@@ -13,7 +14,6 @@ data class ProductEntity(
     val normalizedName: String,
     val alias: String,
     val lastPrice: Int,
-    val averagePrice: Int = lastPrice,
     val purchaseCount: Int = 0,
     val isArchived: Boolean = false,
     val createdAt: Long,
@@ -24,3 +24,8 @@ sealed interface ProductChoice {
     data class Existing(val product: ProductEntity) : ProductChoice
     data class New(val alias: String) : ProductChoice
 }
+
+data class ProductFromQuery(
+    @Embedded val product: ProductEntity,
+    val spentMinor: Long
+)

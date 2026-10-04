@@ -82,7 +82,6 @@ fun AddTransactionProductModal(
                                 normalizedName = normalizedNewName,
                                 alias = newName,
                                 lastPrice = 0,
-                                averagePrice = 0,
                                 createdAt = 0,
                                 updatedAt = 0,
                             )

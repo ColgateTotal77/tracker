@@ -2,7 +2,9 @@ package com.colgateTotal77.tracker.core.database
 
 import androidx.room.AutoMigration
 import androidx.room.Database
+import androidx.room.DeleteColumn
 import androidx.room.RoomDatabase
+import androidx.room.migration.AutoMigrationSpec
 import androidx.room.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.db.SupportSQLiteDatabase
@@ -23,13 +25,17 @@ import com.colgateTotal77.tracker.core.database.transaction_product.TransactionP
         ProductEntity::class,
         TransactionProductEntity::class,
     ],
-    version = 4,
+    version = 5,
     autoMigrations = [
-        AutoMigration(from = 1, to = 2)
+        AutoMigration(from = 1, to = 2),
+        AutoMigration(from = 4, to = 5, spec = AppDatabase.Migration4To5::class)
     ],
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
+    @DeleteColumn(tableName = "products", columnName = "averagePrice")
+    class Migration4To5 : AutoMigrationSpec
+
     abstract fun transactionDao(): TransactionDao
     abstract fun marketDao(): MarketDao
     abstract fun productDao(): ProductDao
@@ -45,11 +51,6 @@ abstract class AppDatabase : RoomDatabase() {
                     SET
                         lastPrice = NEW.unitPriceMinor,
                         purchaseCount = purchaseCount + NEW.quantity,
-                        averagePrice = (
-                            SELECT COALESCE(CAST(AVG(unitPriceMinor) AS INTEGER), 0)
-                            FROM transaction_products
-                            WHERE productId = NEW.productId
-                        ),
                         updatedAt = (strftime('%s','now') * 1000)
                     WHERE id = NEW.productId;
                 END;
@@ -61,8 +62,6 @@ abstract class AppDatabase : RoomDatabase() {
                 WHEN OLD.unitPriceMinor != NEW.unitPriceMinor OR OLD.productId != NEW.productId OR OLD.quantity != NEW.quantity
                 BEGIN
                     UPDATE products SET
-                        averagePrice = (SELECT COALESCE(CAST(AVG(unitPriceMinor) AS INTEGER), 0)
-                                        FROM transaction_products WHERE productId = products.id),
                         lastPrice = COALESCE((SELECT tp.unitPriceMinor FROM transaction_products tp
                                      JOIN transactions t ON t.id = tp.transactionId
                                      WHERE tp.productId = products.id
@@ -80,8 +79,6 @@ abstract class AppDatabase : RoomDatabase() {
                 AFTER DELETE ON transaction_products
                 BEGIN
                     UPDATE products SET
-                        averagePrice = (SELECT COALESCE(CAST(AVG(unitPriceMinor) AS INTEGER), 0)
-                                        FROM transaction_products WHERE productId = OLD.productId),
                         lastPrice = COALESCE((SELECT tp.unitPriceMinor FROM transaction_products tp
                                      JOIN transactions t ON t.id = tp.transactionId
                                      WHERE tp.productId = OLD.productId

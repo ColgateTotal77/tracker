@@ -194,7 +194,7 @@ fun ScannerPreview(
                 Icon(
                     if (isTorchOn) Icons.Default.FlashlightOn else Icons.Default.FlashlightOff,
                     contentDescription = "Toggle flashlight",
-                    tint = Color.White,
+                    tint = MaterialTheme.colorScheme.onPrimary,
                 )
             }
         }
@@ -203,7 +203,7 @@ fun ScannerPreview(
             onClick = onClose,
             modifier = Modifier.align(Alignment.TopStart),
         ) {
-            Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+            Icon(Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onPrimary)
         }
     }
 }

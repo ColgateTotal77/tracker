@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.colgateTotal77.tracker.core.MeasureUnit
 import com.colgateTotal77.tracker.core.database.product.PricePoint
-import com.colgateTotal77.tracker.core.database.product.ProductEntity
+import com.colgateTotal77.tracker.core.database.product.ProductFromQuery
 import com.colgateTotal77.tracker.core.formatMoney
 import com.colgateTotal77.tracker.core.getMeasureUnit
 import com.colgateTotal77.tracker.core.ui.CardWrapper
@@ -87,11 +87,12 @@ fun formatChartProductMeasure(measureUnit: MeasureUnit, quantity: Int): String {
 
 @Composable
 fun ProductCard(
-    product: ProductEntity,
+    productFromQuery: ProductFromQuery,
     onGetProductHistory: (id: Int) -> Flow<List<PricePoint>>,
     onEdit: () -> Unit,
     onArchive: () -> Unit,
 ) {
+    val product = productFromQuery.product
     var expanded by remember { mutableStateOf(false) }
     val dimensions = LocalDimensions.current
 
@@ -123,7 +124,7 @@ fun ProductCard(
                     Icon(
                         imageVector = Icons.Rounded.ShoppingBag,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onTertiaryContainer
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
 
@@ -156,7 +157,7 @@ fun ProductCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Last price",
+                        text = formatMoney(productFromQuery.spentMinor),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

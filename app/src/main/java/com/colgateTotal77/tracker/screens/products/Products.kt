@@ -1,9 +1,13 @@
 package com.colgateTotal77.tracker.screens.products
 
+import android.graphics.Color
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FilterAlt
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.ProductionQuantityLimits
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -14,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
@@ -21,6 +26,8 @@ import com.colgateTotal77.tracker.core.ProductNameNormalizer
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
 import com.colgateTotal77.tracker.core.enums.DateFilter
 import com.colgateTotal77.tracker.core.enums.ProductSort
+import com.colgateTotal77.tracker.core.ui.CustomButton
+import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.DropdownPopup
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
@@ -37,10 +44,13 @@ fun Products(
 
     val dimensions = LocalDimensions.current
 
+    val markets by viewModel.marketsFlow.collectAsStateWithLifecycle()
+    val filters by viewModel.filters.collectAsStateWithLifecycle()
+
+    var isFilterModalOpen by remember { mutableStateOf(false) }
     val products = viewModel.productFlow.collectAsLazyPagingItems()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val currentSort by viewModel.sortBy.collectAsState()
-    val currentDateFilter by viewModel.dateFilter.collectAsState()
 
     Scaffold(
         modifier = modifier,
@@ -65,9 +75,10 @@ fun Products(
                     placeholder = { Text("Search products...") },
                     singleLine = true
                 )
-
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Min),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)
                 ) {
@@ -79,19 +90,20 @@ fun Products(
                         },
                         itemText = { sort -> sort.label },
                         itemName = "Sort",
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f)
                     )
 
-                    DropdownPopup(
-                        items = DateFilter.entries,
-                        selected = currentDateFilter,
-                        onSelect = { selectedDateFilter ->
-                            selectedDateFilter?.let { viewModel.onDateFilterChange(it) }
-                        },
-                        itemText = { dateFilter -> dateFilter.label },
-                        itemName = "Date filter",
-                        modifier = Modifier.weight(1f),
-                    )
+                    CustomIconButton(
+                        onClick = { isFilterModalOpen = true },
+                        bgColor = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.aspectRatio(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FilterAlt,
+                            contentDescription = "Filter",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 }
             }
             if (products.itemCount == 0) {
@@ -115,21 +127,21 @@ fun Products(
                 ) {
                     items(
                         count = products.itemCount,
-                        key = products.itemKey { it.id }
+                        key = products.itemKey { it.product.id }
                     ) { index ->
-                        val product = products[index] ?: return@items
+                        val productFromQuery = products[index] ?: return@items
 
                         ProductCard(
-                            product = product,
+                            productFromQuery = productFromQuery,
                             onGetProductHistory = { id ->
                                 viewModel.getProductHistoryFlow(id)
                             },
                             onEdit = {
-                                selectedProduct = product
+                                selectedProduct = productFromQuery.product
                                 isEditProductModalOpen = true
                             },
                             onArchive = {
-                                selectedProduct = product
+                                selectedProduct = productFromQuery.product
                                 isArchiveProductModalOpen = true
                             }
                         )
@@ -181,6 +193,18 @@ fun Products(
                     viewModel.archiveProductById(id)
                     isArchiveProductModalOpen = false
                 }
+            )
+        }
+
+        if (isFilterModalOpen) {
+            FilterModal(
+                markets = markets,
+                filters = filters,
+                onDismiss = { isFilterModalOpen = false },
+                onApply = { newFilters ->
+                    viewModel.onFiltersChanged(newFilters)
+                    isFilterModalOpen = false
+                },
             )
         }
     }

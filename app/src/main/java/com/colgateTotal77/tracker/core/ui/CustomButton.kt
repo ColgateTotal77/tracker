@@ -41,7 +41,7 @@ fun CustomButton(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = LocalContentColor.current,
+                tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(dimensions.elementSpacing))
