@@ -6,6 +6,7 @@
     <string name="currency">Currency</string>
     <string name="market">Market</string>
     <string name="rename_market">Rename market</string>
+    <string name="create_market">Create market</string>
     <string name="save_transaction">Save Transaction</string>
     <string name="add_product">Add Product</string>
     <string name="save_product">Save Product</string>
@@ -16,6 +17,7 @@
     <string name="unit_price">Unit price</string>
     <string name="new_product_name">New product name</string>
     <string name="create_product">Create product</string>
+    <string name="rename_product">Rename product</string>
     <string name="change_target">Change Target</string>
     <string name="time_period">Time Period</string>
     <string name="save_progress">Save Progress</string>

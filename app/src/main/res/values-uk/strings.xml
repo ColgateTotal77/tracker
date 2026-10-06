@@ -6,6 +6,7 @@
     <string name="currency">Валюта</string>
     <string name="market">Магазин</string>
     <string name="rename_market">Перейменувати магазин</string>
+    <string name="create_market">Створити магазин</string>
     <string name="save_transaction">Зберегти витрату</string>
     <string name="add_product">Додати товар</string>
     <string name="save_product">Зберегти товар</string>
@@ -16,6 +17,7 @@
     <string name="unit_price">Ціна за одиницю</string>
     <string name="new_product_name">Назва нового товару</string>
     <string name="create_product">Створити товар</string>
+    <string name="rename_product">Перейменувати товар</string>
     <string name="change_target">Змінити ціль</string>
     <string name="time_period">Період часу</string>
     <string name="save_progress">Зберегти ціль</string>

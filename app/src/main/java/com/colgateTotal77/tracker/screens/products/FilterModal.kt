@@ -13,7 +13,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +28,7 @@ import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.core.enums.DateFilter
 import com.colgateTotal77.tracker.core.filterDecimal
+import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
@@ -51,6 +51,7 @@ fun FilterModal(
     onDismiss: () -> Unit,
     onApply: (filters: ProductFilters) -> Unit,
 ) {
+    var dropdownTouched by remember { mutableStateOf(false) }
     var date by remember { mutableStateOf(filters.date) }
     var selectedMarketIds by remember { mutableStateOf(filters.marketIds) }
     var minPrice by remember { mutableStateOf(filters.minPrice?.toString() ?: "") }
@@ -60,7 +61,10 @@ fun FilterModal(
     val dimensions = LocalDimensions.current
     val context = LocalContext.current
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    AppModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetGesturesEnabled = !dropdownTouched,
+    ) {
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)) {
                 Row(
@@ -85,6 +89,7 @@ fun FilterModal(
                 }
 
                 DropdownMultiSelect(
+                    onTouchChange = { dropdownTouched = it },
                     items = displayMarkets,
                     selectedKeys = selectedMarketIds,
                     key = { it.id },
@@ -112,6 +117,7 @@ fun FilterModal(
                 }
 
                 Dropdown(
+                    onTouchChange = { dropdownTouched = it },
                     items = DateFilter.entries,
                     selected = date,
                     onSelect = { selectedDateFilter ->

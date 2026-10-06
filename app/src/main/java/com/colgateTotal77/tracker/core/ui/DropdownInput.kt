@@ -30,21 +30,18 @@ fun <T> DropdownInput(
     itemText: (T?) -> String,
     itemName: String,
     inputLabel: String,
-    isInputEnabled: Boolean,
-    onInputDone: (name: String) -> Unit,
+    onInputDone: (name: String) -> Boolean,
     modifier: Modifier = Modifier,
-    onCreateNewItem: ((name: String) -> Unit)? = null,
     leadingIcon: (@Composable () -> Unit)? = null,
+    onTouchChange: (Boolean) -> Unit = {},
 ) {
     var isInputOpen by remember { mutableStateOf(false) }
 
-    if (isInputOpen && isInputEnabled) {
+    if (isInputOpen) {
         RenameField(
             selected = selected,
-            itemName = itemName,
             itemText = itemText,
             inputLabel = inputLabel,
-            otherNames = items.mapNotNull { itemText(it) },
             modifier = modifier,
             onInputDone = onInputDone,
             onBackToDropdown = { isInputOpen = false }
@@ -56,18 +53,15 @@ fun <T> DropdownInput(
             onSelect = { onSelect(it) },
             itemText = itemText,
             itemName = itemName,
-            onCreateNewItem = onCreateNewItem,
             leadingIcon = if (leadingIcon != null) {
                 {
-                    CustomIconButton(
-                        onClick = { isInputOpen = true },
-                        enabled = isInputEnabled
-                    ) {
+                    CustomIconButton(onClick = { isInputOpen = true }) {
                         leadingIcon()
                     }
                 }
             } else null,
             modifier = modifier,
+            onTouchChange = onTouchChange,
         )
     }
 }
@@ -75,12 +69,10 @@ fun <T> DropdownInput(
 @Composable
 private fun <T> RenameField(
     selected: T,
-    itemName: String,
     inputLabel: String,
     itemText: (T) -> String,
-    otherNames: List<String>,
     modifier: Modifier = Modifier,
-    onInputDone: (name: String) -> Unit,
+    onInputDone: (name: String) -> Boolean,
     onBackToDropdown: () -> Unit
 ) {
     var nameInput by remember(selected) { mutableStateOf(itemText(selected)) }
@@ -88,8 +80,7 @@ private fun <T> RenameField(
 
     val trimmed = nameInput.trim()
     val isUnchanged = trimmed == itemText(selected).trim()
-    val isDuplicate = otherNames.any { it == trimmed && !isUnchanged }
-    val isValid = trimmed.isNotEmpty() && !isUnchanged && !isDuplicate
+    val isValid = trimmed.isNotEmpty() && !isUnchanged
 
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
@@ -99,21 +90,17 @@ private fun <T> RenameField(
         label = { Text(inputLabel) },
         singleLine = true,
         supportingText = {
-            when {
-                isUnchanged -> Text(stringResource(R.string.name_unchanged), style = MaterialTheme.typography.bodySmall)
-                isDuplicate -> Text(stringResource(R.string.duplicate_name, itemName), style = MaterialTheme.typography.bodySmall)
+            if (isUnchanged) {
+                Text(stringResource(R.string.name_unchanged), style = MaterialTheme.typography.bodySmall)
             }
         },
         keyboardActions = KeyboardActions(onDone = {
-            if(!isValid) return@KeyboardActions
-            onInputDone(trimmed)
-            onBackToDropdown()
+            if (isValid && onInputDone(trimmed)) onBackToDropdown()
         }),
         trailingIcon = {
             if (isValid) {
                 CustomIconButton(onClick = {
-                    onInputDone(trimmed)
-                    onBackToDropdown()
+                    if (onInputDone(trimmed)) onBackToDropdown()
                 }) {
                     Icon(Icons.Default.Check, contentDescription = stringResource(R.string.save_name))
                 }

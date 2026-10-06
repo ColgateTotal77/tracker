@@ -6,9 +6,13 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,9 +39,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.ui.theme.dimensions
@@ -56,12 +67,16 @@ fun <T, K> DropdownMultiSelect(
     itemName: String,
     onSelectionChange: (Set<K>) -> Unit,
     modifier: Modifier = Modifier,
+    onTouchChange: (Boolean) -> Unit = {},
 ) {
+    val currentOnTouchChange by rememberUpdatedState(onTouchChange)
     val dimensions = MaterialTheme.dimensions
     val panelShape = RoundedCornerShape(dimensions.cornerRadius)
 
     var isExpanded by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
 
     val filteredItems = remember(items, searchQuery) {
         if (searchQuery.isBlank()) items
@@ -72,7 +87,36 @@ fun <T, K> DropdownMultiSelect(
         else if (selectedKeys.size == 1) itemText(items.first { key(it) == selectedKeys.first() })
         else stringResource(R.string.selected_count, itemName, selectedKeys.size)
 
-    Column(modifier = modifier.fillMaxWidth()) {
+    val blockParentScroll = remember {
+        object : NestedScrollConnection {
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ) = Offset(x = 0f, y = available.y)
+        }
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .nestedScroll(blockParentScroll)
+            .pointerInput(Unit) {
+                try {
+                    awaitEachGesture {
+                        awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                        currentOnTouchChange(isExpanded)
+                        while (true) {
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                            if (event.changes.none { it.pressed }) break
+                        }
+                        currentOnTouchChange(false)
+                    }
+                } finally {
+                    currentOnTouchChange(false)
+                }
+            }
+    ) {
         ExposedDropdownMenuBox(
             expanded = isExpanded,
             onExpandedChange = { isExpanded = it },
@@ -86,6 +130,7 @@ fun <T, K> DropdownMultiSelect(
                     .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true),
                 readOnly = true,
                 singleLine = true,
+                interactionSource = interactionSource,
                 label = { Text(stringResource(R.string.select_item, itemName)) },
                 trailingIcon = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -113,7 +158,12 @@ fun <T, K> DropdownMultiSelect(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = dimensions.elementSpacing)
-                    .border(1.dp, MaterialTheme.colorScheme.outline, panelShape)
+                    .border(
+                        if (isFocused) 2.dp else 1.dp,
+                        if (isFocused) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.outline,
+                        panelShape,
+                    )
                     .background(MaterialTheme.colorScheme.surface, panelShape)
                     .heightIn(max = MaxPanelHeight)
             ) {

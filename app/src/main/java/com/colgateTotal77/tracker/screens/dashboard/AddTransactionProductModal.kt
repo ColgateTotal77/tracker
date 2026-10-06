@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,9 +23,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.MeasureUnit
+import com.colgateTotal77.tracker.core.ProductNameNormalizer
+import com.colgateTotal77.tracker.core.ui.AppToast
+import com.colgateTotal77.tracker.core.ui.ToastType
 import com.colgateTotal77.tracker.core.database.product.ProductChoice
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
 import com.colgateTotal77.tracker.core.filterDecimal
+import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.DropdownInput
@@ -41,14 +44,19 @@ fun AddTransactionProductModal(
     onDismiss: () -> Unit,
     onAdd: (productChoice: ProductChoice, quantity: Int, unitPriceMinor: Int) -> Unit,
 ) {
+    var dropdownTouched by remember { mutableStateOf(false) }
     var selectedProduct by remember { mutableStateOf<ProductEntity?>(null) }
     var unitPriceInput by remember { mutableStateOf("") }
     var selectedUnit by remember { mutableStateOf(MeasureUnit.PIECE) }
     var quantityInput by remember { mutableStateOf("1") }
 
     val dimensions = LocalDimensions.current
+    val duplicateProductMessage = stringResource(R.string.duplicate_name, stringResource(R.string.product))
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    AppModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetGesturesEnabled = !dropdownTouched,
+    ) {
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)) {
                 Text(
@@ -57,6 +65,7 @@ fun AddTransactionProductModal(
                 )
 
                 DropdownInput(
+                    onTouchChange = { dropdownTouched = it },
                     items = products,
                     itemName = stringResource(R.string.product),
                     inputLabel = stringResource(R.string.new_product_name),
@@ -67,26 +76,39 @@ fun AddTransactionProductModal(
                         if (unitPriceInput == "") unitPriceInput = selectedProduct!!.lastPrice.toString()
                    },
                     modifier = Modifier.fillMaxWidth(),
-                    isInputEnabled = selectedProduct == null || selectedProduct!!.id == 0,
                     leadingIcon = {
                         Icon(
-                            imageVector = if (selectedProduct?.id != 0) Icons.Default.Add else Icons.Default.Edit,
-                            contentDescription = if (selectedProduct?.id == 0) stringResource(R.string.create_product) else stringResource(R.string.edit_transaction_product)
+                            imageVector = if (selectedProduct == null) Icons.Default.Add else Icons.Default.Edit,
+                            contentDescription = stringResource(
+                                if (selectedProduct == null) R.string.create_product else R.string.rename_product
+                            )
                         )
                     },
                     onInputDone = { newName ->
-                        val normalizedNewName = newName.lowercase().replace(" ", "")
-                        val existingMatch = products.find { it.normalizedName == normalizedNewName }
-
-                        selectedProduct = existingMatch
-                            ?: ProductEntity(
-                                id = 0,
-                                normalizedName = normalizedNewName,
-                                alias = newName,
-                                lastPrice = 0,
-                                createdAt = 0,
-                                updatedAt = 0,
-                            )
+                        val normalizedName = ProductNameNormalizer.normalize(newName)
+                        val duplicate = products.any {
+                            it.id != selectedProduct?.id &&
+                                (it.normalizedName == normalizedName ||
+                                    ProductNameNormalizer.normalize(it.alias) == normalizedName)
+                        }
+                        if (duplicate) {
+                            AppToast.show(duplicateProductMessage, ToastType.Error)
+                            false
+                        } else {
+                            selectedProduct = selectedProduct?.let {
+                                it.copy(
+                                    alias = newName,
+                                    normalizedName = if (it.id == 0) normalizedName else it.normalizedName,
+                                )
+                            } ?: ProductEntity(
+                                    normalizedName = normalizedName,
+                                    alias = newName,
+                                    lastPrice = 0,
+                                    createdAt = 0,
+                                    updatedAt = 0,
+                                )
+                            true
+                        }
                     }
                 )
 

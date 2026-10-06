@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.enums.DateFilter
 import com.colgateTotal77.tracker.core.filterDecimal
+import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.Dropdown
@@ -34,13 +34,17 @@ fun ProgressBarModal(
     onDismiss: () -> Unit,
     onProgressBarPreferences: (settings: ProgressBarPreferences) -> Unit,
 ) {
+    var dropdownTouched by remember { mutableStateOf(false) }
     var amountInput by remember { mutableStateOf(if (settings.targetBudget > 0) (settings.targetBudget / 100).toString() else "") }
     var selectedFilter by remember { mutableStateOf(settings.selectedFilter) }
 
     val dimensions = LocalDimensions.current
     val context = LocalContext.current
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    AppModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetGesturesEnabled = !dropdownTouched,
+    ) {
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)) {
                 Text(
@@ -57,6 +61,7 @@ fun ProgressBarModal(
                 )
 
                 Dropdown(
+                    onTouchChange = { dropdownTouched = it },
                     items = DateFilter.entries,
                     selected = selectedFilter,
                     onSelect = { newFilter ->

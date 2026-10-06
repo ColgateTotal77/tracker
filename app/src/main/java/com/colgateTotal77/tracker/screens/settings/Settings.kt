@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.screens.settings
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,6 +28,8 @@ fun Settings(
     val context = LocalContext.current
     val settings by viewModel.settings.collectAsStateWithLifecycle()
 
+    Log.d("Settings", settings.toString())
+
     Scaffold(modifier = modifier) { paddingValues ->
         Column(
             modifier = Modifier
@@ -35,19 +38,21 @@ fun Settings(
                 .padding(paddingValues),
             verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing),
         ) {
-            Dropdown(
-                items = Language.entries,
-                selected = settings.language,
-                onSelect = { language ->
-                    language?.let {
-                        viewModel.updateSettings(settings.copy(language = it))
-                        viewModel.applyLanguage(it)
-                    }
-                },
-                itemText = { context.getString(it.labelRes) },
-                itemName = stringResource(R.string.language),
-                modifier = Modifier.fillMaxWidth(),
-            )
+            settings?.let { settings ->
+                Dropdown(
+                    items = Language.entries,
+                    selected = settings.language,
+                    onSelect = { language ->
+                        language?.let {
+                            viewModel.updateSettings(settings.copy(language = it))
+                            viewModel.applyLanguage(it)
+                        }
+                    },
+                    itemText = { context.getString(it.labelRes) },
+                    itemName = stringResource(R.string.language),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         }
     }
 }

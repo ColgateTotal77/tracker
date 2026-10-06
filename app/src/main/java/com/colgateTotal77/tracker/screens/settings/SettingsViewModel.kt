@@ -29,7 +29,7 @@ class SettingsViewModel(
     val settings = preferencesRepository.settingsFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = SettingsPref(),
+        initialValue = null,
     )
 
     fun updateSettings(setting: SettingsPref) {

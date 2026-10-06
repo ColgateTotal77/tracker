@@ -9,11 +9,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -30,6 +30,7 @@ import com.colgateTotal77.tracker.core.database.transaction.TransactionEntity
 import com.colgateTotal77.tracker.core.enums.Currency
 import com.colgateTotal77.tracker.core.enums.TransactionSource
 import com.colgateTotal77.tracker.core.filterDecimal
+import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.Dropdown
@@ -37,6 +38,8 @@ import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.core.formatMoney
 import com.colgateTotal77.tracker.core.ui.DateTimeInputField
 import com.colgateTotal77.tracker.core.ui.DropdownInput
+import com.colgateTotal77.tracker.core.ui.AppToast
+import com.colgateTotal77.tracker.core.ui.ToastType
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,6 +50,7 @@ fun EditTransactionModal(
     onDismiss: () -> Unit,
     onUpdate: (amountMinor: Int, currency: Currency, selectedMarket: MarketChoice, date: Long?) -> Unit,
 ) {
+    var dropdownTouched by remember { mutableStateOf(false) }
     var amountInput by remember { mutableStateOf(formatMoney(transaction.amountMinor)) }
     var currency by remember { mutableStateOf(transaction.currency) }
     var selectedMarket by remember { mutableStateOf(markets.find { it.id == transaction.marketId}) }
@@ -75,8 +79,12 @@ fun EditTransactionModal(
     }
 
     val dimensions = LocalDimensions.current
+    val duplicateMarketMessage = stringResource(R.string.duplicate_name, stringResource(R.string.market))
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    AppModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetGesturesEnabled = !dropdownTouched,
+    ) {
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -97,6 +105,7 @@ fun EditTransactionModal(
                 )
 
                 Dropdown(
+                    onTouchChange = { dropdownTouched = it },
                     items = Currency.entries,
                     selected = currency,
                     onSelect = { selectedCurrency ->
@@ -108,23 +117,36 @@ fun EditTransactionModal(
                 )
 
                 DropdownInput(
+                    onTouchChange = { dropdownTouched = it },
                     items = displayMarkets,
                     itemName = stringResource(R.string.market),
                     inputLabel = stringResource(R.string.rename_market),
                     itemText = { it?.name ?: "" },
                     selected = selectedMarket,
                     onSelect = { selectedMarket = it },
-                    isInputEnabled = selectedMarket != null,
                     modifier = Modifier.fillMaxWidth(),
-                    onCreateNewItem = { name ->
-                        selectedMarket = MarketEntity(id = 0, tin = null, name = name)
+                    onInputDone = { newName ->
+                        val duplicate = markets.any {
+                            it.id != selectedMarket?.id &&
+                                it.name.orEmpty().trim().equals(newName, ignoreCase = true)
+                        }
+                        if (duplicate) {
+                            AppToast.show(duplicateMarketMessage, ToastType.Error)
+                            false
+                        } else {
+                            selectedMarket = selectedMarket?.copy(name = newName)
+                                ?: MarketEntity(tin = null, name = newName)
+                            true
+                        }
                     },
-                    leadingIcon = if(selectedMarket != null) {
-                        { Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.rename_market)) }
-                    } else null,
-                    onInputDone = { name ->
-                        selectedMarket = selectedMarket?.copy(name = name)
-                    }
+                    leadingIcon = {
+                        Icon(
+                            imageVector = if (selectedMarket == null) Icons.Default.Add else Icons.Default.Edit,
+                            contentDescription = stringResource(
+                                if (selectedMarket == null) R.string.create_market else R.string.rename_market
+                            )
+                        )
+                    },
                 )
 
                 DateTimeInputField(

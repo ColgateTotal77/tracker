@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -65,12 +66,13 @@ fun QuantityInputField(
         modifier = modifier,
         trailingIcon = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                VerticalDivider(modifier = Modifier.height(32.dp))
+                VerticalDivider(modifier = Modifier.height(34.dp))
 
                 Box {
                     TextButton(
                         onClick = { unitMenuExpanded = true },
-                        modifier = Modifier.padding(end = dimensions.elementSpacing)
+                        modifier = Modifier.padding(horizontal = dimensions.elementSpacing),
+                        shape = RoundedCornerShape(dimensions.cornerRadius),
                     ) {
                         Text(selectedUnit.label)
                         Icon(Icons.Default.ArrowDropDown, contentDescription = stringResource(R.string.select_unit))
