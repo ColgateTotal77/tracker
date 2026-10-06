@@ -15,7 +15,6 @@ data class Dimensions(
     val elementSpacing: Dp = 8.dp,
     val cornerRadius: Dp = 4.dp,
     val leadingIconSize: Dp = 48.dp,
-    val iconButtonSize: Dp = 40.dp,
 )
 
 val LocalDimensions: ProvidableCompositionLocal<Dimensions> =

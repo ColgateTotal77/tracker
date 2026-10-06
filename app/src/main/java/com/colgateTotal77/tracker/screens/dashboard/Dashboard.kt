@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.screens.dashboard
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.transaction.TransactionEntity
 import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductDraft
 import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductWithProduct
@@ -79,7 +81,7 @@ fun Dashboard(
         ) {
             ProgressBar(
                 progressState = progressState,
-                label = "Budget (${settings.selectedFilter.label}): ${formatMoney(spending)} / ${formatMoney(progressState.targetForFilter)}",
+                label = stringResource(R.string.budget, stringResource(settings.selectedFilter.labelRes), formatMoney(spending), formatMoney(progressState.targetForFilter)),
                 color =
                     if (spending > progressState.targetForFilter) MaterialTheme.colorScheme.error
                     else MaterialTheme.colorScheme.primary,
@@ -100,8 +102,8 @@ fun Dashboard(
                         verticalArrangement = Arrangement.spacedBy(dimensions.elementSpacing),
                     ) {
                         Icon(Icons.AutoMirrored.Default.ReceiptLong, contentDescription = null)
-                        Text("No transactions yet", style = MaterialTheme.typography.bodyLarge)
-                        Text("Tap + to add your first transaction")
+                        Text(stringResource(R.string.no_transactions_yet), style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(R.string.add_first_transaction))
                     }
                 }
             } else {

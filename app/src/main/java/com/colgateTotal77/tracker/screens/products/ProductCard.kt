@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.screens.products
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.MeasureUnit
 import com.colgateTotal77.tracker.core.database.product.PricePoint
 import com.colgateTotal77.tracker.core.database.product.ProductFromQuery
@@ -177,7 +179,7 @@ fun ProductCard(
 
                     if (history.isNotEmpty()) {
                         Text(
-                            text = "Price History",
+                            text = stringResource(R.string.price_history),
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -253,14 +255,14 @@ fun ProductCard(
                     ) {
                         CustomButton(
                             onClick = onEdit,
-                            buttonText = "Edit Product",
+                            buttonText = stringResource(R.string.edit_product),
                             icon = Icons.Rounded.Edit,
                             modifier = Modifier.weight(1f)
                         )
 
                         CustomButton(
                             onClick = onArchive,
-                            buttonText = "Archive Product",
+                            buttonText = stringResource(R.string.archive_product),
                             icon = Icons.Rounded.Archive,
                             modifier = Modifier.weight(1f)
                         )

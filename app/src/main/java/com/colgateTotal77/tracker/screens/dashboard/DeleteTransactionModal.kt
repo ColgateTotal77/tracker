@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.stringResource
+import com.colgateTotal77.tracker.R
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Dialog
@@ -28,7 +30,7 @@ fun DeleteTransactionModal(
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)) {
                 Text(
-                    "Delete Transaction",
+                    stringResource(R.string.delete_transaction),
                     style = MaterialTheme.typography.titleLarge,
                 )
 
@@ -39,7 +41,7 @@ fun DeleteTransactionModal(
 
                 CustomButton(
                     onClick = onDelete,
-                    buttonText = "Delete Transaction",
+                    buttonText = stringResource(R.string.delete_transaction),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

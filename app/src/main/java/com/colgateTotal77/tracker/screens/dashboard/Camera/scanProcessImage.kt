@@ -12,6 +12,7 @@ private const val TAG = "Camera"
 fun scanProcessImage(
     imageProxy: ImageProxy,
     scanner: BarcodeScanner,
+    onError: (Exception) -> Unit = {},
     onQRLinkFound: (String) -> Unit,
 ) {
     val mediaImage = imageProxy.image
@@ -34,6 +35,9 @@ fun scanProcessImage(
                 break
             }
         }
-        .addOnFailureListener { e -> Log.e(TAG, "scan error", e) }
+        .addOnFailureListener { e ->
+            Log.e(TAG, "scan error", e)
+            onError(e)
+        }
         .addOnCompleteListener { imageProxy.close() }
 }

@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.core.ui
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -38,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.ui.theme.dimensions
 
 private val DropdownItemHeight = 48.dp
@@ -66,9 +68,9 @@ fun <T, K> DropdownMultiSelect(
         else items.filter { itemText(it).contains(searchQuery, ignoreCase = true) }
     }
 
-    val displayText = if (selectedKeys.isEmpty()) "All $itemName"
+    val displayText = if (selectedKeys.isEmpty()) stringResource(R.string.all_items, itemName)
         else if (selectedKeys.size == 1) itemText(items.first { key(it) == selectedKeys.first() })
-        else "$itemName (${selectedKeys.size} selected)"
+        else stringResource(R.string.selected_count, itemName, selectedKeys.size)
 
     Column(modifier = modifier.fillMaxWidth()) {
         ExposedDropdownMenuBox(
@@ -84,14 +86,14 @@ fun <T, K> DropdownMultiSelect(
                     .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true),
                 readOnly = true,
                 singleLine = true,
-                label = { Text("Select $itemName") },
+                label = { Text(stringResource(R.string.select_item, itemName)) },
                 trailingIcon = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         if (selectedKeys.isNotEmpty()) {
                             CustomIconButton(onClick = { onSelectionChange(emptySet()) }) {
                                 Icon(
                                     imageVector = Icons.Default.Clear,
-                                    contentDescription = "Reset selection"
+                                    contentDescription = stringResource(R.string.reset_selection)
                                 )
                             }
                         }
@@ -127,8 +129,8 @@ fun <T, K> DropdownMultiSelect(
                                         horizontal = dimensions.contentPadding,
                                         vertical = dimensions.elementSpacing,
                                     ),
-                                placeholder = { Text("Search...") },
-                                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                                placeholder = { Text(stringResource(R.string.search)) },
+                                leadingIcon = { Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search)) },
                                 singleLine = true,
                             )
                             HorizontalDivider()

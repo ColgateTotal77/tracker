@@ -1,17 +1,18 @@
 package com.colgateTotal77.tracker.core.enums
 
+import com.colgateTotal77.tracker.R
 import java.util.Calendar
 
 data class TimeRange(val start: Long?, val end: Long?)
 
-enum class DateFilter(val label: String) {
-    AllTime("All Time"),
-    Month("Current month"),
-    PrevMonth("Previous month"),
-    SixMonth("Last 6 months"),
-    PrevSixMonth("Previous 6 months"),
-    Year("Current year"),
-    PrevYear("Previous year"),
+enum class DateFilter(val labelRes: Int) {
+    AllTime(R.string.date_all_time),
+    Month(R.string.date_current_month),
+    PrevMonth(R.string.date_previous_month),
+    SixMonth(R.string.date_last_six_months),
+    PrevSixMonth(R.string.date_previous_six_months),
+    Year(R.string.date_current_year),
+    PrevYear(R.string.date_previous_year),
 }
 
 fun DateFilter.toTimeRange(): TimeRange {

@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -41,9 +42,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.screens.dashboard.Dashboard
 import com.colgateTotal77.tracker.screens.products.Products
+import com.colgateTotal77.tracker.screens.settings.Settings
 
 private val NavigationBarHeight = 80.dp
 private val IndicatorWidth = 64.dp
@@ -53,8 +56,20 @@ private val IndicatorHeight = 32.dp
 fun NavBar() {
     var selectedItemIndex by remember { mutableIntStateOf(0) }
 
-    val items = listOf("Dashboard", "Products", "Portfolio", "Analytics")
-    val icons = listOf(Icons.Default.Home, Icons.Default.ShoppingCart, Icons.Default.Folder, Icons.Default.Analytics)
+    val items = listOf(
+        R.string.tab_dashboard,
+        R.string.tab_products,
+        R.string.tab_portfolio,
+        R.string.tab_analytics,
+        R.string.tab_settings
+    )
+    val icons = listOf(
+        Icons.Default.Home,
+        Icons.Default.ShoppingCart,
+        Icons.Default.Folder,
+        Icons.Default.Analytics,
+        Icons.Default.Settings
+    )
 
     Scaffold(
         bottomBar = {
@@ -63,9 +78,9 @@ fun NavBar() {
                     NavBarItem(
                         selected = selectedItemIndex == index,
                         onClick = { selectedItemIndex = index },
-                        icon = { Icon(icons[index], contentDescription = item) },
+                        icon = { Icon(icons[index], contentDescription = stringResource(item)) },
                         label = {
-                            Text(item, style = MaterialTheme.typography.labelMedium)
+                            Text(stringResource(item), style = MaterialTheme.typography.labelMedium)
                         },
                     )
                 }
@@ -75,13 +90,14 @@ fun NavBar() {
         when (selectedItemIndex) {
             0 -> Dashboard(modifier = Modifier.padding(paddingValues))
             1 -> Products(modifier = Modifier.padding(paddingValues))
+            4 -> Settings(modifier = Modifier.padding(paddingValues))
             else -> Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "${items[selectedItemIndex]} Screen")
+                Text(text = stringResource(R.string.screen_name, stringResource(items[selectedItemIndex])))
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.screens.dashboard
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.MeasureUnit
 import com.colgateTotal77.tracker.core.filterDecimal
 import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductWithProduct
@@ -72,7 +74,7 @@ fun EditTransactionProductModal(
                 OutlinedTextField(
                     value = nameInput,
                     onValueChange = { nameInput = it },
-                    label = { Text("Product name") },
+                    label = { Text(stringResource(R.string.product_name)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -87,7 +89,7 @@ fun EditTransactionProductModal(
                 OutlinedTextField(
                     value = unitPriceInput,
                     onValueChange = { unitPriceInput = it.filterDecimal() },
-                    label = { Text("Unit price") },
+                    label = { Text(stringResource(R.string.unit_price)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -106,7 +108,7 @@ fun EditTransactionProductModal(
 
                         onUpdate(alias, quantity, unitPriceMinor)
                     },
-                    buttonText = "Save Product",
+                    buttonText = stringResource(R.string.save_product),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

@@ -20,6 +20,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.stringResource
+import com.colgateTotal77.tracker.R
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -105,18 +107,18 @@ fun AddTransactionModal(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        "Add Transaction",
+                        stringResource(R.string.add_transaction),
                         style = MaterialTheme.typography.titleLarge,
                     )
                     CustomIconButton(onClick = { isCameraOpen = true }) {
-                        Icon(Icons.Default.QrCode2, contentDescription = "Open Camera")
+                        Icon(Icons.Default.QrCode2, contentDescription = stringResource(R.string.open_camera))
                     }
                 }
 
                 OutlinedTextField(
                     value = amountInput,
                     onValueChange = { amountInput = it.filterDecimal() },
-                    label = { Text("Amount") },
+                    label = { Text(stringResource(R.string.amount)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -128,14 +130,14 @@ fun AddTransactionModal(
                         selectedCurrency?.let { currency = it }
                     },
                     itemText = { it.dropdownText },
-                    itemName = "Currency",
+                    itemName = stringResource(R.string.currency),
                     modifier = Modifier.fillMaxWidth(),
                 )
 
                 DropdownInput(
                     items = displayMarkets,
-                    itemName = "Market",
-                    inputLabel = "Rename market",
+                    itemName = stringResource(R.string.market),
+                    inputLabel = stringResource(R.string.rename_market),
                     itemText = { it?.name ?: "" },
                     selected = selectedMarket,
                     onSelect = { selectedMarket = it },
@@ -145,7 +147,7 @@ fun AddTransactionModal(
                         selectedMarket = MarketEntity(tin = null, name = name)
                     },
                     leadingIcon = if (selectedMarket != null) {
-                        { Icon(Icons.Default.Edit, contentDescription = "Rename market") }
+                        { Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.rename_market)) }
                     } else null,
                     onInputDone = { name ->
                         selectedMarket = selectedMarket?.copy(name = name)
@@ -176,7 +178,7 @@ fun AddTransactionModal(
 
                         onAdd(transactionDraft)
                     },
-                    buttonText = "Save Transaction",
+                    buttonText = stringResource(R.string.save_transaction),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

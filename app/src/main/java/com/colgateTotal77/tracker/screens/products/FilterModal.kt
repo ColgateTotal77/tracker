@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.screens.products
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,7 +23,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.core.enums.DateFilter
 import com.colgateTotal77.tracker.core.filterDecimal
@@ -55,6 +58,7 @@ fun FilterModal(
 
     val displayMarkets = markets.filter { !it.name.isNullOrBlank() }
     val dimensions = LocalDimensions.current
+    val context = LocalContext.current
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
@@ -65,7 +69,7 @@ fun FilterModal(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        "Filter Products",
+                        stringResource(R.string.filter_products),
                         style = MaterialTheme.typography.titleLarge,
                     )
                     CustomIconButton(
@@ -76,7 +80,7 @@ fun FilterModal(
                             maxPrice = filters.maxPrice?.toString() ?: ""
                         }
                     ) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Open Camera")
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.open_camera))
                     }
                 }
 
@@ -85,7 +89,7 @@ fun FilterModal(
                     selectedKeys = selectedMarketIds,
                     key = { it.id },
                     itemText = { it.name ?: "" },
-                    itemName = "Markets",
+                    itemName = stringResource(R.string.markets),
                     onSelectionChange = { selectedMarketIds = it },
                 )
 
@@ -93,7 +97,7 @@ fun FilterModal(
                     OutlinedTextField(
                         value = minPrice,
                         onValueChange = { minPrice = it.filterDecimal() },
-                        label = { Text("Min Price") },
+                        label = { Text(stringResource(R.string.min_price)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.weight(1f),
                     )
@@ -101,7 +105,7 @@ fun FilterModal(
                     OutlinedTextField(
                         value = maxPrice,
                         onValueChange = { maxPrice = it.filterDecimal() },
-                        label = { Text("Max Price") },
+                        label = { Text(stringResource(R.string.max_price)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.weight(1f),
                     )
@@ -113,8 +117,8 @@ fun FilterModal(
                     onSelect = { selectedDateFilter ->
                         selectedDateFilter?.let { date = it }
                     },
-                    itemText = { dateFilter -> dateFilter.label },
-                    itemName = "Date filter",
+                    itemText = { dateFilter -> context.getString(dateFilter.labelRes) },
+                    itemName = stringResource(R.string.date_filter),
                 )
 
                 CustomButton(
@@ -128,7 +132,7 @@ fun FilterModal(
                         onApply(newFilters)
                         onDismiss()
                     },
-                    buttonText = "Apply",
+                    buttonText = stringResource(R.string.apply),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

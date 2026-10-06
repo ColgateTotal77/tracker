@@ -28,24 +28,12 @@ object ProductNameNormalizer {
         return sb.toString()
     }
 
-    fun repairDisplay(raw: String): String {
-        return raw.split(Regex("\\s+")).joinToString(" ") { word ->
-            if (!word.any(::isCyrillic)) return@joinToString word
-
-            word.map { ch ->
-                when {
-                    ch in APOSTROPHES -> '\''
-                    else -> HOMOGLYPHS[ch.lowercaseChar()]?.let { cyr ->
-                        if (ch.isUpperCase()) cyr.uppercaseChar()
-                        else cyr
-                    } ?: ch
-                }
-            }.joinToString("")
+    fun repairDisplay(raw: String): String = raw.map { ch ->
+        when {
+            ch in APOSTROPHES -> '\''
+            else -> HOMOGLYPHS[ch.lowercaseChar()]?.let { cyr ->
+                if (ch.isUpperCase()) cyr.uppercaseChar() else cyr
+            } ?: ch
         }
-    }
-
-    private fun isCyrillic(ch: Char): Boolean {
-        val c = ch.lowercaseChar()
-        return c in 'а'..'я' || c == 'і' || c == 'ї' || c == 'є' || c == 'ґ'
-    }
+    }.joinToString("")
 }

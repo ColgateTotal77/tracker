@@ -18,6 +18,12 @@ import com.colgateTotal77.tracker.core.database.product.ProductEntity
 import com.colgateTotal77.tracker.core.database.product.ProductFromQuery
 import com.colgateTotal77.tracker.core.enums.ProductSort
 import com.colgateTotal77.tracker.core.enums.toTimeRange
+import com.colgateTotal77.tracker.R
+import com.colgateTotal77.tracker.core.ui.AppToast
+import com.colgateTotal77.tracker.core.ui.ToastFailure
+import com.colgateTotal77.tracker.core.ui.launchWithToast
+import androidx.room.withTransaction
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -28,7 +34,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 
 class ProductViewModel(
@@ -86,25 +91,34 @@ class ProductViewModel(
     }
 
     fun insertProduct(product: ProductEntity) {
-        viewModelScope.launch(Dispatchers.IO) {
-            database.productDao().insertOrRestore(product)
+        launchWithToast(R.string.toast_save_product_failed) {
+            val restored = database.withTransaction {
+                val dao = database.productDao()
+                val existing = dao.getByNormalizedName(product.normalizedName)
+                if (existing != null && !existing.isArchived) {
+                    throw ToastFailure(R.string.toast_duplicate_product)
+                }
+                dao.insertOrRestore(product)
+                existing != null
+            }
+            if (restored) withContext(Dispatchers.Main) { AppToast.show(R.string.toast_product_restored) }
         }
     }
 
     fun updateProduct(product: ProductEntity) {
-        viewModelScope.launch(Dispatchers.IO) {
+        launchWithToast(R.string.toast_save_product_failed) {
             database.productDao().update(product)
         }
     }
 
     fun archiveProductById(id: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
+        launchWithToast(R.string.toast_archive_product_failed, R.string.toast_product_archived) {
             database.productDao().archiveById(id)
         }
     }
 
     fun restoreProductById(id: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
+        launchWithToast(R.string.toast_restore_product_failed, R.string.toast_product_restored) {
             database.productDao().restoreById(id)
         }
     }

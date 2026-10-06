@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.screens.products
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
@@ -33,14 +35,14 @@ fun AddProductModal(
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)) {
                 Text(
-                    "Add Product",
+                    stringResource(R.string.add_product),
                     style = MaterialTheme.typography.titleLarge,
                 )
 
                 OutlinedTextField(
                     value = nameInput,
                     onValueChange = { nameInput = it },
-                    label = { Text("Product name") },
+                    label = { Text(stringResource(R.string.product_name)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -49,7 +51,7 @@ fun AddProductModal(
                         val name = nameInput.trim()
                         if (name.isNotEmpty()) onAdd(name)
                     },
-                    buttonText = "Save Product",
+                    buttonText = stringResource(R.string.save_product),
                     enabled = nameInput.isNotBlank(),
                     modifier = Modifier.fillMaxWidth(),
                 )

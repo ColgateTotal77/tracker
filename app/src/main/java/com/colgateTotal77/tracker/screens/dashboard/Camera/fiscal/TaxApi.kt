@@ -12,6 +12,8 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+import org.json.JSONException
+import kotlinx.coroutines.CancellationException
 import java.io.IOException
 import java.net.URLDecoder
 import java.nio.charset.Charset
@@ -32,15 +34,9 @@ data class FiscalQrParams(
     val apiDateTime: String
         get() {
             val d = date.filter(Char::isDigit)
-            val t = time.orEmpty().filter(Char::isDigit)
+            val t = time.orEmpty().filter(Char::isDigit).padEnd(6, '0')
             return "${d.take(4)}-${d.substring(4, 6)}-${d.substring(6, 8)} " +
-                buildString {
-                    append(t.take(2))
-                    append(':')
-                    if (t.length >= 4) append(t.substring(2, 4)) else append("00")
-                    append(':')
-                    if (t.length >= 6) append(t.substring(4, 6)) else append("00")
-                }
+                "${t.take(2)}:${t.substring(2, 4)}:${t.substring(4, 6)}"
         }
 }
 
@@ -66,7 +62,7 @@ object TaxApi {
         }
 
         val date = params["date"] ?: return null
-        val time = params["time"] ?: return null
+        val time = params["time"]
         val id = params["id"] ?: return null
         val sm = params["sm"] ?: return null
         val fn = params["fn"] ?: return null
@@ -95,7 +91,7 @@ object TaxApi {
             .get()
             .build()
 
-        var lastError: IOException? = null
+        var lastError: Exception? = null
         repeat(3) { attempt ->
             if (attempt > 0) {
                 Log.w(TAG, "retry attempt ${attempt + 1} after error: $lastError")
@@ -104,50 +100,68 @@ object TaxApi {
             try {
                 val (body, xmlBytes) = fetchOnce(request)
                 return body to xmlBytes
+            } catch (e: ReceiptHttpException) {
+                if (e.status !in 500..599) throw e
+                lastError = e
             } catch (e: IOException) {
-                if (e.message?.contains("Tax API HTTP 4") == true ||
-                    e.message?.contains("Tax API:") == true ||
-                    e.message?.contains("Check not found") == true
-                ) throw e
                 lastError = e
             }
         }
+        if (lastError is ReceiptHttpException) throw lastError
         throw IOException("Tax API unreachable after 3 attempts", lastError)
     }
 
     private suspend fun fetchOnce(request: Request): Pair<String, ByteArray> = withContext(Dispatchers.IO) {
         client.newBuilder().build().newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw IOException("Tax API HTTP ${response.code}")
-
             val body = response.body?.string().orEmpty()
-            Log.d(TAG, "checkXml response: ${body.take(2000)}")
+            Log.d(TAG, "checkXml HTTP ${response.code}: ${body.take(2000)}")
 
-            val json = JSONObject(body)
+            val json = try {
+                JSONObject(body)
+            } catch (e: JSONException) {
+                if (!response.isSuccessful) throw ReceiptHttpException(response.code)
+                throw ReceiptDataException("Tax API returned invalid JSON", e)
+            }
 
             fun optField(name: String) = json.optString(name).takeIf { it.isNotBlank() && it != "null" }
+
+            val apiError = optField("error_description")
+            if ((response.code == 400 || response.isSuccessful) &&
+                apiError?.contains("Не знайдено", ignoreCase = true) == true
+            ) throw ReceiptNotFoundException(apiError)
+            if (!response.isSuccessful) throw ReceiptHttpException(response.code)
 
             val resultCode = optField("resultCode")
             val resultText = optField("resultText")
 
             val captchaUrl = optField("captchaUrl")
-            if (captchaUrl != null && resultCode == null) throw IOException("Tax API: captcha required: $captchaUrl")
-            if (resultCode != null && resultCode != "0") throw IOException("Tax API error code=$resultCode text=$resultText")
+            if (captchaUrl != null && resultCode == null) throw CaptchaRequiredException()
 
-            val apiError = optField("error_description")
-            if (apiError != null) throw IOException("Check not found in the tax archive (likely expired): $apiError")
+            if (apiError != null) throw ReceiptApiException(resultCode ?: optField("error").orEmpty(), apiError)
+            if (resultCode != null && resultCode != "0") throw ReceiptApiException(resultCode, resultText.orEmpty())
 
             val checkXml = optField("checkXml") ?: optField("check")
-                ?: throw IOException("Tax API: missing checkXml, body=${body.take(500)}")
-
-            body to Base64.decode(checkXml, Base64.DEFAULT)
+                ?: throw ReceiptDataException("Tax API response is missing receipt XML")
+            val xmlBytes = try {
+                Base64.decode(checkXml, Base64.DEFAULT)
+            } catch (e: IllegalArgumentException) {
+                throw ReceiptDataException("Tax API returned invalid receipt encoding", e)
+            }
+            body to xmlBytes
         }
     }
 
-    suspend fun fetchFiscalCheck(qrLink: String, captcha: String? = null): FetchedCheck =
+    suspend fun fetchFiscalCheck(params: FiscalQrParams, captcha: String? = null): FetchedCheck =
         withContext(Dispatchers.IO) {
-            val params = requireNotNull(parseQrLink(qrLink)) { "Invalid QR link: $qrLink" }
             val (responseBody, xmlBytes) = fetchCheckXml(params, captcha)
-            val check = CheckXmlParser.parse(xmlBytes)
+            val check = try {
+                CheckXmlParser.parse(xmlBytes)
+            } catch (e: Exception) {
+                when(e) {
+                    is CancellationException -> throw e
+                    else -> throw ReceiptDataException("Could not parse receipt XML", e)
+                }
+            }
 
             val json = JSONObject(responseBody)
             val visual = json.optString("check")

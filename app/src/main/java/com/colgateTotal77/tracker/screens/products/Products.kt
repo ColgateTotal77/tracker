@@ -1,13 +1,11 @@
 package com.colgateTotal77.tracker.screens.products
 
-import android.graphics.Color
-import androidx.compose.foundation.background
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterAlt
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.ProductionQuantityLimits
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -18,15 +16,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.ProductNameNormalizer
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
-import com.colgateTotal77.tracker.core.enums.DateFilter
 import com.colgateTotal77.tracker.core.enums.ProductSort
-import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.DropdownPopup
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
@@ -43,6 +41,7 @@ fun Products(
     var selectedProduct by remember { mutableStateOf<ProductEntity?>(null) }
 
     val dimensions = LocalDimensions.current
+    val context = LocalContext.current
 
     val markets by viewModel.marketsFlow.collectAsStateWithLifecycle()
     val filters by viewModel.filters.collectAsStateWithLifecycle()
@@ -56,7 +55,7 @@ fun Products(
         modifier = modifier,
         floatingActionButton = {
             FloatingActionButton(onClick = { isAddProductModalOpen = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Add Product")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_product))
             }
         },
     ) { paddingValues ->
@@ -72,7 +71,7 @@ fun Products(
                     value = searchQuery,
                     onValueChange = { viewModel.onSearchQueryChanged(it) },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Search products...") },
+                    placeholder = { Text(stringResource(R.string.search_products)) },
                     singleLine = true
                 )
                 Row(
@@ -88,8 +87,8 @@ fun Products(
                         onSelect = { selectedSort ->
                             selectedSort?.let { viewModel.onSortChanged(it) }
                         },
-                        itemText = { sort -> sort.label },
-                        itemName = "Sort",
+                        itemText = { sort -> context.getString(sort.labelRes) },
+                        itemName = stringResource(R.string.sort),
                         modifier = Modifier.weight(1f)
                     )
 
@@ -100,7 +99,7 @@ fun Products(
                     ) {
                         Icon(
                             imageVector = Icons.Default.FilterAlt,
-                            contentDescription = "Filter",
+                            contentDescription = stringResource(R.string.filter),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
@@ -116,8 +115,8 @@ fun Products(
                         verticalArrangement = Arrangement.spacedBy(dimensions.elementSpacing),
                     ) {
                         Icon(Icons.Default.ProductionQuantityLimits, contentDescription = null)
-                        Text("No Product yet", style = MaterialTheme.typography.bodyLarge)
-                        Text("Tap + to add your first transaction")
+                        Text(stringResource(R.string.no_products_yet), style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(R.string.add_first_transaction))
                     }
                 }
             } else {

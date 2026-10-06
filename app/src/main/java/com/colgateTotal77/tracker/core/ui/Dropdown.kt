@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.core.ui
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -39,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.ui.theme.dimensions
 
 private val DropdownItemHeight = 48.dp
@@ -59,6 +61,7 @@ fun <T> Dropdown(
 ) {
     val dimensions = MaterialTheme.dimensions
     val panelShape = RoundedCornerShape(dimensions.cornerRadius)
+    val duplicateMessage = stringResource(R.string.duplicate_name, itemName)
 
     val initialItem = remember { selected }
     var isExpanded by remember { mutableStateOf(false) }
@@ -71,7 +74,7 @@ fun <T> Dropdown(
         newItemText = ""
     }
 
-    val currentDisplayText = if (selected != null) itemText(selected) else "Not Selected"
+    val currentDisplayText = if (selected != null) itemText(selected) else stringResource(R.string.not_selected)
 
     val filteredItems = remember(items, searchQuery) {
         if (searchQuery.isBlank()) items
@@ -95,7 +98,7 @@ fun <T> Dropdown(
                     ),
                 readOnly = true,
                 singleLine = true,
-                label = { Text("Select $itemName") },
+                label = { Text(stringResource(R.string.select_item, itemName)) },
                 leadingIcon = leadingIcon,
                 trailingIcon = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -103,7 +106,7 @@ fun <T> Dropdown(
                             CustomIconButton(onClick = { onSelect(initialItem) }) {
                                 Icon(
                                     imageVector = Icons.Default.Clear,
-                                    contentDescription = "Reset selection"
+                                    contentDescription = stringResource(R.string.reset_selection)
                                 )
                             }
                         }
@@ -141,8 +144,8 @@ fun <T> Dropdown(
                                         horizontal = dimensions.contentPadding,
                                         vertical = dimensions.elementSpacing,
                                     ),
-                                placeholder = { Text("Search...") },
-                                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                                placeholder = { Text(stringResource(R.string.search)) },
+                                leadingIcon = { Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search)) },
                                 singleLine = true
                             )
                             HorizontalDivider()
@@ -164,7 +167,7 @@ fun <T> Dropdown(
                             OutlinedTextField(
                                 value = newItemText,
                                 onValueChange = { newItemText = it },
-                                label = { Text("Add new $itemName") },
+                                label = { Text(stringResource(R.string.add_new_item, itemName)) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(
@@ -176,14 +179,14 @@ fun <T> Dropdown(
                                         onClick = {
                                             if (newItemText.isBlank()) return@CustomIconButton
                                             if (newItemText.lowercase().trim() in items.map { itemText(it).lowercase().trim() }) {
-                                                // toast
+                                                AppToast.show(duplicateMessage, ToastType.Error)
                                                 return@CustomIconButton
                                             }
                                             onCreateNewItem(newItemText)
                                             newItemText = ""
                                         }
                                     ) {
-                                        Icon(Icons.Default.Add, contentDescription = "Add Item")
+                                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_item))
                                     }
                                 }
                             )

@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.screens.dashboard.Camera
 
+import androidx.compose.ui.res.stringResource
 import android.Manifest
 
 import androidx.compose.foundation.layout.Arrangement
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.transaction.TransactionDraft
 import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
@@ -35,11 +37,11 @@ fun Camera(
             ) {
                 CustomButton(
                     onClick = { permissionState.launchPermissionRequest() },
-                    buttonText = "Grant Camera Permission",
+                    buttonText = stringResource(R.string.grant_camera_permission),
                 )
                 CustomButton(
                     onClick = onClose,
-                    buttonText = "Close",
+                    buttonText = stringResource(R.string.close),
                 )
             }
         }

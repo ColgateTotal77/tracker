@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.colgateTotal77.tracker.core.ui.theme.dimensions
 
 @Composable
@@ -27,8 +28,8 @@ fun CustomIconButton(
         modifier = modifier
             .minimumInteractiveComponentSize()
             .defaultMinSize(
-                minWidth = dimensions.iconButtonSize,
-                minHeight = dimensions.iconButtonSize
+                minWidth = 40.dp,
+                minHeight = 40.dp
             ),
         shape = RoundedCornerShape(dimensions.cornerRadius),
         color = bgColor,

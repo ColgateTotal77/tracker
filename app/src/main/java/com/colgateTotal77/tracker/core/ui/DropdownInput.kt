@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.core.ui
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -18,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import com.colgateTotal77.tracker.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,8 +100,8 @@ private fun <T> RenameField(
         singleLine = true,
         supportingText = {
             when {
-                isUnchanged -> Text("Name unchanged", style = MaterialTheme.typography.bodySmall)
-                isDuplicate -> Text("$itemName with this name already exists", style = MaterialTheme.typography.bodySmall)
+                isUnchanged -> Text(stringResource(R.string.name_unchanged), style = MaterialTheme.typography.bodySmall)
+                isDuplicate -> Text(stringResource(R.string.duplicate_name, itemName), style = MaterialTheme.typography.bodySmall)
             }
         },
         keyboardActions = KeyboardActions(onDone = {
@@ -113,13 +115,13 @@ private fun <T> RenameField(
                     onInputDone(trimmed)
                     onBackToDropdown()
                 }) {
-                    Icon(Icons.Default.Check, contentDescription = "Save name")
+                    Icon(Icons.Default.Check, contentDescription = stringResource(R.string.save_name))
                 }
             } else {
                 CustomIconButton(onClick = {
                     onBackToDropdown()
                 }) {
-                    Icon(Icons.Default.Close, contentDescription = "Cancel renaming")
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel_renaming))
                 }
             }
         },

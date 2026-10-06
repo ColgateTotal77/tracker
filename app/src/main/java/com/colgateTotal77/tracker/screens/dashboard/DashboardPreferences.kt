@@ -1,4 +1,4 @@
-package com.colgateTotal77.tracker.core
+package com.colgateTotal77.tracker.screens.dashboard
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -13,10 +13,10 @@ data class ProgressBarPreferences(
     val selectedFilter: DateFilter = DateFilter.Month
 )
 
-class ProgressBarPreferencesRepository(
+class DashboardPreferences(
     private val dataStore: DataStore<Preferences>,
 ) {
-    private val KEY = stringPreferencesKey("settings")
+    private val KEY = stringPreferencesKey("progressBarSettings")
 
     val progressBarSettingsFlow: Flow<ProgressBarPreferences> = dataStore.data.map { prefs ->
         val savedString = prefs[KEY] ?: return@map ProgressBarPreferences()
@@ -32,9 +32,9 @@ class ProgressBarPreferencesRepository(
         ProgressBarPreferences(targetBudget = budget, selectedFilter = filter)
     }
 
-    suspend fun updateProgressBarPreferences(settings: ProgressBarPreferences) {
+    suspend fun updateProgressBarPreferences(progressBarSettings: ProgressBarPreferences) {
         dataStore.edit { prefs ->
-            val stringToSave = "${settings.targetBudget}|${settings.selectedFilter.name}"
+            val stringToSave = "${progressBarSettings.targetBudget}|${progressBarSettings.selectedFilter.name}"
             prefs[KEY] = stringToSave
         }
     }

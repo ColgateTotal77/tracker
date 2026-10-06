@@ -1,8 +1,8 @@
 package com.colgateTotal77.tracker.screens.dashboard
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.*
@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductWithProduct
 import com.colgateTotal77.tracker.core.formatMoney
 import com.colgateTotal77.tracker.core.ui.CardWrapper
@@ -64,7 +65,7 @@ fun TransactionProductCard(
                 CustomIconButton(onClick = onEdit) {
                     Icon(
                         imageVector = Icons.Rounded.Edit,
-                        contentDescription = "Edit product",
+                        contentDescription = stringResource(R.string.edit_transaction_product),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -72,7 +73,7 @@ fun TransactionProductCard(
                 CustomIconButton(onClick = onDelete) {
                     Icon(
                         imageVector = Icons.Rounded.DeleteOutline,
-                        contentDescription = "Delete product",
+                        contentDescription = stringResource(R.string.delete_transaction_product),
                         tint = MaterialTheme.colorScheme.error
                     )
                 }

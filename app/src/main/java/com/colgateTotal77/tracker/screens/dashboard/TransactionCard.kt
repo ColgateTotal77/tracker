@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.screens.dashboard
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,7 +32,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.MeasureUnit
+import com.colgateTotal77.tracker.core.enums.TransactionSource
 import com.colgateTotal77.tracker.core.database.transaction.TransactionWithProducts
 import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductWithProduct
 import com.colgateTotal77.tracker.core.formatMoney
@@ -113,7 +116,7 @@ fun TransactionCard(
                         )
 
                         Text(
-                            text = transaction.source.name,
+                            text = stringResource(transaction.source.labelRes),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
@@ -131,7 +134,7 @@ fun TransactionCard(
 
                 ActionDropdownMenu { onCloseMenu ->
                     DropdownMenuItem(
-                        text = { Text("Edit") },
+                        text = { Text(stringResource(R.string.edit)) },
                         onClick = {
                             onCloseMenu()
                             onEdit()
@@ -139,7 +142,7 @@ fun TransactionCard(
                     )
 
                     DropdownMenuItem(
-                        text = { Text("Delete") },
+                        text = { Text(stringResource(R.string.delete)) },
                         onClick = {
                             onCloseMenu()
                             onDelete()
@@ -172,7 +175,7 @@ fun TransactionCard(
                             val nextPosition = (transactionItem.items.maxOfOrNull { it.transactionProduct.position } ?: -1) + 1
                             onAddTransactionProduct(nextPosition)
                         },
-                        buttonText = "Add Product",
+                        buttonText = stringResource(R.string.add_product),
                         icon = Icons.Rounded.Add,
                         modifier = Modifier.fillMaxWidth()
                     )

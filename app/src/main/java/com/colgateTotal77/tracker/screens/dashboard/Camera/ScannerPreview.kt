@@ -20,7 +20,6 @@ import androidx.compose.material.icons.filled.FlashlightOn
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -36,19 +35,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.transaction.TransactionDraft
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
+import com.colgateTotal77.tracker.core.ui.AppToast
+import com.colgateTotal77.tracker.core.ui.ToastType
+import com.colgateTotal77.tracker.screens.dashboard.Camera.fiscal.FiscalQrParams
+import com.colgateTotal77.tracker.screens.dashboard.Camera.fiscal.ReceiptNotFoundException
 import com.colgateTotal77.tracker.screens.dashboard.Camera.fiscal.TaxApi.fetchFiscalCheck
+import com.colgateTotal77.tracker.screens.dashboard.Camera.fiscal.TaxApi.parseQrLink
 import com.colgateTotal77.tracker.screens.dashboard.Camera.fiscal.toDraft
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 import java.io.IOException
 import java.util.concurrent.Executors
 
@@ -74,7 +79,16 @@ fun ScannerPreview(
     var hasScanned by remember { mutableStateOf(false) }
     var isTorchOn by remember { mutableStateOf(false) }
     var camera by remember { mutableStateOf<Camera?>(null) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    var lastErrorToastAt by remember { mutableStateOf<Long?>(null) }
+    fun showScannerError(messageRes: Int, e: Exception? = null) {
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (lastErrorToastAt == null || now - lastErrorToastAt!! >= 5000) {
+            AppToast.show(messageRes, ToastType.Error)
+            Log.e(TAG, "scan error", e)
+            lastErrorToastAt = now
+        }
+    }
 
     val previewView = remember { PreviewView(context) }
     previewView.implementationMode = PreviewView.ImplementationMode.COMPATIBLE
@@ -97,22 +111,46 @@ fun ScannerPreview(
 
             analysis.setAnalyzer(executor) { imageProxy ->
                 if (!hasScanned) {
-                    scanProcessImage(imageProxy, scanner) { qrLink ->
+                    scanProcessImage(
+                        imageProxy,
+                        scanner,
+                        onError = { e ->
+                            coroutineScope.launch { showScannerError(R.string.scanner_failed, e) }
+                        },
+                    ) { qrLink ->
                         if (hasScanned) return@scanProcessImage
                         hasScanned = true
 
                         coroutineScope.launch {
+                            var params: FiscalQrParams? = null
                             try {
-                                val parsedCheck = fetchFiscalCheck(qrLink)
+                                params = try {
+                                    parseQrLink(qrLink)
+                                } catch (_: IllegalArgumentException) {
+                                    null
+                                }
+                                if (params == null) {
+                                    showScannerError(R.string.invalid_receipt_qr)
+                                    hasScanned = false
+                                    return@launch
+                                }
+                                val parsedCheck = fetchFiscalCheck(params)
                                 Log.d(TAG, "parsedCheck $parsedCheck")
                                 onAdd(parsedCheck.toDraft())
+                            } catch (e: CancellationException) {
+                                throw e
                             } catch (e: Exception) {
                                 Log.e(TAG, "Failed to fetch fiscal check", e)
-                                errorMessage = if (e is IOException) { //toast?
-                                    "Network error loading check — check connection and try again"
-                                } else {
-                                    "Failed to load check: ${e.message}"
-                                }
+                                showScannerError(
+                                    when (e) {
+                                        is ReceiptNotFoundException if isRecentReceipt(params) ->
+                                            R.string.receipt_not_loaded_yet
+                                        is ReceiptNotFoundException -> R.string.receipt_not_found
+                                        is IOException -> R.string.network_error_check
+                                        else -> R.string.receipt_load_failed
+                                    },
+                                    e
+                                )
                                 hasScanned = false
                             }
                         }
@@ -137,6 +175,7 @@ fun ScannerPreview(
                 Log.d(TAG, "Camera bound successfully")
             } catch (e: Exception) {
                 Log.e(TAG, "bindToLifecycle failed", e)
+                showScannerError(R.string.camera_start_failed, e)
             }
         }, ContextCompat.getMainExecutor(context))
 
@@ -156,13 +195,6 @@ fun ScannerPreview(
                 .fillMaxSize()
         )
 
-        Text(
-            errorMessage ?: "Point at a QR code",
-            color = if (errorMessage != null) MaterialTheme.colorScheme.error else Color.White,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.align(Alignment.TopCenter),
-        )
-
         Row(
             modifier = Modifier.align(Alignment.TopEnd),
             verticalAlignment = Alignment.CenterVertically,
@@ -180,7 +212,7 @@ fun ScannerPreview(
                 }
                 Icon(
                     Icons.Default.Refresh,
-                    contentDescription = "Processing",
+                    contentDescription = context.getString(R.string.processing),
                     tint = Color(0xFF70BF73),
                     modifier = Modifier.padding(end = 4.dp).size(22.dp).rotate(angle),
                 )
@@ -193,7 +225,7 @@ fun ScannerPreview(
             ) {
                 Icon(
                     if (isTorchOn) Icons.Default.FlashlightOn else Icons.Default.FlashlightOff,
-                    contentDescription = "Toggle flashlight",
+                    contentDescription = context.getString(R.string.toggle_flashlight),
                     tint = MaterialTheme.colorScheme.onPrimary,
                 )
             }
@@ -203,7 +235,7 @@ fun ScannerPreview(
             onClick = onClose,
             modifier = Modifier.align(Alignment.TopStart),
         ) {
-            Icon(Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onPrimary)
+            Icon(Icons.Default.Close, contentDescription = context.getString(R.string.close), tint = MaterialTheme.colorScheme.onPrimary)
         }
     }
 }

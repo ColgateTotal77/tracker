@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.screens.dashboard
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,8 +17,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
-import com.colgateTotal77.tracker.core.ProgressBarPreferences
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.enums.DateFilter
 import com.colgateTotal77.tracker.core.filterDecimal
 import com.colgateTotal77.tracker.core.ui.CardWrapper
@@ -36,19 +38,20 @@ fun ProgressBarModal(
     var selectedFilter by remember { mutableStateOf(settings.selectedFilter) }
 
     val dimensions = LocalDimensions.current
+    val context = LocalContext.current
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)) {
                 Text(
-                    "Change Target",
+                    stringResource(R.string.change_target),
                     style = MaterialTheme.typography.titleLarge,
                 )
 
                 OutlinedTextField(
                     value = amountInput,
                     onValueChange = { amountInput = it.filterDecimal() },
-                    label = { Text("Amount") },
+                    label = { Text(stringResource(R.string.amount)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -59,8 +62,8 @@ fun ProgressBarModal(
                     onSelect = { newFilter ->
                         selectedFilter = newFilter ?: DateFilter.Month
                     },
-                    itemText = { filter -> filter.label },
-                    itemName = "Time Period",
+                    itemText = { filter -> context.getString(filter.labelRes) },
+                    itemName = stringResource(R.string.time_period),
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -73,7 +76,7 @@ fun ProgressBarModal(
                             )
                         )
                     },
-                    buttonText = "Save Progress",
+                    buttonText = stringResource(R.string.save_progress),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

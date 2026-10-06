@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.screens.dashboard
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.market.MarketChoice
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.core.database.transaction.TransactionEntity
@@ -88,7 +90,7 @@ fun EditTransactionModal(
                 OutlinedTextField(
                     value = amountInput,
                     onValueChange = { amountInput = it.filterDecimal() },
-                    label = { Text("Amount") },
+                    label = { Text(stringResource(R.string.amount)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     enabled = transaction.source == TransactionSource.MANUAL,
                     modifier = Modifier.fillMaxWidth(),
@@ -101,14 +103,14 @@ fun EditTransactionModal(
                         selectedCurrency?.let { currency = it }
                     },
                     itemText = { it.dropdownText },
-                    itemName = "Currency",
+                    itemName = stringResource(R.string.currency),
                     modifier = Modifier.fillMaxWidth(),
                 )
 
                 DropdownInput(
                     items = displayMarkets,
-                    itemName = "Market",
-                    inputLabel = "Rename market",
+                    itemName = stringResource(R.string.market),
+                    inputLabel = stringResource(R.string.rename_market),
                     itemText = { it?.name ?: "" },
                     selected = selectedMarket,
                     onSelect = { selectedMarket = it },
@@ -118,7 +120,7 @@ fun EditTransactionModal(
                         selectedMarket = MarketEntity(id = 0, tin = null, name = name)
                     },
                     leadingIcon = if(selectedMarket != null) {
-                        { Icon(Icons.Default.Edit, contentDescription = "Rename market") }
+                        { Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.rename_market)) }
                     } else null,
                     onInputDone = { name ->
                         selectedMarket = selectedMarket?.copy(name = name)
@@ -146,7 +148,7 @@ fun EditTransactionModal(
 
                         onUpdate(amountMinor, currency, market, parsedDateMillis)
                     },
-                    buttonText = "Save Transaction",
+                    buttonText = stringResource(R.string.save_transaction),
                     enabled = isDateValid && amountInput.isNotBlank(),
                     modifier = Modifier.fillMaxWidth(),
                 )

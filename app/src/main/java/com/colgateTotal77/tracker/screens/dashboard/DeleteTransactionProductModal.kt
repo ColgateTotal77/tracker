@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.screens.dashboard
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Dialog
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductWithProduct
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
@@ -30,7 +32,7 @@ fun DeleteTransactionProductModal(
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)) {
                 Text(
-                    "Delete Product",
+                    stringResource(R.string.delete_product),
                     style = MaterialTheme.typography.titleLarge,
                 )
 
@@ -41,7 +43,7 @@ fun DeleteTransactionProductModal(
 
                 CustomButton(
                     onClick = onDelete,
-                    buttonText = "Delete Product",
+                    buttonText = stringResource(R.string.delete_product),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

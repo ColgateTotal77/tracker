@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.core.ui
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
@@ -24,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.MeasureUnit
 import com.colgateTotal77.tracker.core.filterDecimal
 import com.colgateTotal77.tracker.core.ui.theme.dimensions
@@ -71,7 +73,7 @@ fun QuantityInputField(
                         modifier = Modifier.padding(end = dimensions.elementSpacing)
                     ) {
                         Text(selectedUnit.label)
-                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Unit")
+                        Icon(Icons.Default.ArrowDropDown, contentDescription = stringResource(R.string.select_unit))
                     }
 
                     DropdownMenu(

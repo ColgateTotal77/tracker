@@ -13,12 +13,14 @@ import androidx.paging.cachedIn
 import com.colgateTotal77.tracker.TrackerApplication
 import com.colgateTotal77.tracker.core.ProductNameNormalizer
 import com.colgateTotal77.tracker.core.database.transaction.TransactionEntity
-import kotlinx.coroutines.Dispatchers
+import com.colgateTotal77.tracker.R
+import com.colgateTotal77.tracker.core.enums.TransactionSource
+import com.colgateTotal77.tracker.core.ui.ToastFailure
+import com.colgateTotal77.tracker.core.ui.launchWithToast
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import androidx.room.withTransaction
 import com.colgateTotal77.tracker.core.database.AppDatabase
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
@@ -27,9 +29,6 @@ import com.colgateTotal77.tracker.core.database.transaction.TransactionWithProdu
 import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductEntity
 import com.colgateTotal77.tracker.core.enums.TransactionStatus
 import androidx.paging.map
-import com.colgateTotal77.tracker.core.ProgressBarPreferences
-import com.colgateTotal77.tracker.core.ProgressBarPreferencesRepository
-import com.colgateTotal77.tracker.core.calculateTargetBudget
 import com.colgateTotal77.tracker.core.database.market.MarketChoice
 import com.colgateTotal77.tracker.core.database.product.ProductChoice
 import com.colgateTotal77.tracker.core.database.transaction.TransactionDraft
@@ -42,7 +41,7 @@ import kotlinx.coroutines.flow.map
 
 class DashboardViewModel(
     private val database: AppDatabase,
-    private val preferencesRepository: ProgressBarPreferencesRepository,
+    private val preferencesRepository: DashboardPreferences,
 ) : ViewModel() {
 
     val transactionsFlow: Flow<PagingData<TransactionWithProducts>> = Pager(
@@ -57,7 +56,10 @@ class DashboardViewModel(
     }.cachedIn(viewModelScope)
 
     fun addTransaction(transaction: TransactionDraft) {
-        viewModelScope.launch(Dispatchers.IO) {
+        launchWithToast(
+            error = R.string.toast_save_transaction_failed,
+            success = R.string.toast_receipt_added.takeIf { transaction.source == TransactionSource.QR_CODE },
+        ) {
             database.withTransaction {
                 val marketDao = database.marketDao()
                 val productDao = database.productDao()
@@ -106,7 +108,7 @@ class DashboardViewModel(
                         updatedAt = now,
                     )
                 )
-                if (transactionId == -1L) return@withTransaction //need to add toast (already added)
+                if (transactionId == -1L) throw ToastFailure(R.string.toast_duplicate_receipt)
 
                 val distinctProducts = transaction.items.mapNotNull { item ->
                     val name = item.name ?: return@mapNotNull null
@@ -158,7 +160,7 @@ class DashboardViewModel(
     }
 
     fun updateTransaction(transaction: TransactionEntity, market: MarketChoice) {
-        viewModelScope.launch(Dispatchers.IO) {
+        launchWithToast(R.string.toast_save_transaction_failed) {
             database.withTransaction {
                 val marketDao = database.marketDao()
 
@@ -186,7 +188,7 @@ class DashboardViewModel(
     }
 
     fun deleteTransactionById(id: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
+        launchWithToast(R.string.toast_delete_transaction_failed, R.string.toast_transaction_deleted) {
             database.transactionDao().deleteById(id)
         }
     }
@@ -199,7 +201,7 @@ class DashboardViewModel(
         )
 
     fun addTransactionProduct(transactionProduct: TransactionProductDraft, productChoice: ProductChoice) {
-        viewModelScope.launch(Dispatchers.IO) {
+        launchWithToast(R.string.toast_save_transaction_product_failed) {
             val productDao = database.productDao()
             val now = System.currentTimeMillis()
 
@@ -219,7 +221,8 @@ class DashboardViewModel(
                             )
                         )
 
-                        productDao.getByNormalizedName(normalizedName)?.id ?: return@withTransaction
+                        productDao.getByNormalizedName(normalizedName)?.id
+                            ?: throw ToastFailure(R.string.toast_save_transaction_product_failed)
                     }
                 }
 
@@ -244,7 +247,7 @@ class DashboardViewModel(
     }
 
     fun updateTransactionProduct(transactionProduct: TransactionProductEntity, alias: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        launchWithToast(R.string.toast_save_transaction_product_failed) {
             database.withTransaction {
                 database.transactionProductDao().update(transactionProduct)
                 database.productDao().updateAlliesById(transactionProduct.productId, alias)
@@ -253,7 +256,7 @@ class DashboardViewModel(
     }
 
     fun deleteTransactionProductById(id: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
+        launchWithToast(R.string.toast_delete_transaction_product_failed, R.string.toast_transaction_product_deleted) {
             database.transactionProductDao().deleteById(id)
         }
     }
@@ -285,7 +288,7 @@ class DashboardViewModel(
         )
 
     fun updateProgressBarPreferences(settings: ProgressBarPreferences) {
-        viewModelScope.launch {
+        launchWithToast(R.string.toast_save_settings_failed) {
             preferencesRepository.updateProgressBarPreferences(settings)
         }
     }
@@ -296,7 +299,7 @@ class DashboardViewModel(
                 val application = (this[APPLICATION_KEY] as TrackerApplication)
                 DashboardViewModel(
                     application.database,
-                    application.userPreferencesRepository,
+                    application.dashboardPreferencesRepository,
                 )
             }
         }

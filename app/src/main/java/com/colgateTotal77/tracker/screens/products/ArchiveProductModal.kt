@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.screens.products
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Dialog
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
@@ -28,7 +30,7 @@ fun ArchiveProductModal(
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)) {
                 Text(
-                    "Archive Product",
+                    stringResource(R.string.archive_product),
                     style = MaterialTheme.typography.titleLarge,
                 )
 
@@ -39,7 +41,7 @@ fun ArchiveProductModal(
 
                 CustomButton(
                     onClick = { onArchive(product.id) },
-                    buttonText = "Archive Product",
+                    buttonText = stringResource(R.string.archive_product),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

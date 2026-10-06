@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.screens.dashboard
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.MeasureUnit
 import com.colgateTotal77.tracker.core.database.product.ProductChoice
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
@@ -50,14 +52,14 @@ fun AddTransactionProductModal(
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)) {
                 Text(
-                    "Add Product",
+                    stringResource(R.string.add_product),
                     style = MaterialTheme.typography.titleLarge,
                 )
 
                 DropdownInput(
                     items = products,
-                    itemName = "Product",
-                    inputLabel = "New product name",
+                    itemName = stringResource(R.string.product),
+                    inputLabel = stringResource(R.string.new_product_name),
                     itemText = { it?.alias ?: ""},
                     selected = selectedProduct,
                     onSelect = {
@@ -69,7 +71,7 @@ fun AddTransactionProductModal(
                     leadingIcon = {
                         Icon(
                             imageVector = if (selectedProduct?.id != 0) Icons.Default.Add else Icons.Default.Edit,
-                            contentDescription = if (selectedProduct?.id == 0) "Create product" else "Edit product"
+                            contentDescription = if (selectedProduct?.id == 0) stringResource(R.string.create_product) else stringResource(R.string.edit_transaction_product)
                         )
                     },
                     onInputDone = { newName ->
@@ -99,7 +101,7 @@ fun AddTransactionProductModal(
                 OutlinedTextField(
                     value = unitPriceInput,
                     onValueChange = { unitPriceInput = it.filterDecimal() },
-                    label = { Text("Unit price") },
+                    label = { Text(stringResource(R.string.unit_price)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -123,7 +125,7 @@ fun AddTransactionProductModal(
 
                         onAdd(productChoice, quantity, unitPriceMinor)
                     },
-                    buttonText = "Save Product",
+                    buttonText = stringResource(R.string.save_product),
                     enabled = !selectedProduct?.alias.isNullOrBlank(),
                     modifier = Modifier.fillMaxWidth(),
                 )

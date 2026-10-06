@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.core.ui
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.material.icons.Icons
@@ -13,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.colgateTotal77.tracker.R
 
 @Composable
 fun ActionDropdownMenu(
@@ -25,7 +27,7 @@ fun ActionDropdownMenu(
         CustomIconButton(onClick = { menuExpanded = true }) {
             Icon(
                 imageVector = Icons.Default.MoreVert,
-                contentDescription = "Options",
+                contentDescription = stringResource(R.string.options),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

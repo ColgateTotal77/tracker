@@ -1,9 +1,11 @@
 package com.colgateTotal77.tracker.core.ui
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import com.colgateTotal77.tracker.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,7 +28,7 @@ fun <T> DropdownPopup(
             value = selected?.let { itemText(it) } ?: "",
             onValueChange = {},
             readOnly = true,
-            placeholder = { Text("Select $itemName") },
+            placeholder = { Text(stringResource(R.string.select_item, itemName)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
             modifier = Modifier.menuAnchor(
