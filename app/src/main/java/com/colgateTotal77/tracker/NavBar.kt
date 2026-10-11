@@ -18,10 +18,9 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -34,7 +33,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,7 +45,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
-import com.colgateTotal77.tracker.screens.dashboard.Dashboard
+import com.colgateTotal77.tracker.screens.operations.Operations
+import com.colgateTotal77.tracker.screens.overview.Overview
 import com.colgateTotal77.tracker.screens.products.Products
 import com.colgateTotal77.tracker.screens.settings.Settings
 
@@ -57,19 +59,19 @@ fun NavBar() {
     var selectedItemIndex by remember { mutableIntStateOf(0) }
 
     val items = listOf(
-        R.string.tab_dashboard,
-        R.string.tab_products,
+        R.string.tab_overview,
+        R.string.tab_operations,
         R.string.tab_portfolio,
         R.string.tab_analytics,
-        R.string.tab_settings
     )
     val icons = listOf(
         Icons.Default.Home,
-        Icons.Default.ShoppingCart,
+        Icons.Default.CreditCard,
         Icons.Default.Folder,
         Icons.Default.Analytics,
-        Icons.Default.Settings
     )
+
+    var expendedExpenseId by rememberSaveable { mutableStateOf<Int?>(null) }
 
     Scaffold(
         bottomBar = {
@@ -88,9 +90,20 @@ fun NavBar() {
         }
     ) { paddingValues ->
         when (selectedItemIndex) {
-            0 -> Dashboard(modifier = Modifier.padding(paddingValues))
-            1 -> Products(modifier = Modifier.padding(paddingValues))
-            4 -> Settings(modifier = Modifier.padding(paddingValues))
+            0 -> Overview(
+                onExpenseClick = { id ->
+                    expendedExpenseId = id
+                    selectedItemIndex = 1
+                },
+                modifier = Modifier.padding(paddingValues)
+            )
+            1 -> Operations(
+                expendedExpenseId = expendedExpenseId,
+                changeExpendedExpenseId = { id ->
+                    expendedExpenseId = id
+                },
+                modifier = Modifier.padding(paddingValues)
+            )
             else -> Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -136,7 +149,7 @@ private fun RowScope.NavBarItem(
     ) {
         Box(
             modifier = Modifier
-                .padding(top = dimensions.elementSpacing)
+                .padding(top = dimensions.spacingSmall)
                 .size(width = IndicatorWidth, height = IndicatorHeight)
                 .clip(RoundedCornerShape(dimensions.cornerRadius))
                 .background(if (selected) colors.selectedIndicatorColor else Color.Transparent)
@@ -153,7 +166,7 @@ private fun RowScope.NavBarItem(
             }
         }
 
-        Spacer(modifier = Modifier.height(dimensions.elementSpacing))
+        Spacer(modifier = Modifier.height(dimensions.spacingSmall))
 
         CompositionLocalProvider(LocalContentColor provides textColor) {
             label()

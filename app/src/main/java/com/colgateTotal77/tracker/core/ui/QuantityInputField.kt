@@ -66,12 +66,12 @@ fun QuantityInputField(
         modifier = modifier,
         trailingIcon = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                VerticalDivider(modifier = Modifier.height(34.dp))
+                VerticalDivider(modifier = Modifier.height(dimensions.verticalDividerHeight))
 
                 Box {
                     TextButton(
                         onClick = { unitMenuExpanded = true },
-                        modifier = Modifier.padding(horizontal = dimensions.elementSpacing),
+                        modifier = Modifier.padding(horizontal = dimensions.iconContainerPadding),
                         shape = RoundedCornerShape(dimensions.cornerRadius),
                     ) {
                         Text(selectedUnit.label)

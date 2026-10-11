@@ -44,7 +44,7 @@ fun CustomButton(
                 tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(20.dp)
             )
-            Spacer(modifier = Modifier.width(dimensions.elementSpacing))
+            Spacer(modifier = Modifier.width(dimensions.spacingSmall))
         }
         Text(text = buttonText)
     }

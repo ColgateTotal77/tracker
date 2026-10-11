@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.screens.products
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -7,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.ProductionQuantityLimits
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -32,9 +34,12 @@ import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Products(
+    onBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ProductViewModel = viewModel(factory = ProductViewModel.Factory),
 ) {
+    BackHandler(onBack = onBack)
+
     var isAddProductModalOpen by remember { mutableStateOf(false) }
     var isEditProductModalOpen by remember { mutableStateOf(false) }
     var isArchiveProductModalOpen by remember { mutableStateOf(false) }
@@ -64,22 +69,35 @@ fun Products(
                 .fillMaxSize()
                 .padding(dimensions.screenPadding)
                 .padding(paddingValues),
-            verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing),
+            verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)) {
+            Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { viewModel.onSearchQueryChanged(it) },
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text(stringResource(R.string.search_products)) },
-                    singleLine = true
+                    singleLine = true,
+                    trailingIcon = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            VerticalDivider(modifier = Modifier.height(dimensions.verticalDividerHeight))
+                            CustomIconButton(onClick = onBack) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = stringResource(R.string.tab_operations),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+                    },
                 )
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(IntrinsicSize.Min),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)
+                    horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall / 2)
                 ) {
                     DropdownPopup(
                         items = ProductSort.entries,
@@ -92,19 +110,16 @@ fun Products(
                         modifier = Modifier.weight(1f)
                     )
 
-                    CustomIconButton(
-                        onClick = { isFilterModalOpen = true },
-                        bgColor = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.aspectRatio(1f)
-                    ) {
+                    CustomIconButton(onClick = { isFilterModalOpen = true }) {
                         Icon(
                             imageVector = Icons.Default.FilterAlt,
                             contentDescription = stringResource(R.string.filter),
-                            tint = MaterialTheme.colorScheme.onPrimary
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                     }
                 }
             }
+
             if (products.itemCount == 0) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -112,17 +127,17 @@ fun Products(
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(dimensions.elementSpacing),
+                        verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall),
                     ) {
                         Icon(Icons.Default.ProductionQuantityLimits, contentDescription = null)
                         Text(stringResource(R.string.no_products_yet), style = MaterialTheme.typography.bodyLarge)
-                        Text(stringResource(R.string.add_first_transaction))
+                        Text(stringResource(R.string.add_first_product))
                     }
                 }
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(bottom = dimensions.screenBottomPadding),
-                    verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)
+                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
                 ) {
                     items(
                         count = products.itemCount,

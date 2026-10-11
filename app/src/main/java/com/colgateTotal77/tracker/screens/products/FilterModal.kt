@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -66,7 +65,7 @@ fun FilterModal(
         sheetGesturesEnabled = !dropdownTouched,
     ) {
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
-            Column(verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)) {
+            Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -98,7 +97,7 @@ fun FilterModal(
                     onSelectionChange = { selectedMarketIds = it },
                 )
 
-                Row(horizontalArrangement = Arrangement.spacedBy(dimensions.elementSpacing)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)) {
                     OutlinedTextField(
                         value = minPrice,
                         onValueChange = { minPrice = it.filterDecimal() },

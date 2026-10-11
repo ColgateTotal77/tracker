@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.core.ui
 
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.graphics.Color
 import androidx.annotation.StringRes
@@ -135,7 +136,7 @@ private fun ToastContent(message: AppToast.Message) {
                 shape = RoundedCornerShape(dimensions.cornerRadius),
                 color = if (error) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.inverseSurface,
                 contentColor = if (error) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.inverseOnSurface,
-                shadowElevation = dimensions.elementSpacing,
+                shadowElevation = 8.dp,
                 modifier = Modifier
                     .widthIn(max = (LocalConfiguration.current.screenWidthDp * 0.8f).dp)
                     .semantics { liveRegion = LiveRegionMode.Polite },

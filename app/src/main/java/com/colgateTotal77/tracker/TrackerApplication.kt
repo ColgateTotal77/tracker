@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.room.Room
 import com.colgateTotal77.tracker.core.dataStore
 import com.colgateTotal77.tracker.core.database.AppDatabase
-import com.colgateTotal77.tracker.screens.dashboard.DashboardPreferences
+import com.colgateTotal77.tracker.screens.overview.OverviewPreferences
 import com.colgateTotal77.tracker.screens.settings.SettingsPreferences
 
 class TrackerApplication : Application() {
@@ -15,12 +15,16 @@ class TrackerApplication : Application() {
             "tracker_database"
         )
             .addCallback(AppDatabase.CALLBACK)
-            .addMigrations(AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4)
+            .addMigrations(
+                AppDatabase.MIGRATION_2_3,
+                AppDatabase.MIGRATION_3_4,
+                AppDatabase.MIGRATION_5_6,
+            )
             .build()
     }
 
-    val dashboardPreferencesRepository by lazy {
-        DashboardPreferences(dataStore)
+    val overviewPreferencesRepository by lazy {
+        OverviewPreferences(dataStore)
     }
 
     val settingsPreferencesRepository by lazy {

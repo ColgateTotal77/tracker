@@ -13,19 +13,19 @@ import com.colgateTotal77.tracker.core.database.market.MarketDao
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.core.database.product.ProductDao
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
-import com.colgateTotal77.tracker.core.database.transaction.TransactionDao
-import com.colgateTotal77.tracker.core.database.transaction.TransactionEntity
-import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductDao
-import com.colgateTotal77.tracker.core.database.transaction_product.TransactionProductEntity
+import com.colgateTotal77.tracker.core.database.expense.ExpenseDao
+import com.colgateTotal77.tracker.core.database.expense.ExpenseEntity
+import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductDao
+import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductEntity
 
 @Database(
     entities = [
-        TransactionEntity::class,
+        ExpenseEntity::class,
         MarketEntity::class,
         ProductEntity::class,
-        TransactionProductEntity::class,
+        ExpenseProductEntity::class,
     ],
-    version = 5,
+    version = 6,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 4, to = 5, spec = AppDatabase.Migration4To5::class)
@@ -36,16 +36,16 @@ abstract class AppDatabase : RoomDatabase() {
     @DeleteColumn(tableName = "products", columnName = "averagePrice")
     class Migration4To5 : AutoMigrationSpec
 
-    abstract fun transactionDao(): TransactionDao
+    abstract fun expenseDao(): ExpenseDao
     abstract fun marketDao(): MarketDao
     abstract fun productDao(): ProductDao
-    abstract fun transactionProductDao(): TransactionProductDao
+    abstract fun expenseProductDao(): ExpenseProductDao
 
     companion object {
         private val TRIGGERS = listOf(
-            "update_product_after_transaction_product_creation" to """
-                CREATE TRIGGER update_product_after_transaction_product_creation
-                AFTER INSERT ON transaction_products
+            "update_product_after_expense_product_creation" to """
+                CREATE TRIGGER update_product_after_expense_product_creation
+                AFTER INSERT ON expense_products
                 BEGIN
                     UPDATE products
                     SET
@@ -56,14 +56,14 @@ abstract class AppDatabase : RoomDatabase() {
                 END;
             """.trimIndent(),
 
-            "update_product_after_transaction_product_update" to """
-                CREATE TRIGGER update_product_after_transaction_product_update
-                AFTER UPDATE OF unitPriceMinor, productId, quantity ON transaction_products
+            "update_product_after_expense_product_update" to """
+                CREATE TRIGGER update_product_after_expense_product_update
+                AFTER UPDATE OF unitPriceMinor, productId, quantity ON expense_products
                 WHEN OLD.unitPriceMinor != NEW.unitPriceMinor OR OLD.productId != NEW.productId OR OLD.quantity != NEW.quantity
                 BEGIN
                     UPDATE products SET
-                        lastPrice = COALESCE((SELECT tp.unitPriceMinor FROM transaction_products tp
-                                     JOIN transactions t ON t.id = tp.transactionId
+                        lastPrice = COALESCE((SELECT tp.unitPriceMinor FROM expense_products tp
+                                     JOIN expenses t ON t.id = tp.expenseId
                                      WHERE tp.productId = products.id
                                      ORDER BY t.date DESC LIMIT 1), lastPrice),
                         purchaseCount = purchaseCount
@@ -74,13 +74,13 @@ abstract class AppDatabase : RoomDatabase() {
                 END;
             """.trimIndent(),
 
-            "update_product_after_transaction_product_delete" to """
-                CREATE TRIGGER update_product_after_transaction_product_delete
-                AFTER DELETE ON transaction_products
+            "update_product_after_expense_product_delete" to """
+                CREATE TRIGGER update_product_after_expense_product_delete
+                AFTER DELETE ON expense_products
                 BEGIN
                     UPDATE products SET
-                        lastPrice = COALESCE((SELECT tp.unitPriceMinor FROM transaction_products tp
-                                     JOIN transactions t ON t.id = tp.transactionId
+                        lastPrice = COALESCE((SELECT tp.unitPriceMinor FROM expense_products tp
+                                     JOIN expenses t ON t.id = tp.expenseId
                                      WHERE tp.productId = OLD.productId
                                      ORDER BY t.date DESC LIMIT 1), lastPrice),
                         purchaseCount = purchaseCount - OLD.quantity,
@@ -89,29 +89,29 @@ abstract class AppDatabase : RoomDatabase() {
                 END;
             """.trimIndent(),
 
-            "update_transaction_after_transaction_product_update" to """
-                CREATE TRIGGER update_transaction_after_transaction_product_update
-                AFTER UPDATE OF totalMinor, transactionId ON transaction_products
+            "update_expense_after_expense_product_update" to """
+                CREATE TRIGGER update_expense_after_expense_product_update
+                AFTER UPDATE OF totalMinor, expenseId ON expense_products
                 BEGIN
-                    UPDATE transactions SET
+                    UPDATE expenses SET
                         amountMinor = amountMinor - OLD.totalMinor,
                         updatedAt = (strftime('%s','now') * 1000)
-                    WHERE id = OLD.transactionId;
-                    UPDATE transactions SET
+                    WHERE id = OLD.expenseId;
+                    UPDATE expenses SET
                         amountMinor = amountMinor + NEW.totalMinor,
                         updatedAt = (strftime('%s','now') * 1000)
-                    WHERE id = NEW.transactionId;
+                    WHERE id = NEW.expenseId;
                 END;
             """.trimIndent(),
 
-            "update_transaction_after_transaction_product_delete" to """
-                CREATE TRIGGER update_transaction_after_transaction_product_delete
-                AFTER DELETE ON transaction_products
+            "update_expense_after_expense_product_delete" to """
+                CREATE TRIGGER update_expense_after_expense_product_delete
+                AFTER DELETE ON expense_products
                 BEGIN
-                    UPDATE transactions SET
+                    UPDATE expenses SET
                         amountMinor = amountMinor - OLD.totalMinor,
                         updatedAt = (strftime('%s','now') * 1000)
-                    WHERE id = OLD.transactionId;
+                    WHERE id = OLD.expenseId;
                 END;
             """.trimIndent(),
         )
@@ -150,7 +150,10 @@ abstract class AppDatabase : RoomDatabase() {
 
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(connection: SQLiteConnection) {
-                for ((name, _) in TRIGGERS) connection.execSQL("DROP TRIGGER IF EXISTS `$name`")
+                for ((name, _) in TRIGGERS) {
+                    val oldName = name.replace("expense", "transaction")
+                    connection.execSQL("DROP TRIGGER IF EXISTS `$oldName`")
+                }
 
                 connection.execSQL("""
                     CREATE TABLE `_new_products` (
@@ -178,6 +181,66 @@ abstract class AppDatabase : RoomDatabase() {
                 connection.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_products_normalizedName` ON `products` (`normalizedName`)")
 
                 connection.execSQL("ALTER TABLE `transaction_products` ADD COLUMN `barcode` TEXT")
+            }
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(connection: SQLiteConnection) {
+                val oldTriggers = listOf(
+                    "update_product_after_transaction_product_creation",
+                    "update_product_after_transaction_product_update",
+                    "update_product_after_transaction_product_delete",
+                    "update_transaction_after_transaction_product_update",
+                    "update_transaction_after_transaction_product_delete",
+                )
+                for (name in oldTriggers) connection.execSQL("DROP TRIGGER IF EXISTS `$name`")
+
+                connection.execSQL("""
+                    CREATE TABLE `expenses` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `amountMinor` INTEGER NOT NULL,
+                        `currency` TEXT NOT NULL,
+                        `note` TEXT,
+                        `status` TEXT NOT NULL,
+                        `source` TEXT NOT NULL,
+                        `rawFiscalPayload` TEXT,
+                        `fiscalId` TEXT,
+                        `marketId` INTEGER,
+                        `date` INTEGER NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL,
+                        FOREIGN KEY(`marketId`) REFERENCES `markets`(`id`) ON DELETE SET NULL
+                    )
+                """.trimIndent())
+                connection.execSQL("INSERT INTO `expenses` SELECT * FROM `transactions`")
+                connection.execSQL("""
+                    CREATE TABLE `expense_products` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `expenseId` INTEGER NOT NULL,
+                        `productId` INTEGER NOT NULL,
+                        `quantity` INTEGER NOT NULL,
+                        `unitPriceMinor` INTEGER NOT NULL,
+                        `totalMinor` INTEGER NOT NULL,
+                        `taxGroup` TEXT,
+                        `position` INTEGER NOT NULL,
+                        `isManuallyCreated` INTEGER NOT NULL DEFAULT 0,
+                        `barcode` TEXT,
+                        FOREIGN KEY(`expenseId`) REFERENCES `expenses`(`id`)
+                            ON UPDATE CASCADE ON DELETE CASCADE
+                    )
+                """.trimIndent())
+                connection.execSQL("INSERT INTO `expense_products` SELECT * FROM `transaction_products`")
+                connection.execSQL("DROP TABLE `transaction_products`")
+                connection.execSQL("DROP TABLE `transactions`")
+
+                for (column in listOf("marketId", "date", "fiscalId")) {
+                    val unique = if (column == "fiscalId") "UNIQUE " else ""
+                    connection.execSQL("CREATE ${unique}INDEX `index_expenses_$column` ON `expenses` (`$column`)")
+                }
+                connection.execSQL("CREATE INDEX `index_expense_products_expenseId` ON `expense_products` (`expenseId`)")
+                connection.execSQL("CREATE INDEX `index_expense_products_productId` ON `expense_products` (`productId`)")
+
+                for ((_, sql) in TRIGGERS) connection.execSQL(sql)
             }
         }
 

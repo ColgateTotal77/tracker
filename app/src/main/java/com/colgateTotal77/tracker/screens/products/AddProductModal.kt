@@ -33,7 +33,7 @@ fun AddProductModal(
 
     AppModalBottomSheet(onDismissRequest = onDismiss) {
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
-            Column(verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)) {
+            Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
                 Text(
                     stringResource(R.string.add_product),
                     style = MaterialTheme.typography.titleLarge,

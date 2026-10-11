@@ -19,9 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.colgateTotal77.tracker.screens.dashboard.ProgressBarPreferences
+import com.colgateTotal77.tracker.screens.overview.ProgressBarPreferences
 import com.colgateTotal77.tracker.core.ui.theme.dimensions
-import com.colgateTotal77.tracker.screens.dashboard.ProgressBarModal
+import com.colgateTotal77.tracker.screens.operations.ProgressBarModal
 
 data class ProgressBarState(
     val settings: ProgressBarPreferences = ProgressBarPreferences(),
@@ -50,7 +50,7 @@ fun ProgressBar(
     )
 
     CardWrapper(onClick = { isModalOpen = true }) {
-        Column(verticalArrangement = Arrangement.spacedBy(dimensions.elementSpacing)) {
+        Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,

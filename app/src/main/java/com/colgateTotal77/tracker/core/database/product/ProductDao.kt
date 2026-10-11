@@ -25,8 +25,8 @@ interface ProductDao {
                 COALESCE(SUM((tp.quantity * tp.unitPriceMinor) / 1000), 0) AS spentMinor,
                 COALESCE((
                     SELECT tp2.unitPriceMinor 
-                    FROM transaction_products tp2 
-                    JOIN transactions t2 ON t2.id = tp2.transactionId 
+                    FROM expense_products tp2 
+                    JOIN expenses t2 ON t2.id = tp2.expenseId 
                     WHERE tp2.productId = p.id 
                         AND (:startTime IS NULL OR t2.date >= :startTime)
                         AND (:endTime IS NULL OR t2.date <= :endTime)
@@ -34,8 +34,8 @@ interface ProductDao {
                     LIMIT 1
                 ), 0) AS lastPrice
             FROM products p
-            JOIN transaction_products tp ON tp.productId = p.id 
-            JOIN transactions t ON t.id = tp.transactionId 
+            JOIN expense_products tp ON tp.productId = p.id 
+            JOIN expenses t ON t.id = tp.expenseId 
             WHERE p.isArchived = 0 
                 AND (:nameQuery IS NULL OR p.normalizedName LIKE '%' || :nameQuery || '%')
                 AND (:startTime IS NULL OR t.date >= :startTime)
@@ -116,8 +116,8 @@ interface ProductDao {
 
     @Query("""
         SELECT tp.unitPriceMinor, t.date, tp.quantity
-        FROM transaction_products tp
-        JOIN transactions t ON t.id = tp.transactionId  
+        FROM expense_products tp
+        JOIN expenses t ON t.id = tp.expenseId  
         WHERE productId = :id 
         ORDER BY t.date ASC
     """)

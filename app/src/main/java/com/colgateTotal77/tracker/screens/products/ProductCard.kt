@@ -113,7 +113,7 @@ fun ProductCard(
                     .clip(RoundedCornerShape(dimensions.cornerRadius))
                     .clickable { expanded = !expanded }
                     .padding(dimensions.contentPadding),
-                horizontalArrangement = Arrangement.spacedBy(dimensions.itemSpacing),
+                horizontalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
@@ -132,7 +132,7 @@ fun ProductCard(
 
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(dimensions.elementSpacing)
+                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
                 ) {
                     Text(
                         text = product.alias,
@@ -150,7 +150,7 @@ fun ProductCard(
 
                 Column(
                     horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.spacedBy(dimensions.elementSpacing)
+                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
                 ) {
                     Text(
                         text = formatMoney(product.lastPrice),
@@ -171,7 +171,7 @@ fun ProductCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(dimensions.contentPadding),
-                    verticalArrangement = Arrangement.spacedBy(dimensions.elementSpacing)
+                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
                 ) {
                     HorizontalDivider(
                         color = MaterialTheme.colorScheme.surfaceVariant
@@ -250,8 +250,8 @@ fun ProductCard(
                     }
 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(dimensions.elementSpacing),
-                        modifier = Modifier.padding(top = dimensions.elementSpacing)
+                        horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall),
+                        modifier = Modifier.padding(top = dimensions.spacingSmall)
                     ) {
                         CustomButton(
                             onClick = onEdit,

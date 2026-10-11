@@ -11,10 +11,12 @@ data class Dimensions(
     val screenPadding: Dp = 16.dp,
     val screenBottomPadding: Dp = 64.dp,
     val contentPadding: Dp = 12.dp,
-    val itemSpacing: Dp = 16.dp,
-    val elementSpacing: Dp = 8.dp,
+    val spacingMedium: Dp = 16.dp,
+    val spacingSmall: Dp = 8.dp,
     val cornerRadius: Dp = 4.dp,
     val leadingIconSize: Dp = 48.dp,
+    val iconContainerPadding: Dp = 4.dp,
+    val verticalDividerHeight: Dp = 34.dp,
 )
 
 val LocalDimensions: ProvidableCompositionLocal<Dimensions> =

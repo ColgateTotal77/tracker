@@ -35,7 +35,7 @@ fun EditProductModal(
 
     AppModalBottomSheet(onDismissRequest = onDismiss) {
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
-            Column(verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)) {
+            Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
                 Text(
                     text = product.alias,
                     style = MaterialTheme.typography.titleLarge,

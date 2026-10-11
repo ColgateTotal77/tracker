@@ -1,0 +1,241 @@
+package com.colgateTotal77.tracker.screens.operations.Camera
+
+import android.util.Log
+import android.util.Size
+import androidx.camera.core.Camera
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FlashlightOff
+import androidx.compose.material.icons.filled.FlashlightOn
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.colgateTotal77.tracker.R
+import com.colgateTotal77.tracker.core.database.expense.ExpenseDraft
+import com.colgateTotal77.tracker.core.ui.CustomIconButton
+import com.colgateTotal77.tracker.core.ui.AppToast
+import com.colgateTotal77.tracker.core.ui.ToastType
+import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.FiscalQrParams
+import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.ReceiptNotFoundException
+import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.TaxApi.fetchFiscalCheck
+import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.TaxApi.parseQrLink
+import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.toDraft
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
+import java.io.IOException
+import java.util.concurrent.Executors
+
+private const val TAG = "Camera"
+
+@Composable
+fun ScannerPreview(
+    onAdd: (ExpenseDraft) -> Unit,
+    onClose: () -> Unit,
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val coroutineScope = rememberCoroutineScope()
+    val executor = remember { Executors.newSingleThreadExecutor() }
+    val scanner = remember {
+        BarcodeScanning.getClient(
+            BarcodeScannerOptions.Builder()
+                .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                .build()
+        )
+    }
+
+    var hasScanned by remember { mutableStateOf(false) }
+    var isTorchOn by remember { mutableStateOf(false) }
+    var camera by remember { mutableStateOf<Camera?>(null) }
+
+    var lastErrorToastAt by remember { mutableStateOf<Long?>(null) }
+    fun showScannerError(messageRes: Int, e: Exception? = null) {
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (lastErrorToastAt == null || now - lastErrorToastAt!! >= 5000) {
+            AppToast.show(messageRes, ToastType.Error)
+            Log.e(TAG, "scan error", e)
+            lastErrorToastAt = now
+        }
+    }
+
+    val previewView = remember { PreviewView(context) }
+    previewView.implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+
+    DisposableEffect(lifecycleOwner) {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+        var cameraProvider: ProcessCameraProvider? = null
+
+        cameraProviderFuture.addListener({
+            cameraProvider = cameraProviderFuture.get()
+
+            val preview = Preview.Builder().build().also {
+                it.setSurfaceProvider(previewView.surfaceProvider)
+            }
+
+            val analysis = ImageAnalysis.Builder()
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .setTargetResolution(Size(1280, 720))
+                .build()
+
+            analysis.setAnalyzer(executor) { imageProxy ->
+                if (!hasScanned) {
+                    scanProcessImage(
+                        imageProxy,
+                        scanner,
+                        onError = { e ->
+                            coroutineScope.launch { showScannerError(R.string.scanner_failed, e) }
+                        },
+                    ) { qrLink ->
+                        if (hasScanned) return@scanProcessImage
+                        hasScanned = true
+
+                        coroutineScope.launch {
+                            var params: FiscalQrParams? = null
+                            try {
+                                params = try {
+                                    parseQrLink(qrLink)
+                                } catch (_: IllegalArgumentException) {
+                                    null
+                                }
+                                if (params == null) {
+                                    showScannerError(R.string.invalid_receipt_qr)
+                                    hasScanned = false
+                                    return@launch
+                                }
+                                val parsedCheck = fetchFiscalCheck(params)
+                                Log.d(TAG, "parsedCheck $parsedCheck")
+                                onAdd(parsedCheck.toDraft())
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Failed to fetch fiscal check", e)
+                                showScannerError(
+                                    when (e) {
+                                        is ReceiptNotFoundException if isRecentReceipt(params) ->
+                                            R.string.receipt_not_loaded_yet
+                                        is ReceiptNotFoundException -> R.string.receipt_not_found
+                                        is IOException -> R.string.network_error_check
+                                        else -> R.string.receipt_load_failed
+                                    },
+                                    e
+                                )
+                                hasScanned = false
+                            }
+                        }
+                    }
+                } else imageProxy.close()
+            }
+
+            try {
+                camera = cameraProvider.bindToLifecycle(
+                    lifecycleOwner,
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    preview,
+                    analysis
+                )
+                var zoomApplied = false
+                camera?.cameraInfo?.zoomState?.observe(lifecycleOwner) { state ->
+                    if (!zoomApplied && state.maxZoomRatio > 1f) {
+                        zoomApplied = true
+                        camera?.cameraControl?.setZoomRatio(minOf(state.maxZoomRatio * 0.5f, 2f))
+                    }
+                }
+                Log.d(TAG, "Camera bound successfully")
+            } catch (e: Exception) {
+                Log.e(TAG, "bindToLifecycle failed", e)
+                showScannerError(R.string.camera_start_failed, e)
+            }
+        }, ContextCompat.getMainExecutor(context))
+
+        onDispose {
+            cameraProvider?.unbindAll()
+            executor.shutdown()
+            scanner.close()
+        }
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
+
+        ScanCornersOverlay(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .fillMaxSize()
+        )
+
+        Row(
+            modifier = Modifier.align(Alignment.TopEnd),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (hasScanned) {
+                var angle by remember { mutableFloatStateOf(0f) }
+                LaunchedEffect(Unit) {
+                    var last = 0L
+                    while (true) {
+                        withFrameNanos { now ->
+                            if (last != 0L) angle = (angle + (now - last) / 1_000_000f * 0.25f) % 360f
+                            last = now
+                        }
+                    }
+                }
+                Icon(
+                    Icons.Default.Refresh,
+                    contentDescription = context.getString(R.string.processing),
+                    tint = Color(0xFF70BF73),
+                    modifier = Modifier.padding(end = 4.dp).size(22.dp).rotate(angle),
+                )
+            }
+            CustomIconButton(
+                onClick = {
+                    isTorchOn = !isTorchOn
+                    camera?.cameraControl?.enableTorch(isTorchOn)
+                },
+            ) {
+                Icon(
+                    if (isTorchOn) Icons.Default.FlashlightOn else Icons.Default.FlashlightOff,
+                    contentDescription = context.getString(R.string.toggle_flashlight),
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+        }
+
+        CustomIconButton(
+            onClick = onClose,
+            modifier = Modifier.align(Alignment.TopStart),
+        ) {
+            Icon(Icons.Default.Close, contentDescription = context.getString(R.string.close), tint = MaterialTheme.colorScheme.onPrimary)
+        }
+    }
+}

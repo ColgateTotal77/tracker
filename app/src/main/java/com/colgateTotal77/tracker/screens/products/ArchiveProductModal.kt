@@ -28,7 +28,7 @@ fun ArchiveProductModal(
 
     Dialog(onDismissRequest = onDismiss) {
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
-            Column(verticalArrangement = Arrangement.spacedBy(dimensions.itemSpacing)) {
+            Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
                 Text(
                     stringResource(R.string.archive_product),
                     style = MaterialTheme.typography.titleLarge,

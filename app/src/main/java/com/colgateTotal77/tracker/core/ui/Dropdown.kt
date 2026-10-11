@@ -165,7 +165,7 @@ fun <T> Dropdown(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = dimensions.elementSpacing)
+                    .padding(top = dimensions.spacingSmall)
                     .border(
                         if (isFocused) 2.dp else 1.dp,
                         if (isFocused) MaterialTheme.colorScheme.primary
@@ -187,7 +187,7 @@ fun <T> Dropdown(
                                     .fillMaxWidth()
                                     .padding(
                                         horizontal = dimensions.contentPadding,
-                                        vertical = dimensions.elementSpacing,
+                                        vertical = dimensions.spacingSmall,
                                     ),
                                 placeholder = { Text(stringResource(R.string.search)) },
                                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search)) },

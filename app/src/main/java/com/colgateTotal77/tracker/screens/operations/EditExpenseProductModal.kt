@@ -1,0 +1,117 @@
+package com.colgateTotal77.tracker.screens.operations
+
+import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import com.colgateTotal77.tracker.R
+import com.colgateTotal77.tracker.core.MeasureUnit
+import com.colgateTotal77.tracker.core.filterDecimal
+import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductWithProduct
+import com.colgateTotal77.tracker.core.formatMoney
+import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
+import com.colgateTotal77.tracker.core.ui.CardWrapper
+import com.colgateTotal77.tracker.core.ui.CustomButton
+import com.colgateTotal77.tracker.core.ui.QuantityInputField
+import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
+import kotlin.math.roundToInt
+import com.colgateTotal77.tracker.core.getMeasureUnit
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditExpenseProductModal(
+    expenseProductWithProduct: ExpenseProductWithProduct,
+    onDismiss: () -> Unit,
+    onUpdate: (alias: String, quantity: Int, unitPriceMinor: Int) -> Unit,
+) {
+    val expenseProduct = expenseProductWithProduct.expenseProduct
+    val product = expenseProductWithProduct.product
+
+    var nameInput by remember { mutableStateOf(product.alias) }
+
+    var unitPriceInput by remember {
+        mutableStateOf(formatMoney(expenseProduct.unitPriceMinor))
+    }
+
+    var selectedUnit by remember {
+        mutableStateOf(getMeasureUnit(expenseProduct.quantity, product.alias))
+    }
+
+    var quantityInput by remember {
+        val initialValue = expenseProduct.quantity
+        val initialDisplayValue =
+            if (selectedUnit == MeasureUnit.G) initialValue.toString()
+            else {
+                val converted = initialValue / 1000.0
+                if (converted % 1 == 0.0) converted.toInt().toString() else converted.toString()
+            }
+        mutableStateOf(initialDisplayValue)
+    }
+
+    val dimensions = LocalDimensions.current
+
+    AppModalBottomSheet(onDismissRequest = onDismiss) {
+        CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
+            Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
+                Text(
+                    text = product.alias,
+                    style = MaterialTheme.typography.titleLarge,
+                )
+
+                OutlinedTextField(
+                    value = nameInput,
+                    onValueChange = { nameInput = it },
+                    label = { Text(stringResource(R.string.product_name)) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                QuantityInputField(
+                    value = quantityInput,
+                    onValueChange = { quantityInput = it },
+                    selectedUnit = selectedUnit,
+                    onUnitChange = { selectedUnit = it },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                OutlinedTextField(
+                    value = unitPriceInput,
+                    onValueChange = { unitPriceInput = it.filterDecimal() },
+                    label = { Text(stringResource(R.string.unit_price)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                CustomButton(
+                    onClick = {
+                        val alias = nameInput.trim()
+                        val rawQuantity = quantityInput.toDoubleOrNull() ?: return@CustomButton
+                        val unitPriceMinor = ((unitPriceInput.toDoubleOrNull() ?: return@CustomButton) * 100).roundToInt()
+
+                        val quantity =
+                            if (selectedUnit != MeasureUnit.G) (rawQuantity * 1000).roundToInt()
+                            else rawQuantity.roundToInt()
+
+                        if (alias.isEmpty() || quantity <= 0 || unitPriceMinor <= 0) return@CustomButton
+
+                        onUpdate(alias, quantity, unitPriceMinor)
+                    },
+                    buttonText = stringResource(R.string.save_product),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}
