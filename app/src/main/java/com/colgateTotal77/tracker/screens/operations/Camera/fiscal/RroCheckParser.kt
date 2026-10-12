@@ -31,7 +31,6 @@ object RroCheckParser {
             quantity = quantity,
             unitPriceMinor = unitPriceMinor,
             totalMinor = totalMinor,
-            taxGroup = element.attr("TX"),
         )
     }
 }

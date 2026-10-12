@@ -28,7 +28,6 @@ data class ExpenseProductEntity(
     val quantity: Int,
     val unitPriceMinor: Int,
     val totalMinor: Int,
-    val taxGroup: String?,
     val position: Int,
 
     @ColumnInfo(defaultValue = "0")

@@ -35,5 +35,5 @@ object ProductNameNormalizer {
                 if (ch.isUpperCase()) cyr.uppercaseChar() else cyr
             } ?: ch
         }
-    }.joinToString("")
+    }.joinToString("").trim()
 }

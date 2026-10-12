@@ -16,5 +16,4 @@ data class FiscalItem(
     val quantity: Int = 1000,
     val unitPriceMinor: Int,
     val totalMinor: Int? = null,
-    val taxGroup: String? = null,
 )

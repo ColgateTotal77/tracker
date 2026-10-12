@@ -37,7 +37,6 @@ object PrroCheckParser {
             quantity = quantity,
             unitPriceMinor = price ?: ((cost ?: 0) * 1000L / quantity).toInt(),
             totalMinor = cost,
-            taxGroup = element.textOf("LETTERS"),
         )
     }
 }

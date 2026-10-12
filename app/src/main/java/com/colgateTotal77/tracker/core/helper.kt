@@ -18,7 +18,6 @@ fun formatMoney(minorUnits: Number): String {
         .toPlainString()
 }
 
-fun String.filterDigits() = filter { it.isDigit() }
 fun String.filterDecimal() = filter { it.isDigit() || it == '.' || it == ',' }.replace(',', '.')
 
 enum class MeasureUnit(val label: String) {

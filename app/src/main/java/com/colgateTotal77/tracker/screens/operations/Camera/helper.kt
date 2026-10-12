@@ -7,7 +7,7 @@ import java.util.Locale
 import java.util.TimeZone
 import kotlin.time.Duration.Companion.days
 
-fun isRecentReceipt(params: FiscalQrParams?): Boolean {
+fun isRecentReceipt(params: FiscalQrParams?, now: Long = System.currentTimeMillis()): Boolean {
     if (params == null) return false
     val date = params.date.filter(Char::isDigit)
     val time = params.time.orEmpty().filter(Char::isDigit)
@@ -21,6 +21,6 @@ fun isRecentReceipt(params: FiscalQrParams?): Boolean {
     val input = date + time.padEnd(6, '0')
     val timestamp = formatter.parse(input, position)?.time ?: return false
     if (position.index != input.length) return false
-    val age = System.currentTimeMillis() - timestamp
+    val age = now - timestamp
     return age in 0..2.days.inWholeMilliseconds
 }

@@ -25,14 +25,18 @@ import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductEn
         ProductEntity::class,
         ExpenseProductEntity::class,
     ],
-    version = 6,
+    version = 7,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
-        AutoMigration(from = 4, to = 5, spec = AppDatabase.Migration4To5::class)
+        AutoMigration(from = 4, to = 5, spec = AppDatabase.Migration4To5::class),
+        AutoMigration(from = 6, to = 7, spec = AppDatabase.Migration6To7::class),
     ],
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
+    @DeleteColumn(tableName = "expense_products", columnName = "taxGroup")
+    class Migration6To7 : AutoMigrationSpec
+
     @DeleteColumn(tableName = "products", columnName = "averagePrice")
     class Migration4To5 : AutoMigrationSpec
 

@@ -153,7 +153,6 @@ class OperationsViewModel(private val database: AppDatabase) : ViewModel() {
                         quantity = item.quantity,
                         unitPriceMinor = item.unitPriceMinor,
                         totalMinor = item.totalMinor ?: (item.unitPriceMinor * item.quantity),
-                        taxGroup = item.taxGroup,
                         position = item.position ?: index,
                         isManuallyCreated = false,
                         barcode = item.barcode
@@ -247,7 +246,6 @@ class OperationsViewModel(private val database: AppDatabase) : ViewModel() {
                         quantity = expenseProduct.quantity,
                         unitPriceMinor = expenseProduct.unitPriceMinor,
                         totalMinor = totalMinor,
-                        taxGroup = null,
                         position = expenseProduct.position,
                         isManuallyCreated = expenseProduct.isManuallyCreated
                     )
