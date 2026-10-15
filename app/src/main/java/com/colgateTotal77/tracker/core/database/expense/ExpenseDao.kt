@@ -11,17 +11,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ExpenseDao {
-    @Transaction
-    @Query("SELECT * FROM `expenses` ORDER BY date DESC")
-    fun query(): PagingSource<Int, ExpenseWithProducts>
-
-    @Query("""                                                                                                                       
-       SELECT * FROM expenses                                                                                                   
-       ORDER BY date DESC, id DESC                                                                                                  
-       LIMIT 3                                                                                                                      
-   """)
-    fun getRecent(): Flow<List<ExpenseWithMarket>>
-
     @Query("""
         SELECT * FROM expenses 
         WHERE fiscalId = :fiscalId
@@ -47,11 +36,4 @@ interface ExpenseDao {
         AND (:endTime IS NULL OR date <= :endTime)
     """)
     fun getTotalSpendingFlow(startTime: Long?, endTime: Long?): Flow<Long>
-
-    @Query("""                                                                                                                       
-       SELECT COUNT(*)                                                                                                              
-       FROM expenses                                                                                                                
-       WHERE date > (SELECT date FROM expenses WHERE id = :id)                                                                       
-   """)
-    suspend fun getPosition(id: Int): Int
 }

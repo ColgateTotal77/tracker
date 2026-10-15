@@ -17,6 +17,9 @@ import com.colgateTotal77.tracker.core.database.expense.ExpenseDao
 import com.colgateTotal77.tracker.core.database.expense.ExpenseEntity
 import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductDao
 import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductEntity
+import com.colgateTotal77.tracker.core.database.income.IncomeDao
+import com.colgateTotal77.tracker.core.database.income.IncomeEntity
+import com.colgateTotal77.tracker.core.database.operation.OperationDao
 
 @Database(
     entities = [
@@ -24,8 +27,9 @@ import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductEn
         MarketEntity::class,
         ProductEntity::class,
         ExpenseProductEntity::class,
+        IncomeEntity::class,
     ],
-    version = 7,
+    version = 8,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 4, to = 5, spec = AppDatabase.Migration4To5::class),
@@ -44,7 +48,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun marketDao(): MarketDao
     abstract fun productDao(): ProductDao
     abstract fun expenseProductDao(): ExpenseProductDao
-
+    abstract fun incomeDao(): IncomeDao
+    abstract fun operationDao(): OperationDao
     companion object {
         private val TRIGGERS = listOf(
             "update_product_after_expense_product_creation" to """
@@ -245,6 +250,25 @@ abstract class AppDatabase : RoomDatabase() {
                 connection.execSQL("CREATE INDEX `index_expense_products_productId` ON `expense_products` (`productId`)")
 
                 for ((_, sql) in TRIGGERS) connection.execSQL(sql)
+            }
+        }
+
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(connection: SQLiteConnection) {
+                connection.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `income` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `amountMinor` INTEGER NOT NULL,
+                        `currency` TEXT NOT NULL,
+                        `note` TEXT,
+                        `type` TEXT NOT NULL,
+                        `date` INTEGER NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL
+                    )
+                """.trimIndent())
+                connection.execSQL("CREATE INDEX IF NOT EXISTS `index_income_type` ON `income` (`type`)")
+                connection.execSQL("CREATE INDEX IF NOT EXISTS `index_income_date` ON `income` (`date`)")
             }
         }
 

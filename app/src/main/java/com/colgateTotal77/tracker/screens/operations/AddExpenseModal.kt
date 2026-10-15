@@ -85,7 +85,7 @@ fun AddExpenseModal(
     val formatter = SimpleDateFormat("ddMMyyyyHHmm", Locale.getDefault())
     var dateTimeInput by remember { mutableStateOf(formatter.format(Date())) }
     val isDateValid = remember(dateTimeInput) {
-        if (dateTimeInput.length < 12) false
+        if (dateTimeInput.length != 12) false
         else {
             try {
                 val formatter = SimpleDateFormat("ddMMyyyyHHmm", Locale.getDefault())
@@ -105,10 +105,7 @@ fun AddExpenseModal(
         sheetGesturesEnabled = !dropdownTouched,
     ) {
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,

@@ -39,68 +39,66 @@ fun ExpenseCard(
     val expense = expenseItem.expense
 
     CardWrapper(contentPadding = PaddingValues(0.dp)) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Row(
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(dimensions.cornerRadius))
+                .clickable { onClick() }
+                .padding(dimensions.contentPadding),
+            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .size(dimensions.leadingIconSize)
                     .clip(RoundedCornerShape(dimensions.cornerRadius))
-                    .clickable { onClick() }
-                    .padding(dimensions.contentPadding),
-                horizontalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
-                verticalAlignment = Alignment.CenterVertically,
+                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(dimensions.leadingIconSize)
-                        .clip(RoundedCornerShape(dimensions.cornerRadius))
-                        .background(MaterialTheme.colorScheme.secondaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ReceiptLong,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.ReceiptLong,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
 
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
-                ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
+            ) {
+                Text(
+                    text = expenseItem.market?.name.orEmpty().ifBlank { "Receipt" },
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Row {
                     Text(
-                        text = expenseItem.market?.name.orEmpty().ifBlank { "Receipt" },
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        text = formatTimestamp(expense.date),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
 
-                    Row {
-                        Text(
-                            text = formatTimestamp(expense.date),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-
-                        Text(
-                            text = stringResource(expense.source.labelRes),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                    Text(
+                        text = stringResource(expense.source.labelRes),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
-
-                Text(
-                    text = "-${formatMoney(expense.amountMinor)} ${expense.currency.name}",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
             }
+
+            Text(
+                text = "-${formatMoney(expense.amountMinor)} ${expense.currency.name}",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

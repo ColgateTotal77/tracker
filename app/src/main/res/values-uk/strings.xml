@@ -1,5 +1,21 @@
 <resources>
     <string name="app_name">Трекер</string>
+    <string name="income">Дохід</string>
+    <string name="add_income">Додати дохід</string>
+    <string name="expense">Витрата</string>
+    <string name="add_operation">Додати операцію</string>
+    <string name="edit_income">Редагувати дохід</string>
+    <string name="save_income">Зберегти дохід</string>
+    <string name="delete_income">Видалити дохід</string>
+    <string name="confirm_delete_income">Ви впевнені, що хочете видалити цей дохід? Сума доступних коштів зменшиться.</string>
+    <string name="toast_save_income_failed">Не вдалося зберегти дохід. Спробуйте ще раз.</string>
+    <string name="toast_delete_income_failed">Не вдалося видалити дохід. Спробуйте ще раз.</string>
+    <string name="toast_income_deleted">Дохід видалено</string>
+    <string name="available_balance">Доступні кошти</string>
+    <string name="change_balance">Встановити поточний баланс</string>
+    <string name="new_balance">Новий баланс</string>
+    <string name="save_balance">Зберегти баланс</string>
+    <string name="toast_save_balance_failed">Не вдалося оновити баланс. Спробуйте ще раз.</string>
     <string name="add_expense">Додати витрату</string>
     <string name="open_camera">Відкрити камеру</string>
     <string name="amount">Сума</string>

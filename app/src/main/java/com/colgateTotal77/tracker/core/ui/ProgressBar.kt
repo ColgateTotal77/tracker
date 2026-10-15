@@ -21,7 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.colgateTotal77.tracker.screens.overview.ProgressBarPreferences
 import com.colgateTotal77.tracker.core.ui.theme.dimensions
-import com.colgateTotal77.tracker.screens.operations.ProgressBarModal
+import com.colgateTotal77.tracker.screens.overview.ProgressBarModal
 
 data class ProgressBarState(
     val settings: ProgressBarPreferences = ProgressBarPreferences(),

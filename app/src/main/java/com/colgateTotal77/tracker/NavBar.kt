@@ -44,11 +44,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
+import com.colgateTotal77.tracker.core.enums.OperationId
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.screens.operations.Operations
 import com.colgateTotal77.tracker.screens.overview.Overview
-import com.colgateTotal77.tracker.screens.products.Products
-import com.colgateTotal77.tracker.screens.settings.Settings
 
 private val NavigationBarHeight = 80.dp
 private val IndicatorWidth = 64.dp
@@ -71,7 +70,7 @@ fun NavBar() {
         Icons.Default.Analytics,
     )
 
-    var expendedExpenseId by rememberSaveable { mutableStateOf<Int?>(null) }
+    var expendedOperationId by rememberSaveable { mutableStateOf<OperationId?>(null) }
 
     Scaffold(
         bottomBar = {
@@ -91,16 +90,16 @@ fun NavBar() {
     ) { paddingValues ->
         when (selectedItemIndex) {
             0 -> Overview(
-                onExpenseClick = { id ->
-                    expendedExpenseId = id
+                onOperationClick = { id ->
+                    expendedOperationId = id
                     selectedItemIndex = 1
                 },
                 modifier = Modifier.padding(paddingValues)
             )
             1 -> Operations(
-                expendedExpenseId = expendedExpenseId,
-                changeExpendedExpenseId = { id ->
-                    expendedExpenseId = id
+                expendedOperationId = expendedOperationId,
+                changeExpendedOperationId = { id ->
+                    expendedOperationId = id
                 },
                 modifier = Modifier.padding(paddingValues)
             )

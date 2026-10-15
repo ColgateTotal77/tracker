@@ -10,12 +10,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.VerticalDivider
@@ -34,6 +37,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -42,6 +47,9 @@ import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.expense.ExpenseEntity
 import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductDraft
 import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductWithProduct
+import com.colgateTotal77.tracker.core.database.income.IncomeEntity
+import com.colgateTotal77.tracker.core.enums.OperationId
+import com.colgateTotal77.tracker.core.enums.OperationType
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.screens.products.Products
@@ -49,8 +57,8 @@ import kotlinx.coroutines.flow.first
 
 @Composable
 fun Operations(
-    expendedExpenseId: Int?,
-    changeExpendedExpenseId: (id: Int?) -> Unit,
+    expendedOperationId: OperationId?,
+    changeExpendedOperationId: (id: OperationId?) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: OperationsViewModel = viewModel(factory = OperationsViewModel.Factory),
 ) {
@@ -60,10 +68,15 @@ fun Operations(
         return
     }
 
-    var isAddExpenseModalOpen by remember { mutableStateOf(false) }
+    var isAddMenuOpen by remember { mutableStateOf(false) }
+    var operationToAdd by remember { mutableStateOf<OperationType?>(null) }
     var isEditExpenseModalOpen by remember { mutableStateOf(false) }
     var isDeleteExpenseModalOpen by remember { mutableStateOf(false) }
     var selectedExpense by remember { mutableStateOf<ExpenseEntity?>(null) }
+
+    var isEditIncomeModalOpen by remember { mutableStateOf(false) }
+    var isDeleteIncomeModalOpen by remember { mutableStateOf(false) }
+    var selectedIncome by remember { mutableStateOf<IncomeEntity?>(null) }
 
     var isAddExpenseProductModalOpen by remember { mutableStateOf(false) }
     var isEditExpenseProductModalOpen by remember { mutableStateOf(false) }
@@ -73,18 +86,21 @@ fun Operations(
 
     val dimensions = LocalDimensions.current
 
-    val expenses = viewModel.expensesFlow.collectAsLazyPagingItems()
+    val operations = viewModel.operationsFlow.collectAsLazyPagingItems()
     val markets by viewModel.marketsFlow.collectAsStateWithLifecycle()
     val products by viewModel.productFlow.collectAsStateWithLifecycle()
 
     var searchQuery by remember { mutableStateOf("") }
 
     val listState = rememberLazyListState()
-    LaunchedEffect(expendedExpenseId) {
-        val id = expendedExpenseId ?: return@LaunchedEffect
-        val index = viewModel.getExpensePosition(id)
+    LaunchedEffect(expendedOperationId) {
+        val id = expendedOperationId?.id ?: return@LaunchedEffect
+        val index = when (expendedOperationId.type) {
+            OperationType.EXPENSE -> viewModel.getOperationPosition(expenseId = id)
+            OperationType.INCOME -> viewModel.getOperationPosition(incomeId = id)
+        }
 
-        snapshotFlow { expenses.itemCount }
+        snapshotFlow { operations.itemCount }
             .first { it > index }
 
         listState.scrollToItem(index)
@@ -93,8 +109,43 @@ fun Operations(
     Scaffold(
         modifier = modifier,
         floatingActionButton = {
-            FloatingActionButton(onClick = { isAddExpenseModalOpen = true }) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_expense))
+            Box(modifier = Modifier.size(56.dp)) {
+                if (!isAddMenuOpen) {
+                    FloatingActionButton(
+                        onClick = { isAddMenuOpen = true },
+                        modifier = Modifier.fillMaxSize(),
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_operation))
+                    }
+                } else {
+                    Popup(
+                        alignment = Alignment.BottomEnd,
+                        onDismissRequest = { isAddMenuOpen = false },
+                        properties = PopupProperties(focusable = true),
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.End,
+                            verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
+                        ) {
+                            ExtendedFloatingActionButton(
+                                text = { Text(stringResource(R.string.income)) },
+                                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                                onClick = {
+                                    operationToAdd = OperationType.INCOME
+                                    isAddMenuOpen = false
+                                },
+                            )
+                            ExtendedFloatingActionButton(
+                                text = { Text(stringResource(R.string.expense)) },
+                                icon = { Icon(Icons.Default.Remove, contentDescription = null) },
+                                onClick = {
+                                    operationToAdd = OperationType.EXPENSE
+                                    isAddMenuOpen = false
+                                },
+                            )
+                        }
+                    }
+                }
             }
         },
     ) { paddingValues ->
@@ -125,7 +176,7 @@ fun Operations(
                 },
             )
 
-            if (expenses.itemCount == 0) {
+            if (operations.itemCount == 0) {
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -151,67 +202,98 @@ fun Operations(
                     verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
                 ) {
                     items(
-                        count = expenses.itemCount,
-                        key = expenses.itemKey { it.expense.id },
+                        count = operations.itemCount,
+                        key = operations.itemKey {
+                            "${it.operation.type}:${it.operation.expenseId ?: it.operation.incomeId}"
+                        },
                     ) { index ->
-                        val expenseItem = expenses[index]
-                        val isExpended = expendedExpenseId == expenseItem?.expense?.id;
+                        val operation = operations[index]
 
-                        if (expenseItem == null) {
-                            Box(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .height(80.dp)
-                            )
-                        } else {
-                            ExpenseCardExpandable(
-                                expenseItem = expenseItem,
-                                expanded = expendedExpenseId == expenseItem.expense.id,
-                                onExpandedChange = {
-                                    if (isExpended) changeExpendedExpenseId(null)
-                                    else changeExpendedExpenseId(expenseItem.expense.id)
-                                },
-                                onEdit = {
-                                    selectedExpense = expenseItem.expense
-                                    isEditExpenseModalOpen = true
-                                },
-                                onDelete = {
-                                    selectedExpense = expenseItem.expense
-                                    isDeleteExpenseModalOpen = true
-                                },
-                                onAddExpenseProduct = { nextPosition ->
-                                    selectedExpense = expenseItem.expense
-                                    nextExpenseProductPosition = nextPosition
-                                    isAddExpenseProductModalOpen = true
-                                },
-                                onEditExpenseProduct = { expenseProduct ->
-                                    selectedExpenseProduct = expenseProduct
-                                    isEditExpenseProductModalOpen = true
-                                },
-                                onDeleteExpenseProduct = { expenseProduct ->
-                                    selectedExpenseProduct = expenseProduct
-                                    isDeleteExpenseProductModalOpen = true
-                                },
-                            )
+                        if (operation == null) {
+                            Box(Modifier.fillMaxWidth().height(80.dp))
+                            return@items
+                        }
+
+                        when (operation.operation.type) {
+                            OperationType.EXPENSE -> {
+                                val expenseItem = operation.expense ?: return@items
+                                val operationId = OperationId(
+                                    id = expenseItem.expense.id,
+                                    type = OperationType.EXPENSE,
+                                )
+                                val isExpanded = expendedOperationId == operationId
+
+                                ExpenseCardExpandable(
+                                    expenseItem = expenseItem,
+                                    isExpanded = isExpanded,
+                                    onExpandedChange = {
+                                        if (isExpanded) changeExpendedOperationId(null)
+                                        else changeExpendedOperationId(operationId)
+                                    },
+                                    onEdit = {
+                                        selectedExpense = expenseItem.expense
+                                        isEditExpenseModalOpen = true
+                                    },
+                                    onDelete = {
+                                        selectedExpense = expenseItem.expense
+                                        isDeleteExpenseModalOpen = true
+                                    },
+                                    onAddExpenseProduct = { nextPosition ->
+                                        selectedExpense = expenseItem.expense
+                                        nextExpenseProductPosition = nextPosition
+                                        isAddExpenseProductModalOpen = true
+                                    },
+                                    onEditExpenseProduct = { expenseProduct ->
+                                        selectedExpenseProduct = expenseProduct
+                                        isEditExpenseProductModalOpen = true
+                                    },
+                                    onDeleteExpenseProduct = { expenseProduct ->
+                                        selectedExpenseProduct = expenseProduct
+                                        isDeleteExpenseProductModalOpen = true
+                                    },
+                                )
+                            }
+                            OperationType.INCOME -> {
+                                val income = operation.income ?: return@items
+                                IncomeCard(
+                                    income = income,
+                                    onEdit = {
+                                        selectedIncome = income
+                                        isEditExpenseModalOpen = true
+                                    },
+                                    onDelete = {
+                                        selectedIncome = income
+                                        isDeleteIncomeModalOpen = true
+                                    },
+                                )
+                            }
                         }
                     }
                 }
             }
         }
 
-        if (isAddExpenseModalOpen) {
-            AddExpenseModal(
+        when (operationToAdd) {
+            OperationType.EXPENSE -> AddExpenseModal(
                 markets = markets,
-                onDismiss = { isAddExpenseModalOpen = false },
+                onDismiss = { operationToAdd = null },
                 onAdd = { expense ->
-                    viewModel.addExpense(
-                        expense
-                    ) { id ->
-                        changeExpendedExpenseId(id)
+                    viewModel.addExpense(expense) { id ->
+                        changeExpendedOperationId(OperationId(id = id, type = OperationType.EXPENSE))
+                        operationToAdd = null
                     }
-                    isAddExpenseModalOpen = false
                 },
             )
+            OperationType.INCOME -> AddIncomeModal(
+                onDismiss = { operationToAdd = null },
+                onAdd = { amountMinor, currency, date ->
+                    viewModel.addIncome(amountMinor, currency, date) { id ->
+                        changeExpendedOperationId(OperationId(id = id, type = OperationType.INCOME))
+                        operationToAdd = null
+                    }
+                },
+            )
+            null -> Unit
         }
 
         if (isEditExpenseModalOpen) {
@@ -291,6 +373,34 @@ fun Operations(
                     viewModel.deleteExpenseProductById(selectedExpenseProduct!!.expenseProduct.id)
                     isDeleteExpenseProductModalOpen = false
                 }
+            )
+        }
+
+        if (isEditIncomeModalOpen) {
+            EditIncomeModal(
+                income = selectedIncome!!,
+                onDismiss = { isEditIncomeModalOpen = false },
+                onUpdate = { amountMinor, currency, date ->
+                    val now = System.currentTimeMillis()
+                    viewModel.updateIncome(selectedIncome!!.copy(
+                        amountMinor = amountMinor,
+                        currency = currency,
+                        date = date ?: now,
+                        note = "",
+                        updatedAt = now,
+                    ))
+                    isEditIncomeModalOpen = false
+                },
+            )
+        }
+
+        if (isDeleteIncomeModalOpen) {
+            DeleteIncomeModal(
+                onDismiss = { isDeleteIncomeModalOpen = false },
+                onDelete = {
+                    viewModel.deleteIncomeById(selectedIncome!!.id)
+                    isDeleteIncomeModalOpen = false
+                },
             )
         }
     }

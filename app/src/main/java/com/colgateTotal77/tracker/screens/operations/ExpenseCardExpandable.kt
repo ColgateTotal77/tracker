@@ -58,7 +58,7 @@ fun formatProductMeasure(quantity: Int, name: String): String {
 @Composable
 fun ExpenseCardExpandable(
     expenseItem: ExpenseWithProducts,
-    expanded: Boolean,
+    isExpanded: Boolean,
     onExpandedChange: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
@@ -151,7 +151,7 @@ fun ExpenseCardExpandable(
                 }
             }
 
-            AnimatedVisibility(visible = expanded) {
+            AnimatedVisibility(visible = isExpanded) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()

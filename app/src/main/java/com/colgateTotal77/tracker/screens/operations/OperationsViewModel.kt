@@ -12,8 +12,11 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.colgateTotal77.tracker.TrackerApplication
 import com.colgateTotal77.tracker.core.ProductNameNormalizer
+import com.colgateTotal77.tracker.core.database.income.IncomeEntity
 import com.colgateTotal77.tracker.core.database.expense.ExpenseEntity
 import com.colgateTotal77.tracker.R
+import com.colgateTotal77.tracker.core.enums.Currency
+import com.colgateTotal77.tracker.core.enums.IncomeType
 import com.colgateTotal77.tracker.core.enums.ExpenseSource
 import com.colgateTotal77.tracker.core.ui.ToastFailure
 import com.colgateTotal77.tracker.core.ui.launchWithToast
@@ -25,7 +28,6 @@ import androidx.room.withTransaction
 import com.colgateTotal77.tracker.core.database.AppDatabase
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
-import com.colgateTotal77.tracker.core.database.expense.ExpenseWithProducts
 import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductEntity
 import com.colgateTotal77.tracker.core.enums.ExpenseStatus
 import androidx.paging.map
@@ -33,26 +35,27 @@ import com.colgateTotal77.tracker.core.database.market.MarketChoice
 import com.colgateTotal77.tracker.core.database.product.ProductChoice
 import com.colgateTotal77.tracker.core.database.expense.ExpenseDraft
 import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductDraft
-import com.colgateTotal77.tracker.core.enums.toTimeRange
-import com.colgateTotal77.tracker.core.ui.ProgressBarState
-import com.colgateTotal77.tracker.screens.overview.ProgressBarPreferences
-import com.colgateTotal77.tracker.screens.overview.calculateTargetBudget
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flatMapLatest
+import com.colgateTotal77.tracker.core.database.operation.OperationWithDetails
 import kotlinx.coroutines.flow.map
 
 class OperationsViewModel(private val database: AppDatabase) : ViewModel() {
 
-    val expensesFlow: Flow<PagingData<ExpenseWithProducts>> = Pager(
+    val operationsFlow: Flow<PagingData<OperationWithDetails>> = Pager(
         config = PagingConfig(
             pageSize = 20,
             enablePlaceholders = true
         ),
-        pagingSourceFactory = database.expenseDao()::query,
+        pagingSourceFactory = database.operationDao()::query,
     ).flow.map { pagingData ->
-        pagingData.map { expenseItem ->
-            expenseItem.copy(
-                items = expenseItem.items.sortedBy { it.expenseProduct.position }
+        pagingData.map { operationItem ->
+            operationItem.copy(
+                expense = operationItem.expense?.let { expense ->
+                    expense.copy(
+                        items = expense.items.sortedBy {
+                            it.expenseProduct.position
+                        }
+                    )
+                }
             )
         }
     }.cachedIn(viewModelScope)
@@ -170,6 +173,35 @@ class OperationsViewModel(private val database: AppDatabase) : ViewModel() {
         }
     }
 
+    fun addIncome(amountMinor: Int, currency: Currency, date: Long, onSaved: (Int) -> Unit) {
+        launchWithToast(R.string.toast_save_income_failed) {
+            val now = System.currentTimeMillis()
+            val id = database.incomeDao().insert(IncomeEntity(
+                amountMinor = amountMinor,
+                currency = currency,
+                note = "",
+                type = IncomeType.INCOME,
+                date = date,
+                createdAt = now,
+                updatedAt = now,
+            ))
+            if (id == -1L) throw ToastFailure(R.string.toast_save_income_failed)
+            onSaved(id.toInt())
+        }
+    }
+
+    fun updateIncome(income: IncomeEntity) {
+        launchWithToast(R.string.toast_save_income_failed) {
+            database.incomeDao().update(income)
+        }
+    }
+
+    fun deleteIncomeById(id: Int) {
+        launchWithToast(R.string.toast_delete_income_failed, R.string.toast_income_deleted) {
+            database.incomeDao().deleteById(id)
+        }
+    }
+
     fun updateExpense(expense: ExpenseEntity, market: MarketChoice) {
         launchWithToast(R.string.toast_save_expense_failed) {
             database.withTransaction {
@@ -278,7 +310,10 @@ class OperationsViewModel(private val database: AppDatabase) : ViewModel() {
             initialValue = emptyList()
         )
 
-    suspend fun getExpensePosition(id: Int): Int = database.expenseDao().getPosition(id)
+    suspend fun getOperationPosition(
+        expenseId: Int? = null,
+        incomeId: Int? = null
+    ): Int = database.operationDao().getPosition(expenseId, incomeId)
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {

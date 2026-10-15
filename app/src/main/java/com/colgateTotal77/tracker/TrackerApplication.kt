@@ -19,6 +19,7 @@ class TrackerApplication : Application() {
                 AppDatabase.MIGRATION_2_3,
                 AppDatabase.MIGRATION_3_4,
                 AppDatabase.MIGRATION_5_6,
+                AppDatabase.MIGRATION_7_8,
             )
             .build()
     }

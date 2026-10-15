@@ -19,6 +19,7 @@ fun formatMoney(minorUnits: Number): String {
 }
 
 fun String.filterDecimal() = filter { it.isDigit() || it == '.' || it == ',' }.replace(',', '.')
+fun String.filterDecimalWithMinus() = (if (startsWith("-")) "-" else "") + removePrefix("-").filterDecimal()
 
 enum class MeasureUnit(val label: String) {
     PIECE("pcs"),
