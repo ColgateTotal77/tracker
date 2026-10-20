@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.androidx.room.paging)
     implementation(libs.okhttp)
     implementation(libs.vico.compose.m3)
+    implementation(libs.androidx.work.runtime.ktx)
 }
 
 tasks.register<Exec>("run") {

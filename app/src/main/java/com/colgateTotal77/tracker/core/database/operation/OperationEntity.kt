@@ -2,17 +2,25 @@ package com.colgateTotal77.tracker.core.database.operation
 
 import androidx.room.Embedded
 import androidx.room.Relation
+import com.colgateTotal77.tracker.core.database.exchange.ExchangeEntity
 import com.colgateTotal77.tracker.core.database.expense.ExpenseEntity
 import com.colgateTotal77.tracker.core.database.expense.ExpenseWithMarket
 import com.colgateTotal77.tracker.core.database.expense.ExpenseWithProducts
 import com.colgateTotal77.tracker.core.database.income.IncomeEntity
+import com.colgateTotal77.tracker.core.enums.Currency
 import com.colgateTotal77.tracker.core.enums.OperationType
 
 data class OperationEntity(
     val expenseId: Int?,
     val incomeId: Int?,
+    val exchangeId: Int?,
     val type: OperationType,
     val date: Long,
+)
+
+data class CurrencyBalance(
+    val currency: Currency,
+    val amountMinor: Long,
 )
 
 data class OperationWithDetails(
@@ -31,6 +39,12 @@ data class OperationWithDetails(
         entityColumn = "id"
     )
     val income: IncomeEntity?,
+
+    @Relation(
+        parentColumn = "exchangeId",
+        entityColumn = "id"
+    )
+    val exchange: ExchangeEntity?,
 )
 
 data class OperationForOverview(
@@ -49,4 +63,10 @@ data class OperationForOverview(
         entityColumn = "id"
     )
     val income: IncomeEntity?,
+
+    @Relation(
+        parentColumn = "exchangeId",
+        entityColumn = "id"
+    )
+    val exchange: ExchangeEntity?,
 )

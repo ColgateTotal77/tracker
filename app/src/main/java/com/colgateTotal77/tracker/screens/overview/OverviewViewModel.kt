@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.room.withTransaction
 import com.colgateTotal77.tracker.TrackerApplication
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.ui.launchWithToast
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import com.colgateTotal77.tracker.core.database.AppDatabase
 import com.colgateTotal77.tracker.core.database.income.IncomeEntity
+import com.colgateTotal77.tracker.core.database.operation.CurrencyBalance
 import com.colgateTotal77.tracker.core.enums.Currency
 import com.colgateTotal77.tracker.core.enums.IncomeType
 import com.colgateTotal77.tracker.core.enums.toTimeRange
@@ -62,24 +64,34 @@ class OverviewViewModel(
         }
     }
 
-    val balance = database.operationDao().getBalance()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = 0,
-        )
+    val exchangeRates = preferencesRepository.exchangeRateFlow
 
-    fun insertBalanceAdjustment(currentBalance: Int) {
+    val balances = database.operationDao().getBalance().map { balances ->
+        balances.associate { it.currency to it.amountMinor }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyMap(),
+    )
+
+    fun insertBalanceAdjustments(adjustments: List<CurrencyBalance>) {
         launchWithToast(R.string.toast_save_balance_failed) {
-            database.incomeDao().insert(IncomeEntity(
-                amountMinor = currentBalance,
-                currency = Currency.UAH,
-                note = "",
-                type = IncomeType.BALANCE_ADJUSTMENT,
-                date = System.currentTimeMillis(),
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis(),
-            ))
+            val now = System.currentTimeMillis()
+            database.withTransaction {
+                adjustments.forEach { item ->
+                    database.incomeDao().insert(
+                        IncomeEntity(
+                            amountMinor = item.amountMinor,
+                            currency = item.currency,
+                            note = "",
+                            type = IncomeType.BALANCE_ADJUSTMENT,
+                            date = now,
+                            createdAt = now,
+                            updatedAt = now,
+                        )
+                    )
+                }
+            }
         }
     }
 

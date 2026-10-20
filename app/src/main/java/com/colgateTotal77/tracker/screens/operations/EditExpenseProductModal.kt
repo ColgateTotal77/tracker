@@ -29,13 +29,14 @@ import com.colgateTotal77.tracker.core.ui.QuantityInputField
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import kotlin.math.roundToInt
 import com.colgateTotal77.tracker.core.getMeasureUnit
+import kotlin.math.roundToLong
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditExpenseProductModal(
     expenseProductWithProduct: ExpenseProductWithProduct,
     onDismiss: () -> Unit,
-    onUpdate: (alias: String, quantity: Int, unitPriceMinor: Int) -> Unit,
+    onUpdate: (alias: String, quantity: Int, unitPriceMinor: Long) -> Unit,
 ) {
     val expenseProduct = expenseProductWithProduct.expenseProduct
     val product = expenseProductWithProduct.product
@@ -98,7 +99,7 @@ fun EditExpenseProductModal(
                     onClick = {
                         val alias = nameInput.trim()
                         val rawQuantity = quantityInput.toDoubleOrNull() ?: return@CustomButton
-                        val unitPriceMinor = ((unitPriceInput.toDoubleOrNull() ?: return@CustomButton) * 100).roundToInt()
+                        val unitPriceMinor = ((unitPriceInput.toDoubleOrNull() ?: return@CustomButton) * 100).roundToLong()
 
                         val quantity =
                             if (selectedUnit != MeasureUnit.G) (rawQuantity * 1000).roundToInt()

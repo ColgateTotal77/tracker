@@ -27,7 +27,7 @@ import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.FiscalItem
 )
 data class ExpenseEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val amountMinor: Int,
+    val amountMinor: Long,
     val currency: Currency,
     val note: String?,
     val status: ExpenseStatus,
@@ -72,7 +72,7 @@ data class ExpenseWithMarket(
 )
 
 data class ExpenseDraft(
-    val amountMinor: Int,
+    val amountMinor: Long,
     val currency: Currency = Currency.UAH,
     val date: Long = System.currentTimeMillis(),
     val source: ExpenseSource,

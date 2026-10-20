@@ -7,12 +7,12 @@ import com.colgateTotal77.tracker.core.enums.Currency
 import com.colgateTotal77.tracker.core.enums.IncomeType
 
 @Entity(
-    tableName = "income",
+    tableName = "incomes",
     indices = [Index("type"), Index("date")]
 )
 data class IncomeEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val amountMinor: Int,
+    val amountMinor: Long,
     val currency: Currency,
     val note: String?,
     val type: IncomeType,

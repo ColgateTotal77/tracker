@@ -49,8 +49,8 @@ internal fun Element.textOf(tag: String): String? =
 internal fun Element.attr(name: String): String? =
     getAttribute(name).takeIf { it.isNotBlank() }
 
-internal fun String.toMinorMinor(): Int? =
-    toBigDecimalOrNull()?.multiply(BigDecimal(100))?.toInt()
+internal fun String.toMinorMinor(): Long? =
+    toBigDecimalOrNull()?.multiply(BigDecimal(100))?.toLong()
 
 internal fun String.toEpochMillis(pattern: String): Long? = try {
     val format = SimpleDateFormat(pattern, Locale.US)

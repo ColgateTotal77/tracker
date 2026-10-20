@@ -5,7 +5,7 @@ data class FiscalCheck(
     val tin: String? = null,
     val receiptNumber: String? = null,
     val date: Long = System.currentTimeMillis(),
-    val amountMinor: Int? = null,
+    val amountMinor: Long? = null,
     val items: List<FiscalItem> = emptyList(),
 )
 
@@ -14,6 +14,6 @@ data class FiscalItem(
     val name: String? = null,
     val barcode: String? = null,
     val quantity: Int = 1000,
-    val unitPriceMinor: Int,
-    val totalMinor: Int? = null,
+    val unitPriceMinor: Long,
+    val totalMinor: Long? = null,
 )

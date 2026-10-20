@@ -11,6 +11,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -18,29 +19,53 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import com.colgateTotal77.tracker.R
+import com.colgateTotal77.tracker.core.database.operation.CurrencyBalance
+import com.colgateTotal77.tracker.core.enums.Currency
 import com.colgateTotal77.tracker.core.filterDecimalWithMinus
 import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.core.formatMoney
+import kotlinx.coroutines.flow.Flow
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdjustBalanceModal(
-    currentBalance: Long,
+    balances: Map<Currency, Long>,
     onDismiss: () -> Unit,
-    onAdd: (adjustmentAmountMinor: Int) -> Unit,
+    onAdd: (List<CurrencyBalance>) -> Unit,
 ) {
-    var newBalance by remember { mutableStateOf(formatMoney(currentBalance)) }
-    val adjustmentAmountMinor = remember(newBalance, currentBalance) {
+    val uahBalance = balances[Currency.UAH] ?: 0L
+    val usdBalance = balances[Currency.USD] ?: 0L
+    val eurBalance = balances[Currency.EUR] ?: 0L
+    var uahBalanceInput by remember { mutableStateOf(formatMoney(uahBalance)) }
+    var usdBalanceInput by remember { mutableStateOf(formatMoney(usdBalance)) }
+    var eurBalanceInput by remember { mutableStateOf(formatMoney(eurBalance)) }
+    val adjustmentUahAmountMinor = remember(uahBalanceInput, uahBalance) {
         runCatching {
-            newBalance.toBigDecimalOrNull()
+            uahBalanceInput.toBigDecimalOrNull()
                 ?.movePointRight(2)
-                ?.subtract(currentBalance.toBigDecimal())
-                ?.intValueExact()
-        }.getOrNull()
+                ?.subtract(uahBalance.toBigDecimal())
+                ?.longValueExact()
+        }.getOrNull() ?: 0
+    }
+    val adjustmentUsdAmountMinor = remember(usdBalanceInput, usdBalance) {
+        runCatching {
+            usdBalanceInput.toBigDecimalOrNull()
+                ?.movePointRight(2)
+                ?.subtract((usdBalance).toBigDecimal())
+                ?.longValueExact()
+        }.getOrNull() ?: 0
+    }
+    val adjustmentEurAmountMinor = remember(eurBalanceInput, eurBalance) {
+        runCatching {
+            eurBalanceInput.toBigDecimalOrNull()
+                ?.movePointRight(2)
+                ?.subtract((eurBalance).toBigDecimal())
+                ?.longValueExact()
+        }.getOrNull() ?: 0
     }
 
     val dimensions = LocalDimensions.current
@@ -54,20 +79,40 @@ fun AdjustBalanceModal(
                 )
 
                 OutlinedTextField(
-                    value = newBalance,
-                    onValueChange = { newBalance = it.filterDecimalWithMinus() },
-                    label = { Text(stringResource(R.string.new_balance)) },
+                    value = uahBalanceInput,
+                    onValueChange = { uahBalanceInput = it.filterDecimalWithMinus() },
+                    label = { Text(stringResource(R.string.new_balance, Currency.UAH.code)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                OutlinedTextField(
+                    value = usdBalanceInput,
+                    onValueChange = { usdBalanceInput = it.filterDecimalWithMinus() },
+                    label = { Text(stringResource(R.string.new_balance, Currency.USD.code)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                OutlinedTextField(
+                    value = eurBalanceInput,
+                    onValueChange = { eurBalanceInput = it.filterDecimalWithMinus() },
+                    label = { Text(stringResource(R.string.new_balance, Currency.EUR.code)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
                 )
 
                 CustomButton(
                     onClick = {
-                        val adjustment = adjustmentAmountMinor ?: return@CustomButton
-                        onAdd(adjustment)
+                        val adjustments = listOf(
+                            CurrencyBalance(Currency.UAH, adjustmentUahAmountMinor),
+                            CurrencyBalance(Currency.USD, adjustmentUsdAmountMinor),
+                            CurrencyBalance(Currency.EUR, adjustmentEurAmountMinor),
+                        ).filter { it.amountMinor != 0L }
+                        onAdd(adjustments)
                     },
                     buttonText = stringResource(R.string.save_balance),
-                    enabled = adjustmentAmountMinor != null && adjustmentAmountMinor != 0,
+                    enabled = adjustmentUahAmountMinor != 0L || adjustmentUsdAmountMinor != 0L || adjustmentEurAmountMinor != 0L,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

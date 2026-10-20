@@ -37,7 +37,7 @@ import java.util.Locale
 fun EditIncomeModal(
     income: IncomeEntity,
     onDismiss: () -> Unit,
-    onUpdate: (amountMinor: Int, currency: Currency, date: Long?) -> Unit,
+    onUpdate: (amountMinor: Long, currency: Currency, date: Long?) -> Unit,
 ) {
     val dimensions = LocalDimensions.current
 
@@ -65,7 +65,7 @@ fun EditIncomeModal(
         runCatching {
             amountInput.toBigDecimalOrNull()
                 ?.movePointRight(2)
-                ?.intValueExact()
+                ?.longValueExact()
         }.getOrNull()
     }
 

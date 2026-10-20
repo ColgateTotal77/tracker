@@ -24,7 +24,7 @@ interface ExpenseDao {
     suspend fun update(expense: ExpenseEntity)
 
     @Query("UPDATE `expenses` SET amountMinor = amountMinor + :additionalAmountMinor, updatedAt = :updatedAt WHERE id = :id")
-    suspend fun bumpAmountMinorById(id: Int, additionalAmountMinor: Int, updatedAt: Long)
+    suspend fun bumpAmountMinorById(id: Int, additionalAmountMinor: Long, updatedAt: Long)
 
     @Query("DELETE FROM `expenses` WHERE id = :id")
     suspend fun deleteById(id: Int)

@@ -6,8 +6,9 @@ enum class Currency(
     val symbol: String,
     val displayName: String,
 ) {
+    UAH("UAH", "\u20b4", "Ukrainian Hryvnia"),
     USD("USD", "$", "US Dollar"),
-    UAH("UAH", "\u20b4", "Ukrainian Hryvnia");
+    EUR("EUR", "\u20ac", "Euro");
 
     val dropdownText: String
         get() = "$code ($symbol) - $displayName"

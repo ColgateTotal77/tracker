@@ -34,7 +34,7 @@ import java.util.Locale
 @Composable
 fun AddIncomeModal(
     onDismiss: () -> Unit,
-    onAdd: (amountMinor: Int, currency: Currency, date: Long) -> Unit,
+    onAdd: (amountMinor: Long, currency: Currency, date: Long) -> Unit,
 ) {
     val dimensions = LocalDimensions.current
 
@@ -62,7 +62,7 @@ fun AddIncomeModal(
         runCatching {
             amountInput.toBigDecimalOrNull()
                 ?.movePointRight(2)
-                ?.intValueExact()
+                ?.longValueExact()
         }.getOrNull()
     }
 

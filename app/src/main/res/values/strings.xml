@@ -13,7 +13,7 @@
     <string name="toast_income_deleted">Income deleted</string>
     <string name="available_balance">Available money</string>
     <string name="change_balance">Set current balance</string>
-    <string name="new_balance">New balance</string>
+    <string name="new_balance">New balance (%1$s)</string>
     <string name="save_balance">Save balance</string>
     <string name="toast_save_balance_failed">Could not update the balance. Please try again.</string>
     <string name="add_expense">Add Expense</string>
@@ -135,4 +135,5 @@
     <string name="scanner_failed">Could not scan the QR code. Please try again.</string>
     <string name="camera_start_failed">Could not start the camera. Close it and try again.</string>
     <string name="receipt_load_failed">Could not load this receipt. Please try again.</string>
+    <string name="balance_includes">Includes %1$s</string>
 </resources>

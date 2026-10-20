@@ -14,16 +14,16 @@ object RroCheckParser {
             tin = dat?.attr("TN")?.filter { it.isDigit() },
             receiptNumber = entry?.attr("NO"),
             date = entry?.attr("TS")?.toEpochMillis("yyyyMMddHHmmss") ?: System.currentTimeMillis(),
-            amountMinor = entry?.attr("SM")?.toIntOrNull(),
+            amountMinor = entry?.attr("SM")?.toLongOrNull(),
             items = elements(root, "P").map(::parseItem),
         )
     }
 
     private fun parseItem(element: Element): FiscalItem {
-        val totalMinor = element.attr("SM")?.toIntOrNull()
+        val totalMinor = element.attr("SM")?.toLongOrNull()
         val quantity = element.attr("Q")?.toIntOrNull() ?: 1000
-        val unitPriceMinor = element.attr("PRC")?.toIntOrNull()
-            ?: ((totalMinor ?: 0) * 1000L / quantity).toInt()
+        val unitPriceMinor = element.attr("PRC")?.toLongOrNull()
+            ?: ((totalMinor ?: 0) * 1000L / quantity)
         return FiscalItem(
             position = element.attr("N")?.toIntOrNull(),
             name = element.attr("NM")?.let(ProductNameNormalizer::repairDisplay),

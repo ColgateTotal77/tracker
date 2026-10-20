@@ -54,6 +54,7 @@ import com.colgateTotal77.tracker.screens.operations.Camera.Camera
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.roundToLong
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -182,7 +183,7 @@ fun AddExpenseModal(
                 CustomButton(
                     onClick = {
                         val expenseDraft = ExpenseDraft(
-                            amountMinor = ((amountInput.toDoubleOrNull() ?: 0.0) * 100).roundToInt(),
+                            amountMinor = ((amountInput.toDoubleOrNull() ?: 0.0) * 100).roundToLong(),
                             currency = currency,
                             market = selectedMarket?.let {
                                 when {

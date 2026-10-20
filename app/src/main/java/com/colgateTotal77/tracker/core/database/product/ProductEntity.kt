@@ -13,7 +13,7 @@ data class ProductEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val normalizedName: String,
     val alias: String,
-    val lastPrice: Int,
+    val lastPrice: Long,
     val purchaseCount: Int = 0,
     val isArchived: Boolean = false,
     val createdAt: Long,

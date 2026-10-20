@@ -65,7 +65,7 @@ class OperationsViewModel(private val database: AppDatabase) : ViewModel() {
             error = R.string.toast_save_expense_failed,
             success = R.string.toast_receipt_added.takeIf { expense.source == ExpenseSource.QR_CODE },
         ) {
-            val expenseId =  database.withTransaction {
+            val expenseId = database.withTransaction {
                 val marketDao = database.marketDao()
                 val productDao = database.productDao()
                 val now = System.currentTimeMillis()
@@ -173,7 +173,7 @@ class OperationsViewModel(private val database: AppDatabase) : ViewModel() {
         }
     }
 
-    fun addIncome(amountMinor: Int, currency: Currency, date: Long, onSaved: (Int) -> Unit) {
+    fun addIncome(amountMinor: Long, currency: Currency, date: Long, onSaved: (Int) -> Unit) {
         launchWithToast(R.string.toast_save_income_failed) {
             val now = System.currentTimeMillis()
             val id = database.incomeDao().insert(IncomeEntity(

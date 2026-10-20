@@ -13,7 +13,7 @@
     <string name="toast_income_deleted">Дохід видалено</string>
     <string name="available_balance">Доступні кошти</string>
     <string name="change_balance">Встановити поточний баланс</string>
-    <string name="new_balance">Новий баланс</string>
+    <string name="new_balance">Новий баланс (%1$s)</string>
     <string name="save_balance">Зберегти баланс</string>
     <string name="toast_save_balance_failed">Не вдалося оновити баланс. Спробуйте ще раз.</string>
     <string name="add_expense">Додати витрату</string>
@@ -135,4 +135,5 @@
     <string name="scanner_failed">Не вдалося сканувати QR-код. Спробуйте ще раз.</string>
     <string name="camera_start_failed">Не вдалося запустити камеру. Закрийте її та спробуйте ще раз.</string>
     <string name="receipt_load_failed">Не вдалося завантажити цей чек. Спробуйте ще раз.</string>
+    <string name="balance_includes">Включає %1$s</string>
 </resources>

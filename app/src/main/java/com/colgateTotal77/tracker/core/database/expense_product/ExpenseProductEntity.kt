@@ -26,8 +26,8 @@ data class ExpenseProductEntity(
     val expenseId: Int,
     val productId: Int,
     val quantity: Int,
-    val unitPriceMinor: Int,
-    val totalMinor: Int,
+    val unitPriceMinor: Long,
+    val totalMinor: Long,
     val position: Int,
 
     @ColumnInfo(defaultValue = "0")
@@ -50,6 +50,6 @@ data class ExpenseProductDraft(
     val expenseId: Int,
     val position: Int,
     val quantity: Int,
-    val unitPriceMinor: Int,
+    val unitPriceMinor: Long,
     val isManuallyCreated: Boolean = true
 )

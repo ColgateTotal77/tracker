@@ -41,6 +41,7 @@ import com.colgateTotal77.tracker.core.ui.DropdownInput
 import com.colgateTotal77.tracker.core.ui.AppToast
 import com.colgateTotal77.tracker.core.ui.ToastType
 import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +49,7 @@ fun EditExpenseModal(
     expense: ExpenseEntity,
     markets: List<MarketEntity>,
     onDismiss: () -> Unit,
-    onUpdate: (amountMinor: Int, currency: Currency, selectedMarket: MarketChoice, date: Long?) -> Unit,
+    onUpdate: (amountMinor: Long, currency: Currency, selectedMarket: MarketChoice, date: Long?) -> Unit,
 ) {
     var dropdownTouched by remember { mutableStateOf(false) }
     var amountInput by remember { mutableStateOf(formatMoney(expense.amountMinor)) }
@@ -155,7 +156,7 @@ fun EditExpenseModal(
                 CustomButton(
                     onClick = {
                         val parsedDateMillis = formatter.parse(dateTimeInput)!!.time
-                        val amountMinor = ((amountInput.toDoubleOrNull() ?: 0.0) * 100).roundToInt()
+                        val amountMinor = ((amountInput.toDoubleOrNull() ?: 0.0) * 100).roundToLong()
 
                         val market = selectedMarket?.let { m ->
                             when {

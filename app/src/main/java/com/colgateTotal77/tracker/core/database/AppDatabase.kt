@@ -3,12 +3,15 @@ package com.colgateTotal77.tracker.core.database
 import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.DeleteColumn
+import androidx.room.RenameTable
 import androidx.room.RoomDatabase
 import androidx.room.migration.AutoMigrationSpec
 import androidx.room.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.execSQL
+import com.colgateTotal77.tracker.core.database.exchange.ExchangeDao
+import com.colgateTotal77.tracker.core.database.exchange.ExchangeEntity
 import com.colgateTotal77.tracker.core.database.market.MarketDao
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.core.database.product.ProductDao
@@ -28,16 +31,21 @@ import com.colgateTotal77.tracker.core.database.operation.OperationDao
         ProductEntity::class,
         ExpenseProductEntity::class,
         IncomeEntity::class,
+        ExchangeEntity::class
     ],
-    version = 8,
+    version = 9,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 4, to = 5, spec = AppDatabase.Migration4To5::class),
         AutoMigration(from = 6, to = 7, spec = AppDatabase.Migration6To7::class),
+        AutoMigration(from = 8, to = 9, spec = AppDatabase.Migration8To9::class),
     ],
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
+    @RenameTable(fromTableName = "income", toTableName = "incomes")
+    class Migration8To9 : AutoMigrationSpec
+
     @DeleteColumn(tableName = "expense_products", columnName = "taxGroup")
     class Migration6To7 : AutoMigrationSpec
 
@@ -50,6 +58,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun expenseProductDao(): ExpenseProductDao
     abstract fun incomeDao(): IncomeDao
     abstract fun operationDao(): OperationDao
+    abstract fun exchangeDao(): ExchangeDao
+
     companion object {
         private val TRIGGERS = listOf(
             "update_product_after_expense_product_creation" to """

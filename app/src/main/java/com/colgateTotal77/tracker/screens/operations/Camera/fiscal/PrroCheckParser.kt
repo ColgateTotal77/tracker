@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.screens.operations.Camera.fiscal
 
+import androidx.compose.runtime.toLong
 import java.math.BigDecimal
 import org.w3c.dom.Element
 import com.colgateTotal77.tracker.core.ProductNameNormalizer
@@ -35,7 +36,7 @@ object PrroCheckParser {
             name = element.textOf("NAME")?.let(ProductNameNormalizer::repairDisplay),
             barcode = null,
             quantity = quantity,
-            unitPriceMinor = price ?: ((cost ?: 0) * 1000L / quantity).toInt(),
+            unitPriceMinor = price ?: ((cost ?: 0L) * 1000L / quantity),
             totalMinor = cost,
         )
     }

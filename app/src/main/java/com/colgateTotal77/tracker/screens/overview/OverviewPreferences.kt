@@ -13,13 +13,20 @@ data class ProgressBarPreferences(
     val selectedFilter: DateFilter = DateFilter.Month
 )
 
+data class ExchangeRatesPreferences(
+    val usdUahExchangeRate: Double = 0.0,
+    val eurUahExchangeRate: Double = 0.0,
+    val updatedAt: Long = 0
+)
+
 class OverviewPreferences(
     private val dataStore: DataStore<Preferences>,
 ) {
-    private val KEY = stringPreferencesKey("progressBarSettings")
+    private val PROGRESS_BAR_SETTINGS_KEY = stringPreferencesKey("progressBarSettings")
+    private val EXCHANGE_RATES_KEY = stringPreferencesKey("exchangeRates")
 
     val progressBarSettingsFlow: Flow<ProgressBarPreferences> = dataStore.data.map { prefs ->
-        val savedString = prefs[KEY] ?: return@map ProgressBarPreferences()
+        val savedString = prefs[PROGRESS_BAR_SETTINGS_KEY] ?: return@map ProgressBarPreferences()
 
         val parts = savedString.split("|")
 
@@ -35,7 +42,26 @@ class OverviewPreferences(
     suspend fun updateProgressBarPreferences(progressBarSettings: ProgressBarPreferences) {
         dataStore.edit { prefs ->
             val stringToSave = "${progressBarSettings.targetBudget}|${progressBarSettings.selectedFilter.name}"
-            prefs[KEY] = stringToSave
+            prefs[PROGRESS_BAR_SETTINGS_KEY] = stringToSave
+        }
+    }
+
+    val exchangeRateFlow: Flow<ExchangeRatesPreferences> = dataStore.data.map { prefs ->
+        val savedString = prefs[EXCHANGE_RATES_KEY] ?: return@map ExchangeRatesPreferences()
+
+        val parts = savedString.split("|")
+
+        val usdUahExchangeRate = parts.getOrNull(0)?.toDoubleOrNull() ?: 0.0
+        val eurUahExchangeRate = parts.getOrNull(1)?.toDoubleOrNull() ?: 0.0
+        val updatedAt = parts.getOrNull(2)?.toLongOrNull() ?: 0L
+
+        ExchangeRatesPreferences(usdUahExchangeRate, eurUahExchangeRate, updatedAt)
+    }
+
+    suspend fun updateExchangeRatesPreferences(exchangeRates: ExchangeRatesPreferences) {
+        dataStore.edit { prefs ->
+            val stringToSave = "${exchangeRates.usdUahExchangeRate}|${exchangeRates.eurUahExchangeRate}|${System.currentTimeMillis()}"
+            prefs[EXCHANGE_RATES_KEY] = stringToSave
         }
     }
 }

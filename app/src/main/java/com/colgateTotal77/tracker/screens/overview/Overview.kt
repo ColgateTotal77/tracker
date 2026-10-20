@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.colgateTotal77.tracker.R
+import com.colgateTotal77.tracker.core.enums.Currency
 import com.colgateTotal77.tracker.core.enums.OperationId
 import com.colgateTotal77.tracker.core.formatMoney
 import com.colgateTotal77.tracker.core.ui.CardWrapper
@@ -42,6 +43,17 @@ import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.ProgressBar
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.screens.settings.Settings
+
+fun calculateBudget(
+    exchangeRates: ExchangeRatesPreferences,
+    balances: Map<Currency, Long>
+): Double {
+    return (
+        (balances[Currency.UAH] ?: 0) +
+            (balances[Currency.USD] ?: 0) * exchangeRates.usdUahExchangeRate +
+            (balances[Currency.EUR] ?: 0) * exchangeRates.eurUahExchangeRate
+    )
+}
 
 @Composable
 fun Overview(
@@ -63,8 +75,16 @@ fun Overview(
     val settings = progressState.settings
     val spending = progressState.currentSpending
 
-    val balance by viewModel.balance.collectAsStateWithLifecycle()
+    val exchangeRates by viewModel.exchangeRates.collectAsStateWithLifecycle(
+        initialValue = ExchangeRatesPreferences(),
+    )
+
+    val balances by viewModel.balances.collectAsStateWithLifecycle()
     var isAdjustBalanceModalOpen by remember { mutableStateOf(false) }
+
+    val includedCurrencies = listOf(Currency.USD, Currency.EUR)
+        .filter { (balances[it] ?: 0L) != 0L }
+        .joinToString("/") { it.code }
 
     Scaffold(modifier = modifier) { paddingValues ->
         Column(
@@ -120,10 +140,17 @@ fun Overview(
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
                     Text(
-                        text = formatMoney(balance),
+                        text = formatMoney(calculateBudget(exchangeRates, balances)),
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
+                    if (includedCurrencies.isNotEmpty()) {
+                        Text(
+                            text = stringResource(R.string.balance_includes, includedCurrencies),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        )
+                    }
                 }
             }
 
@@ -181,10 +208,10 @@ fun Overview(
 
         if (isAdjustBalanceModalOpen) {
             AdjustBalanceModal(
-                currentBalance = balance,
+                balances = balances,
                 onDismiss = { isAdjustBalanceModalOpen = false },
-                onAdd = { adjustmentAmountMinor ->
-                    viewModel.insertBalanceAdjustment(adjustmentAmountMinor)
+                onAdd = { adjustments ->
+                    viewModel.insertBalanceAdjustments(adjustments)
                     isAdjustBalanceModalOpen = false
                 },
             )

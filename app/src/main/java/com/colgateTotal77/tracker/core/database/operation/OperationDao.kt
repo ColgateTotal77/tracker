@@ -10,31 +10,41 @@ import kotlinx.coroutines.flow.Flow
 interface OperationDao {
     @Transaction
     @Query("""
-        SELECT id AS expenseId, NULL AS incomeId, "EXPENSE" AS type, date                                                                               
-        FROM expenses                                                                                                                
-                                                                                                                                    
-        UNION ALL                                                                                                                    
-                                                                                                                                    
-        SELECT NULL AS expenseId, id AS incomeId, "INCOME" AS type, date                                                                               
-        FROM income                                                                                                                      
-        WHERE type != 'BALANCE_ADJUSTMENT'
-
-        ORDER BY date DESC, expenseId DESC, incomeId DESC  
+        SELECT id AS expenseId, NULL AS incomeId, NULL AS exchangeId, 'EXPENSE' AS type, date                                                                                                                                                                                                                                            
+        FROM expenses                                                                                                                                                                                                                                                             
+                                                                                                                                                                                                                                                                         
+        UNION ALL                                                                                                                                                                                                                                                                 
+                                                                                                                                                                                                                                                                         
+        SELECT NULL AS expenseId, id AS incomeId, NULL AS exchangeId, 'INCOME' AS type, date                                                                                                                                                                                                                                             
+        FROM incomes                                                                                                                                                                                                                                                              
+        WHERE type != 'BALANCE_ADJUSTMENT'                                                                                                                                                                                                                                        
+                                                                                                                                                                                                                                                                         
+        UNION ALL                                                                                                                                                                                                                                                                 
+                                                                                                                                                                                                                                                                         
+        SELECT NULL AS expenseId, NULL AS incomeId, id AS exchangeId, 'EXCHANGE' AS type, date                                                                                                                                                                                                                                           
+        FROM exchanges                                                                                                                                                                                                                                                            
+                                                                                                                                                                                                                                                                         
+        ORDER BY date DESC, expenseId DESC, incomeId DESC, exchangeId DESC 
     """)
     fun query(): PagingSource<Int, OperationWithDetails>
 
     @Transaction
     @Query("""                                                                                                                       
-        SELECT id AS expenseId, NULL AS incomeId, "EXPENSE" AS type, date                                                                               
-        FROM expenses                                                                                                                
-                                                                                                                                    
-        UNION ALL                                                                                                                    
-                                                                                                                                    
-        SELECT NULL AS expenseId, id AS incomeId, "INCOME" AS type, date                                                                               
-        FROM income
-        WHERE type != 'BALANCE_ADJUSTMENT'
-
-        ORDER BY date DESC, expenseId DESC, incomeId DESC                                                                                                  
+        SELECT id AS expenseId, NULL AS incomeId, NULL AS exchangeId, 'EXPENSE' AS type, date                                                                                                                                                                                                                                            
+        FROM expenses                                                                                                                                                                                                                                                             
+                                                                                                                                                                                                                                                                         
+        UNION ALL                                                                                                                                                                                                                                                                 
+                                                                                                                                                                                                                                                                         
+        SELECT NULL AS expenseId, id AS incomeId, NULL AS exchangeId, 'INCOME' AS type, date                                                                                                                                                                                                                                             
+        FROM incomes                                                                                                                                                                                                                                                              
+        WHERE type != 'BALANCE_ADJUSTMENT'                                                                                                                                                                                                                                        
+                                                                                                                                                                                                                                                                         
+        UNION ALL                                                                                                                                                                                                                                                                 
+                                                                                                                                                                                                                                                                         
+        SELECT NULL AS expenseId, NULL AS incomeId, id AS exchangeId, 'EXCHANGE' AS type, date                                                                                                                                                                                                                                           
+        FROM exchanges                                                                                                                                                                                                                                                            
+                                                                                                                                                                                                                                                                         
+        ORDER BY date DESC, expenseId DESC, incomeId DESC, exchangeId DESC                                                                                               
         LIMIT 3                                                                                                                      
     """)
     fun getRecent(): Flow<List<OperationForOverview>>
@@ -47,7 +57,7 @@ interface OperationDao {
             UNION ALL                                                                                                                
                                                                                                                                     
             SELECT NULL AS expenseId, id AS incomeId, date                                                                           
-            FROM income
+            FROM incomes
             WHERE type != 'BALANCE_ADJUSTMENT'
         ),                                                                                                                           
         target AS (                                                                                                                  
@@ -84,16 +94,27 @@ interface OperationDao {
     ): Int
 
     @Query("""
-        SELECT COALESCE(SUM(amount), 0)                                                                                              
+        SELECT currency, SUM(amount) AS amountMinor                                                                                              
         FROM (                                                                                                                       
-            SELECT -CAST(amountMinor AS INTEGER) AS amount                                                                           
+            SELECT currency, -CAST(amountMinor AS INTEGER) AS amount                                                                           
             FROM expenses                                                                                                            
                                                                                                                                     
             UNION ALL                                                                                                                
                                                                                                                                     
-            SELECT amountMinor AS amount                                                                                             
-            FROM income                                                                                                              
+            SELECT currency, amountMinor AS amount                                                                                             
+            FROM incomes
+            
+            UNION ALL
+            
+            SELECT fromCurrency AS currency, -CAST(fromAmountMinor AS INTEGER) AS amount                                                                                              
+            FROM exchanges
+            
+            UNION ALL
+            
+            SELECT toCurrency AS currency, toAmountMinor AS amount                                                                                              
+            FROM exchanges
         )
+        GROUP BY currency
     """)
-    fun getBalance(): Flow<Long>
+    fun getBalance(): Flow<List<CurrencyBalance>>
 }

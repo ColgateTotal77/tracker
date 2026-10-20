@@ -125,7 +125,7 @@ interface ProductDao {
 }
 
 data class PricePoint(
-    val unitPriceMinor: Int,
+    val unitPriceMinor: Long,
     val quantity: Int,
     val date: Long
 )
