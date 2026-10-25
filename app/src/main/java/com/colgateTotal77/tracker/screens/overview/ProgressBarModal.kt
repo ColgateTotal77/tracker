@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.enums.DateFilter
 import com.colgateTotal77.tracker.core.filterDecimal
+import com.colgateTotal77.tracker.core.parseInputToMinor
 import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
@@ -76,7 +77,7 @@ fun ProgressBarModal(
                     onClick = {
                         onProgressBarPreferences(
                             ProgressBarPreferences(
-                                (amountInput.toDoubleOrNull() ?: 0.0) * 100,
+                                (parseInputToMinor(amountInput) ?: 0L).toDouble(),
                                 selectedFilter
                             )
                         )

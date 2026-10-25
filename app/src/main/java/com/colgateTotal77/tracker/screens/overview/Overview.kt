@@ -201,6 +201,19 @@ fun Overview(
                                 )
                             }
                         }
+                        operation.exchange?.let {
+                            key("${operation.operation.type}:${it.id}") {
+                                ExchangeCard(
+                                    it,
+                                    onClick = {onOperationClick(
+                                        OperationId(
+                                            id = it.id,
+                                            type = operation.operation.type
+                                        )
+                                    )}
+                                )
+                            }
+                        }
                     }
                 }
             }

@@ -1,4 +1,4 @@
-package com.colgateTotal77.tracker.screens.operations
+package com.colgateTotal77.tracker.screens.operations.Income
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,6 +22,7 @@ import com.colgateTotal77.tracker.core.database.income.IncomeEntity
 import com.colgateTotal77.tracker.core.enums.Currency
 import com.colgateTotal77.tracker.core.filterDecimal
 import com.colgateTotal77.tracker.core.formatMoney
+import com.colgateTotal77.tracker.core.parseInputToMinor
 import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
@@ -37,7 +38,7 @@ import java.util.Locale
 fun EditIncomeModal(
     income: IncomeEntity,
     onDismiss: () -> Unit,
-    onUpdate: (amountMinor: Long, currency: Currency, date: Long?) -> Unit,
+    onUpdate: (amountMinor: Long, currency: Currency, date: Long) -> Unit,
 ) {
     val dimensions = LocalDimensions.current
 
@@ -47,27 +48,18 @@ fun EditIncomeModal(
     val formatter = SimpleDateFormat("ddMMyyyyHHmm", Locale.getDefault())
     var dateTimeInput by remember { mutableStateOf(formatter.format(Date())) }
     val isDateValid = remember(dateTimeInput) {
-        if (dateTimeInput.length != 12) false
-        else {
-            try {
-                val formatter = SimpleDateFormat("ddMMyyyyHHmm", Locale.getDefault())
-                formatter.isLenient = false
-                formatter.parse(dateTimeInput) != null
-            } catch (e: Exception) {
-                false
-            }
+        dateTimeInput.length == 12 && try {
+            val formatter = SimpleDateFormat("ddMMyyyyHHmm", Locale.getDefault())
+            formatter.isLenient = false
+            formatter.parse(dateTimeInput) != null
+        } catch (e: Exception) {
+            false
         }
     }
 
     var dropdownTouched by remember { mutableStateOf(false) }
 
-    val amountMinor = remember(amountInput) {
-        runCatching {
-            amountInput.toBigDecimalOrNull()
-                ?.movePointRight(2)
-                ?.longValueExact()
-        }.getOrNull()
-    }
+    val amountMinor = remember(amountInput) { parseInputToMinor(amountInput) }
 
     AppModalBottomSheet(onDismissRequest = onDismiss, sheetGesturesEnabled = !dropdownTouched) {
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {

@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CurrencyExchange
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -44,6 +45,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.colgateTotal77.tracker.R
+import com.colgateTotal77.tracker.core.database.exchange.ExchangeEntity
 import com.colgateTotal77.tracker.core.database.expense.ExpenseEntity
 import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductDraft
 import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductWithProduct
@@ -52,6 +54,22 @@ import com.colgateTotal77.tracker.core.enums.OperationId
 import com.colgateTotal77.tracker.core.enums.OperationType
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
+import com.colgateTotal77.tracker.screens.operations.Exchange.AddExchangeModal
+import com.colgateTotal77.tracker.screens.operations.Exchange.DeleteExchangeModal
+import com.colgateTotal77.tracker.screens.operations.Exchange.EditExchangeModal
+import com.colgateTotal77.tracker.screens.operations.Exchange.ExchangeCard
+import com.colgateTotal77.tracker.screens.operations.Expense.AddExpenseModal
+import com.colgateTotal77.tracker.screens.operations.Expense.AddExpenseProductModal
+import com.colgateTotal77.tracker.screens.operations.Expense.DeleteExpenseModal
+import com.colgateTotal77.tracker.screens.operations.Expense.DeleteExpenseProductModal
+import com.colgateTotal77.tracker.screens.operations.Expense.EditExpenseModal
+import com.colgateTotal77.tracker.screens.operations.Expense.EditExpenseProductModal
+import com.colgateTotal77.tracker.screens.operations.Expense.ExpenseCardExpandable
+import com.colgateTotal77.tracker.screens.operations.Income.AddIncomeModal
+import com.colgateTotal77.tracker.screens.operations.Income.DeleteIncomeModal
+import com.colgateTotal77.tracker.screens.operations.Income.EditIncomeModal
+import com.colgateTotal77.tracker.screens.operations.Income.IncomeCard
+import com.colgateTotal77.tracker.screens.overview.ExchangeRatesPreferences
 import com.colgateTotal77.tracker.screens.products.Products
 import kotlinx.coroutines.flow.first
 
@@ -78,6 +96,10 @@ fun Operations(
     var isDeleteIncomeModalOpen by remember { mutableStateOf(false) }
     var selectedIncome by remember { mutableStateOf<IncomeEntity?>(null) }
 
+    var isEditExchangeModalOpen by remember { mutableStateOf(false) }
+    var isDeleteExchangeModalOpen by remember { mutableStateOf(false) }
+    var selectedExchange by remember { mutableStateOf<ExchangeEntity?>(null) }
+
     var isAddExpenseProductModalOpen by remember { mutableStateOf(false) }
     var isEditExpenseProductModalOpen by remember { mutableStateOf(false) }
     var isDeleteExpenseProductModalOpen by remember { mutableStateOf(false) }
@@ -92,13 +114,14 @@ fun Operations(
 
     var searchQuery by remember { mutableStateOf("") }
 
+    val exchangeRates by viewModel.exchangeRates.collectAsStateWithLifecycle(
+        initialValue = ExchangeRatesPreferences(),
+    )
+
     val listState = rememberLazyListState()
     LaunchedEffect(expendedOperationId) {
-        val id = expendedOperationId?.id ?: return@LaunchedEffect
-        val index = when (expendedOperationId.type) {
-            OperationType.EXPENSE -> viewModel.getOperationPosition(expenseId = id)
-            OperationType.INCOME -> viewModel.getOperationPosition(incomeId = id)
-        }
+        if (expendedOperationId == null) return@LaunchedEffect
+        val index = viewModel.getOperationPosition(expendedOperationId.id, expendedOperationId.type)
 
         snapshotFlow { operations.itemCount }
             .first { it > index }
@@ -127,6 +150,14 @@ fun Operations(
                             horizontalAlignment = Alignment.End,
                             verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
                         ) {
+                            ExtendedFloatingActionButton(
+                                text = { Text(stringResource(R.string.exchange)) },
+                                icon = { Icon(Icons.Default.CurrencyExchange, contentDescription = null) },
+                                onClick = {
+                                    operationToAdd = OperationType.EXCHANGE
+                                    isAddMenuOpen = false
+                                },
+                            )
                             ExtendedFloatingActionButton(
                                 text = { Text(stringResource(R.string.income)) },
                                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
@@ -204,7 +235,7 @@ fun Operations(
                     items(
                         count = operations.itemCount,
                         key = operations.itemKey {
-                            "${it.operation.type}:${it.operation.expenseId ?: it.operation.incomeId}"
+                            "${it.operation.type}:${it.operation.expenseId ?: it.operation.incomeId ?: it.operation.exchangeId}"
                         },
                     ) { index ->
                         val operation = operations[index]
@@ -259,11 +290,27 @@ fun Operations(
                                     income = income,
                                     onEdit = {
                                         selectedIncome = income
-                                        isEditExpenseModalOpen = true
+                                        isEditIncomeModalOpen = true
                                     },
                                     onDelete = {
                                         selectedIncome = income
                                         isDeleteIncomeModalOpen = true
+                                    },
+                                )
+                            }
+
+                            OperationType.EXCHANGE -> {
+                                val exchange = operation.exchange ?: return@items
+
+                                ExchangeCard(
+                                    exchange = exchange,
+                                    onEdit = {
+                                        selectedExchange = exchange
+                                        isEditExchangeModalOpen = true
+                                    },
+                                    onDelete = {
+                                        selectedExchange = exchange
+                                        isDeleteExchangeModalOpen = true
                                     },
                                 )
                             }
@@ -279,7 +326,12 @@ fun Operations(
                 onDismiss = { operationToAdd = null },
                 onAdd = { expense ->
                     viewModel.addExpense(expense) { id ->
-                        changeExpendedOperationId(OperationId(id = id, type = OperationType.EXPENSE))
+                        changeExpendedOperationId(
+                            OperationId(
+                                id = id,
+                                type = OperationType.EXPENSE
+                            )
+                        )
                         operationToAdd = null
                     }
                 },
@@ -293,6 +345,16 @@ fun Operations(
                     }
                 },
             )
+            OperationType.EXCHANGE -> AddExchangeModal(
+                exchangeRates = exchangeRates,
+                onDismiss = { operationToAdd = null },
+                onAdd = { fromAmountMinor, fromCurrency, toAmountMinor, toCurrency, date ->
+                    viewModel.addExchange(fromAmountMinor, fromCurrency, toAmountMinor, toCurrency, date) { id ->
+                        changeExpendedOperationId(OperationId(id = id, type = OperationType.EXCHANGE))
+                        operationToAdd = null
+                    }
+                },
+            )
             null -> Unit
         }
 
@@ -302,14 +364,12 @@ fun Operations(
                 markets = markets,
                 onDismiss = { isEditExpenseModalOpen = false },
                 onUpdate = { amountMinor, currency, market, date ->
-                    val now = System.currentTimeMillis()
-
                     viewModel.updateExpense(
                         selectedExpense!!.copy(
                             amountMinor = amountMinor,
                             currency = currency,
-                            date = date ?: now,
-                            updatedAt = now,
+                            date = date,
+                            updatedAt = System.currentTimeMillis(),
                         ),
                         market = market,
                     )
@@ -381,14 +441,15 @@ fun Operations(
                 income = selectedIncome!!,
                 onDismiss = { isEditIncomeModalOpen = false },
                 onUpdate = { amountMinor, currency, date ->
-                    val now = System.currentTimeMillis()
-                    viewModel.updateIncome(selectedIncome!!.copy(
-                        amountMinor = amountMinor,
-                        currency = currency,
-                        date = date ?: now,
-                        note = "",
-                        updatedAt = now,
-                    ))
+                    viewModel.updateIncome(
+                        selectedIncome!!.copy(
+                            amountMinor = amountMinor,
+                            currency = currency,
+                            date = date,
+                            note = "",
+                            updatedAt = System.currentTimeMillis(),
+                        )
+                    )
                     isEditIncomeModalOpen = false
                 },
             )
@@ -400,6 +461,37 @@ fun Operations(
                 onDelete = {
                     viewModel.deleteIncomeById(selectedIncome!!.id)
                     isDeleteIncomeModalOpen = false
+                },
+            )
+        }
+
+        if (isEditExchangeModalOpen) {
+            EditExchangeModal(
+                exchange = selectedExchange!!,
+                exchangeRates = exchangeRates,
+                onDismiss = { isEditExchangeModalOpen = false },
+                onUpdate = { fromAmountMinor, fromCurrency, toAmountMinor, toCurrency, date ->
+                    viewModel.updateExchange(
+                        selectedExchange!!.copy(
+                            fromAmountMinor = fromAmountMinor,
+                            fromCurrency = fromCurrency,
+                            toAmountMinor = toAmountMinor,
+                            toCurrency = toCurrency,
+                            date = date,
+                            updatedAt = System.currentTimeMillis(),
+                        )
+                    )
+                    isEditExchangeModalOpen = false
+                },
+            )
+        }
+
+        if (isDeleteExchangeModalOpen) {
+            DeleteExchangeModal(
+                onDismiss = { isDeleteExchangeModalOpen = false },
+                onDelete = {
+                    viewModel.deleteExchangeById(selectedExchange!!.id)
+                    isDeleteExchangeModalOpen = false
                 },
             )
         }

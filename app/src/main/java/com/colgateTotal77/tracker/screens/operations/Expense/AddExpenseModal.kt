@@ -1,4 +1,4 @@
-package com.colgateTotal77.tracker.screens.operations
+package com.colgateTotal77.tracker.screens.operations.Expense
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.background
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.foundation.text.KeyboardOptions
@@ -35,13 +33,13 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.colgateTotal77.tracker.core.enums.Currency
 import com.colgateTotal77.tracker.core.filterDecimal
+import com.colgateTotal77.tracker.core.parseInputToMinor
 import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.Dropdown
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
-import kotlin.math.roundToInt
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.core.database.market.MarketChoice
 import com.colgateTotal77.tracker.core.database.expense.ExpenseDraft
@@ -54,7 +52,6 @@ import com.colgateTotal77.tracker.screens.operations.Camera.Camera
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.math.roundToLong
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,7 +62,7 @@ fun AddExpenseModal(
 ) {
     var dropdownTouched by remember { mutableStateOf(false) }
     var isCameraOpen by remember { mutableStateOf(false) }
-    var amountInput by remember { mutableStateOf("") }
+    var amountInput by remember { mutableStateOf("0") }
     var currency by remember { mutableStateOf(Currency.UAH) }
     var selectedMarket by remember { mutableStateOf<MarketEntity?>(null) }
 
@@ -86,15 +83,12 @@ fun AddExpenseModal(
     val formatter = SimpleDateFormat("ddMMyyyyHHmm", Locale.getDefault())
     var dateTimeInput by remember { mutableStateOf(formatter.format(Date())) }
     val isDateValid = remember(dateTimeInput) {
-        if (dateTimeInput.length != 12) false
-        else {
-            try {
-                val formatter = SimpleDateFormat("ddMMyyyyHHmm", Locale.getDefault())
-                formatter.isLenient = false
-                formatter.parse(dateTimeInput) != null
-            } catch (e: Exception) {
-                false
-            }
+        dateTimeInput.length == 12 && try {
+            val formatter = SimpleDateFormat("ddMMyyyyHHmm", Locale.getDefault())
+            formatter.isLenient = false
+            formatter.parse(dateTimeInput) != null
+        } catch (e: Exception) {
+            false
         }
     }
 
@@ -183,7 +177,7 @@ fun AddExpenseModal(
                 CustomButton(
                     onClick = {
                         val expenseDraft = ExpenseDraft(
-                            amountMinor = ((amountInput.toDoubleOrNull() ?: 0.0) * 100).roundToLong(),
+                            amountMinor = parseInputToMinor(amountInput) ?: 0L,
                             currency = currency,
                             market = selectedMarket?.let {
                                 when {

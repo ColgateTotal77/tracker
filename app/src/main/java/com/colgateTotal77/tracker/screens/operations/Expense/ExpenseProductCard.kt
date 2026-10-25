@@ -1,4 +1,4 @@
-package com.colgateTotal77.tracker.screens.operations
+package com.colgateTotal77.tracker.screens.operations.Expense
 
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.*

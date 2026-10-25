@@ -1,4 +1,4 @@
-package com.colgateTotal77.tracker.screens.operations
+package com.colgateTotal77.tracker.screens.operations.Expense
 
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
@@ -9,7 +9,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -24,21 +23,21 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.MeasureUnit
 import com.colgateTotal77.tracker.core.ProductNameNormalizer
+import com.colgateTotal77.tracker.core.convertQuantityString
 import com.colgateTotal77.tracker.core.ui.AppToast
 import com.colgateTotal77.tracker.core.ui.ToastType
 import com.colgateTotal77.tracker.core.database.product.ProductChoice
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
 import com.colgateTotal77.tracker.core.filterDecimal
+import com.colgateTotal77.tracker.core.parseInputToMinor
 import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.DropdownInput
-import com.colgateTotal77.tracker.core.ui.QuantityInputField
+import com.colgateTotal77.tracker.core.ui.InputWithDropdown
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import kotlin.math.roundToInt
-import kotlin.math.roundToLong
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddExpenseProductModal(
     products: List<ProductEntity>,
@@ -113,12 +112,18 @@ fun AddExpenseProductModal(
                     }
                 )
 
-                QuantityInputField(
+                InputWithDropdown(
                     value = quantityInput,
                     onValueChange = { quantityInput = it },
-                    selectedUnit = selectedUnit,
-                    onUnitChange = { selectedUnit = it },
-                    modifier = Modifier.fillMaxWidth(),
+                    selectedInDropdown = selectedUnit,
+                    dropdownItems = MeasureUnit.entries,
+                    onDropdownSelect = { newUnit ->
+                        quantityInput = convertQuantityString(quantityInput, selectedUnit, newUnit)
+                        selectedUnit = newUnit
+                    },
+                    dropdownItemText = { it.label },
+                    label = stringResource(R.string.quantity),
+                    dropdownContentDescription = stringResource(R.string.select_unit),
                 )
 
                 OutlinedTextField(
@@ -138,7 +143,7 @@ fun AddExpenseProductModal(
                             else ProductChoice.Existing(selectedProduct!!)
 
                         val rawQuantity = quantityInput.toDoubleOrNull() ?: return@CustomButton
-                        val unitPriceMinor = ((unitPriceInput.toDoubleOrNull() ?: return@CustomButton) * 100).roundToLong()
+                        val unitPriceMinor = parseInputToMinor(unitPriceInput) ?: return@CustomButton
 
                         val quantity =
                             if (selectedUnit != MeasureUnit.G) (rawQuantity * 1000).roundToInt()

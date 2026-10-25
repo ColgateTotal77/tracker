@@ -4,6 +4,7 @@ import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
+import com.colgateTotal77.tracker.core.enums.OperationType
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -50,48 +51,39 @@ interface OperationDao {
     fun getRecent(): Flow<List<OperationForOverview>>
 
     @Query("""                                                                                                                       
-        WITH operations AS (                                                                                                         
-            SELECT id AS expenseId, NULL AS incomeId, date                                                                           
-            FROM expenses                                                                                                            
+       WITH operations AS (                                                                                                         
+           SELECT id, 'EXPENSE' AS type, 3 AS priority, date                                                                        
+           FROM expenses                                                                                                            
                                                                                                                                     
-            UNION ALL                                                                                                                
+           UNION ALL                                                                                                                
                                                                                                                                     
-            SELECT NULL AS expenseId, id AS incomeId, date                                                                           
-            FROM incomes
-            WHERE type != 'BALANCE_ADJUSTMENT'
-        ),                                                                                                                           
-        target AS (                                                                                                                  
-           SELECT *                                                                                                                 
-           FROM operations                                                                                                          
-           WHERE expenseId = :expenseId OR incomeId = :incomeId                                                                     
-        )  
-                                                                                                                                  
-        SELECT (                                                                                                                     
+           SELECT id, 'INCOME' AS type, 2 AS priority, date                                                                         
+           FROM incomes                                                                                                             
+           WHERE type != 'BALANCE_ADJUSTMENT'                                                                                       
+                                                                                                                                    
+           UNION ALL                                                                                                                
+                                                                                                                                    
+           SELECT id, 'EXCHANGE' AS type, 1 AS priority, date                                                                       
+           FROM exchanges                                                                                                           
+       )                                                                                                                            
+       SELECT (                                                                                                                     
            SELECT COUNT(*)                                                                                                          
            FROM operations AS o                                                                                                     
-           WHERE o.date > t.date                                                                                                    
-              OR (                                                                                                                  
-                  o.date = t.date AND (
-                    (
-                        t.expenseId IS NOT NULL 
-                        AND o.expenseId > t.expenseId 
-                    )                    
-                    OR (                                                                                                                             
-                        t.incomeId IS NOT NULL                                                                                                       
-                        AND (                                                                                                                        
-                            o.expenseId IS NOT NULL                                                                                                  
-                            OR o.incomeId > t.incomeId                                                                                               
-                        )                                                                                                                            
-                    )   
-                  )                                                                                                                 
-              )                                                                                                                     
-        )                                                                                                                            
-       FROM target AS t                                                                   
-    """)
-    suspend fun getPosition(
-        expenseId: Int?,
-        incomeId: Int?,
-    ): Int
+           WHERE o.date > target.date                                                                                               
+               OR (                                                                                                                 
+                   o.date = target.date                                                                                             
+                   AND o.priority > target.priority                                                                                 
+               )                                                                                                                    
+               OR (                                                                                                                 
+                   o.date = target.date                                                                                             
+                   AND o.priority = target.priority                                                                                 
+                   AND o.id > target.id                                                                                             
+               )                                                                                                                    
+       )                                                                                                                            
+       FROM operations AS target                                                                                                    
+       WHERE target.id = :id AND target.type = :type                                                                                
+   """)
+    suspend fun getPosition(id: Int, type: OperationType): Int
 
     @Query("""
         SELECT currency, SUM(amount) AS amountMinor                                                                                              

@@ -11,7 +11,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -22,12 +21,12 @@ import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.operation.CurrencyBalance
 import com.colgateTotal77.tracker.core.enums.Currency
 import com.colgateTotal77.tracker.core.filterDecimalWithMinus
+import com.colgateTotal77.tracker.core.parseInputToMinor
 import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.core.formatMoney
-import kotlinx.coroutines.flow.Flow
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,27 +44,18 @@ fun AdjustBalanceModal(
     var eurBalanceInput by remember { mutableStateOf(formatMoney(eurBalance)) }
     val adjustmentUahAmountMinor = remember(uahBalanceInput, uahBalance) {
         runCatching {
-            uahBalanceInput.toBigDecimalOrNull()
-                ?.movePointRight(2)
-                ?.subtract(uahBalance.toBigDecimal())
-                ?.longValueExact()
-        }.getOrNull() ?: 0
+            parseInputToMinor(uahBalanceInput)?.let { Math.subtractExact(it, uahBalance) }
+        }.getOrNull() ?: 0L
     }
     val adjustmentUsdAmountMinor = remember(usdBalanceInput, usdBalance) {
         runCatching {
-            usdBalanceInput.toBigDecimalOrNull()
-                ?.movePointRight(2)
-                ?.subtract((usdBalance).toBigDecimal())
-                ?.longValueExact()
-        }.getOrNull() ?: 0
+            parseInputToMinor(usdBalanceInput)?.let { Math.subtractExact(it, usdBalance) }
+        }.getOrNull() ?: 0L
     }
     val adjustmentEurAmountMinor = remember(eurBalanceInput, eurBalance) {
         runCatching {
-            eurBalanceInput.toBigDecimalOrNull()
-                ?.movePointRight(2)
-                ?.subtract((eurBalance).toBigDecimal())
-                ?.longValueExact()
-        }.getOrNull() ?: 0
+            parseInputToMinor(eurBalanceInput)?.let { Math.subtractExact(it, eurBalance) }
+        }.getOrNull() ?: 0L
     }
 
     val dimensions = LocalDimensions.current

@@ -31,15 +31,20 @@ import com.colgateTotal77.tracker.core.database.product.ProductEntity
 import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductEntity
 import com.colgateTotal77.tracker.core.enums.ExpenseStatus
 import androidx.paging.map
+import com.colgateTotal77.tracker.core.database.exchange.ExchangeEntity
 import com.colgateTotal77.tracker.core.database.market.MarketChoice
 import com.colgateTotal77.tracker.core.database.product.ProductChoice
 import com.colgateTotal77.tracker.core.database.expense.ExpenseDraft
 import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductDraft
 import com.colgateTotal77.tracker.core.database.operation.OperationWithDetails
+import com.colgateTotal77.tracker.core.enums.OperationType
+import com.colgateTotal77.tracker.screens.overview.OverviewPreferences
 import kotlinx.coroutines.flow.map
 
-class OperationsViewModel(private val database: AppDatabase) : ViewModel() {
-
+class OperationsViewModel(
+    private val database: AppDatabase,
+    overviewPreferencesRepository: OverviewPreferences,
+) : ViewModel() {
     val operationsFlow: Flow<PagingData<OperationWithDetails>> = Pager(
         config = PagingConfig(
             pageSize = 20,
@@ -173,35 +178,6 @@ class OperationsViewModel(private val database: AppDatabase) : ViewModel() {
         }
     }
 
-    fun addIncome(amountMinor: Long, currency: Currency, date: Long, onSaved: (Int) -> Unit) {
-        launchWithToast(R.string.toast_save_income_failed) {
-            val now = System.currentTimeMillis()
-            val id = database.incomeDao().insert(IncomeEntity(
-                amountMinor = amountMinor,
-                currency = currency,
-                note = "",
-                type = IncomeType.INCOME,
-                date = date,
-                createdAt = now,
-                updatedAt = now,
-            ))
-            if (id == -1L) throw ToastFailure(R.string.toast_save_income_failed)
-            onSaved(id.toInt())
-        }
-    }
-
-    fun updateIncome(income: IncomeEntity) {
-        launchWithToast(R.string.toast_save_income_failed) {
-            database.incomeDao().update(income)
-        }
-    }
-
-    fun deleteIncomeById(id: Int) {
-        launchWithToast(R.string.toast_delete_income_failed, R.string.toast_income_deleted) {
-            database.incomeDao().deleteById(id)
-        }
-    }
-
     fun updateExpense(expense: ExpenseEntity, market: MarketChoice) {
         launchWithToast(R.string.toast_save_expense_failed) {
             database.withTransaction {
@@ -310,16 +286,89 @@ class OperationsViewModel(private val database: AppDatabase) : ViewModel() {
             initialValue = emptyList()
         )
 
+    fun addIncome(amountMinor: Long, currency: Currency, date: Long, onSaved: (Int) -> Unit) {
+        launchWithToast(R.string.toast_save_income_failed) {
+            val now = System.currentTimeMillis()
+            val id = database.incomeDao().insert(IncomeEntity(
+                amountMinor = amountMinor,
+                currency = currency,
+                note = "",
+                type = IncomeType.INCOME,
+                date = date,
+                createdAt = now,
+                updatedAt = now,
+            ))
+            if (id == -1L) throw ToastFailure(R.string.toast_save_income_failed)
+            onSaved(id.toInt())
+        }
+    }
+
+    fun updateIncome(income: IncomeEntity) {
+        launchWithToast(R.string.toast_save_income_failed) {
+            database.incomeDao().update(income)
+        }
+    }
+
+    fun deleteIncomeById(id: Int) {
+        launchWithToast(R.string.toast_delete_income_failed, R.string.toast_income_deleted) {
+            database.incomeDao().deleteById(id)
+        }
+    }
+
+    fun addExchange(
+        fromAmountMinor: Long,
+        fromCurrency: Currency,
+        toAmountMinor: Long,
+        toCurrency: Currency,
+        date: Long,
+        onSaved: (Int) -> Unit
+    ) {
+        launchWithToast(R.string.toast_save_exchange_failed) {
+            val now = System.currentTimeMillis()
+            val id = database.exchangeDao().insert(
+                ExchangeEntity(
+                    fromAmountMinor = fromAmountMinor,
+                    fromCurrency = fromCurrency,
+                    toAmountMinor = toAmountMinor,
+                    toCurrency = toCurrency,
+                    note = "",
+                    date = date,
+                    createdAt = now,
+                    updatedAt = now,
+                )
+            )
+            if (id == -1L) throw ToastFailure(R.string.toast_save_exchange_failed)
+            onSaved(id.toInt())
+        }
+    }
+
+    fun updateExchange(exchange: ExchangeEntity) {
+        launchWithToast(R.string.toast_save_exchange_failed) {
+            database.exchangeDao().update(exchange)
+        }
+    }
+
+    fun deleteExchangeById(id: Int) {
+        launchWithToast(R.string.toast_delete_exchange_failed, R.string.toast_exchange_deleted) {
+            database.exchangeDao().deleteById(id)
+        }
+    }
+
+    val exchangeRates = overviewPreferencesRepository.exchangeRateFlow
+
     suspend fun getOperationPosition(
-        expenseId: Int? = null,
-        incomeId: Int? = null
-    ): Int = database.operationDao().getPosition(expenseId, incomeId)
+        id: Int,
+        type: OperationType
+    ): Int = database.operationDao().getPosition(id, type)
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application = (this[APPLICATION_KEY] as TrackerApplication)
-                OperationsViewModel(application.database)
+                OperationsViewModel(
+                    application.database,
+                    overviewPreferencesRepository = application.overviewPreferencesRepository,
+                )
             }
         }
     }

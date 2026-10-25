@@ -59,8 +59,8 @@ interface ProductDao {
         sortBy: ProductSort,
         startTime: Long?,
         endTime: Long?,
-        minPrice: Int? = null,
-        maxPrice: Int? = null,
+        minPrice: Long? = null,
+        maxPrice: Long? = null,
         marketIds: List<Int>? = null,
     ): PagingSource<Int, ProductFromQuery>
     @Query("SELECT * FROM products WHERE isArchived = 0 ORDER BY purchaseCount DESC")

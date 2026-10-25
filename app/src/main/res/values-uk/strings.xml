@@ -18,7 +18,9 @@
     <string name="toast_save_balance_failed">Не вдалося оновити баланс. Спробуйте ще раз.</string>
     <string name="add_expense">Додати витрату</string>
     <string name="open_camera">Відкрити камеру</string>
+    <string name="date_time_label">Дата й час (ДД/ММ/РРРР ГГ:ХХ)</string>
     <string name="amount">Сума</string>
+    <string name="quantity">Кількість</string>
     <string name="currency">Валюта</string>
     <string name="market">Магазин</string>
     <string name="rename_market">Перейменувати магазин</string>
@@ -136,4 +138,16 @@
     <string name="camera_start_failed">Не вдалося запустити камеру. Закрийте її та спробуйте ще раз.</string>
     <string name="receipt_load_failed">Не вдалося завантажити цей чек. Спробуйте ще раз.</string>
     <string name="balance_includes">Включає %1$s</string>
+    <string name="exchange">Обмін валют</string>
+    <string name="add_exchange">Додати обмін</string>
+    <string name="edit_exchange">Редагувати обмін</string>
+    <string name="save_exchange">Зберегти обмін</string>
+    <string name="exchange_you_pay">Ви віддаєте</string>
+    <string name="exchange_you_receive">Ви отримуєте</string>
+    <string name="exchange_rate">1 %1$s = %2$s %3$s</string>
+    <string name="delete_exchange">Видалити обмін</string>
+    <string name="confirm_delete_exchange">Ви впевнені, що хочете видалити цей обмін? Баланси обох валют буде оновлено.</string>
+    <string name="toast_save_exchange_failed">Не вдалося зберегти обмін. Спробуйте ще раз.</string>
+    <string name="toast_delete_exchange_failed">Не вдалося видалити обмін. Спробуйте ще раз.</string>
+    <string name="toast_exchange_deleted">Обмін видалено</string>
 </resources>

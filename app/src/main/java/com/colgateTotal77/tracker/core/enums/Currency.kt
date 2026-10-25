@@ -12,4 +12,7 @@ enum class Currency(
 
     val dropdownText: String
         get() = "$code ($symbol) - $displayName"
+
+    val dropdownTextSmall: String
+        get() = "$code ($symbol)"
 }

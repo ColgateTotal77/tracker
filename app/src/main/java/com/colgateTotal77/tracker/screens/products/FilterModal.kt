@@ -27,6 +27,8 @@ import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.core.enums.DateFilter
 import com.colgateTotal77.tracker.core.filterDecimal
+import com.colgateTotal77.tracker.core.formatMoney
+import com.colgateTotal77.tracker.core.parseInputToMinor
 import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
@@ -38,8 +40,8 @@ import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 data class ProductFilters(
     val date: DateFilter = DateFilter.AllTime,
     val marketIds: Set<Int> = emptySet(),
-    val maxPrice: Int? = null,
-    val minPrice: Int? = null,
+    val maxPrice: Long? = null,
+    val minPrice: Long? = null,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,8 +55,8 @@ fun FilterModal(
     var dropdownTouched by remember { mutableStateOf(false) }
     var date by remember { mutableStateOf(filters.date) }
     var selectedMarketIds by remember { mutableStateOf(filters.marketIds) }
-    var minPrice by remember { mutableStateOf(filters.minPrice?.toString() ?: "") }
-    var maxPrice by remember { mutableStateOf(filters.maxPrice?.toString() ?: "") }
+    var minPrice by remember { mutableStateOf(filters.minPrice?.let { formatMoney(it) }.orEmpty()) }
+    var maxPrice by remember { mutableStateOf(filters.maxPrice?.let { formatMoney(it) }.orEmpty()) }
 
     val displayMarkets = markets.filter { !it.name.isNullOrBlank() }
     val dimensions = LocalDimensions.current
@@ -79,8 +81,8 @@ fun FilterModal(
                         onClick = {
                             date = filters.date
                             selectedMarketIds = filters.marketIds
-                            minPrice = filters.minPrice?.toString() ?: ""
-                            maxPrice = filters.maxPrice?.toString() ?: ""
+                            minPrice = filters.minPrice?.let { formatMoney(it) }.orEmpty()
+                            maxPrice = filters.maxPrice?.let { formatMoney(it) }.orEmpty()
                         }
                     ) {
                         Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.open_camera))
@@ -131,8 +133,8 @@ fun FilterModal(
                         val newFilters = ProductFilters(
                             date = date,
                             marketIds = selectedMarketIds,
-                            minPrice = minPrice.toDoubleOrNull()?.times(100)?.toInt(),
-                            maxPrice = maxPrice.toDoubleOrNull()?.times(100)?.toInt(),
+                            minPrice = parseInputToMinor(minPrice),
+                            maxPrice = parseInputToMinor(maxPrice)
                         )
                         onApply(newFilters)
                         onDismiss()

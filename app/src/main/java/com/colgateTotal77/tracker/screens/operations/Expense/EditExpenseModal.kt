@@ -1,12 +1,10 @@
-package com.colgateTotal77.tracker.screens.operations
+package com.colgateTotal77.tracker.screens.operations.Expense
 
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -30,6 +28,7 @@ import com.colgateTotal77.tracker.core.database.expense.ExpenseEntity
 import com.colgateTotal77.tracker.core.enums.Currency
 import com.colgateTotal77.tracker.core.enums.ExpenseSource
 import com.colgateTotal77.tracker.core.filterDecimal
+import com.colgateTotal77.tracker.core.parseInputToMinor
 import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
@@ -40,8 +39,9 @@ import com.colgateTotal77.tracker.core.ui.DateTimeInputField
 import com.colgateTotal77.tracker.core.ui.DropdownInput
 import com.colgateTotal77.tracker.core.ui.AppToast
 import com.colgateTotal77.tracker.core.ui.ToastType
-import kotlin.math.roundToInt
-import kotlin.math.roundToLong
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,7 +49,7 @@ fun EditExpenseModal(
     expense: ExpenseEntity,
     markets: List<MarketEntity>,
     onDismiss: () -> Unit,
-    onUpdate: (amountMinor: Long, currency: Currency, selectedMarket: MarketChoice, date: Long?) -> Unit,
+    onUpdate: (amountMinor: Long, currency: Currency, selectedMarket: MarketChoice, date: Long) -> Unit,
 ) {
     var dropdownTouched by remember { mutableStateOf(false) }
     var amountInput by remember { mutableStateOf(formatMoney(expense.amountMinor)) }
@@ -64,18 +64,15 @@ fun EditExpenseModal(
         else validMarkets
     }
 
-    val formatter = java.text.SimpleDateFormat("ddMMyyyyHHmm", java.util.Locale.getDefault())
-    var dateTimeInput by remember { mutableStateOf(formatter.format(java.util.Date(expense.date))) }
+    val formatter = SimpleDateFormat("ddMMyyyyHHmm", Locale.getDefault())
+    var dateTimeInput by remember { mutableStateOf(formatter.format(Date(expense.date))) }
     val isDateValid = remember(dateTimeInput) {
-        if (dateTimeInput.length != 12) false
-        else {
-            try {
-                val formatter = java.text.SimpleDateFormat("ddMMyyyyHHmm", java.util.Locale.getDefault())
-                formatter.isLenient = false
-                formatter.parse(dateTimeInput) != null
-            } catch (e: Exception) {
-                false
-            }
+        dateTimeInput.length == 12 && try {
+            val formatter = SimpleDateFormat("ddMMyyyyHHmm", Locale.getDefault())
+            formatter.isLenient = false
+            formatter.parse(dateTimeInput) != null
+        } catch (e: Exception) {
+            false
         }
     }
 
@@ -156,7 +153,7 @@ fun EditExpenseModal(
                 CustomButton(
                     onClick = {
                         val parsedDateMillis = formatter.parse(dateTimeInput)!!.time
-                        val amountMinor = ((amountInput.toDoubleOrNull() ?: 0.0) * 100).roundToLong()
+                        val amountMinor = parseInputToMinor(amountInput) ?: 0L
 
                         val market = selectedMarket?.let { m ->
                             when {

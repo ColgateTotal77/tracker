@@ -1,4 +1,4 @@
-package com.colgateTotal77.tracker.screens.operations
+package com.colgateTotal77.tracker.screens.operations.Expense
 
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
@@ -19,17 +19,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.MeasureUnit
+import com.colgateTotal77.tracker.core.convertQuantityString
 import com.colgateTotal77.tracker.core.filterDecimal
 import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductWithProduct
 import com.colgateTotal77.tracker.core.formatMoney
+import com.colgateTotal77.tracker.core.parseInputToMinor
 import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
-import com.colgateTotal77.tracker.core.ui.QuantityInputField
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import kotlin.math.roundToInt
 import com.colgateTotal77.tracker.core.getMeasureUnit
-import kotlin.math.roundToLong
+import com.colgateTotal77.tracker.core.ui.InputWithDropdown
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,12 +80,18 @@ fun EditExpenseProductModal(
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                QuantityInputField(
+                InputWithDropdown(
                     value = quantityInput,
                     onValueChange = { quantityInput = it },
-                    selectedUnit = selectedUnit,
-                    onUnitChange = { selectedUnit = it },
-                    modifier = Modifier.fillMaxWidth(),
+                    selectedInDropdown = selectedUnit,
+                    dropdownItems = MeasureUnit.entries,
+                    onDropdownSelect = { newUnit ->
+                        quantityInput = convertQuantityString(quantityInput, selectedUnit, newUnit)
+                        selectedUnit = newUnit
+                    },
+                    dropdownItemText = { it.label },
+                    label = stringResource(R.string.quantity),
+                    dropdownContentDescription = stringResource(R.string.select_unit),
                 )
 
                 OutlinedTextField(
@@ -99,7 +106,7 @@ fun EditExpenseProductModal(
                     onClick = {
                         val alias = nameInput.trim()
                         val rawQuantity = quantityInput.toDoubleOrNull() ?: return@CustomButton
-                        val unitPriceMinor = ((unitPriceInput.toDoubleOrNull() ?: return@CustomButton) * 100).roundToLong()
+                        val unitPriceMinor = parseInputToMinor(unitPriceInput) ?: return@CustomButton
 
                         val quantity =
                             if (selectedUnit != MeasureUnit.G) (rawQuantity * 1000).roundToInt()

@@ -2,7 +2,8 @@ package com.colgateTotal77.tracker.core.enums
 
 enum class OperationType {
     EXPENSE,
-    INCOME
+    INCOME,
+    EXCHANGE
 }
 
 data class OperationId(

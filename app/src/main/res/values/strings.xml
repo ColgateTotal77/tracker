@@ -18,7 +18,9 @@
     <string name="toast_save_balance_failed">Could not update the balance. Please try again.</string>
     <string name="add_expense">Add Expense</string>
     <string name="open_camera">Open Camera</string>
+    <string name="date_time_label">Date &amp; Time (DD/MM/YYYY HH:MM)</string>
     <string name="amount">Amount</string>
+    <string name="quantity">Quantity</string>
     <string name="currency">Currency</string>
     <string name="market">Market</string>
     <string name="rename_market">Rename market</string>
@@ -136,4 +138,16 @@
     <string name="camera_start_failed">Could not start the camera. Close it and try again.</string>
     <string name="receipt_load_failed">Could not load this receipt. Please try again.</string>
     <string name="balance_includes">Includes %1$s</string>
+    <string name="exchange">Exchange</string>
+    <string name="add_exchange">Add exchange</string>
+    <string name="edit_exchange">Edit exchange</string>
+    <string name="save_exchange">Save exchange</string>
+    <string name="exchange_you_pay">You pay</string>
+    <string name="exchange_you_receive">You receive</string>
+    <string name="exchange_rate">1 %1$s = %2$s %3$s</string>
+    <string name="delete_exchange">Delete exchange</string>
+    <string name="confirm_delete_exchange">Are you sure you want to delete this exchange? Both currency balances will be updated.</string>
+    <string name="toast_save_exchange_failed">Could not save the exchange. Please try again.</string>
+    <string name="toast_delete_exchange_failed">Could not delete the exchange. Please try again.</string>
+    <string name="toast_exchange_deleted">Exchange deleted</string>
 </resources>
