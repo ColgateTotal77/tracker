@@ -29,6 +29,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -112,7 +113,7 @@ fun Operations(
     val markets by viewModel.marketsFlow.collectAsStateWithLifecycle()
     val products by viewModel.productFlow.collectAsStateWithLifecycle()
 
-    var searchQuery by remember { mutableStateOf("") }
+    val searchQuery by viewModel.searchQuery.collectAsState()
 
     val exchangeRates by viewModel.exchangeRates.collectAsStateWithLifecycle(
         initialValue = ExchangeRatesPreferences(),
@@ -121,12 +122,15 @@ fun Operations(
     val listState = rememberLazyListState()
     LaunchedEffect(expendedOperationId) {
         if (expendedOperationId == null) return@LaunchedEffect
-        val index = viewModel.getOperationPosition(expendedOperationId.id, expendedOperationId.type)
+        val index = viewModel.getOperationPosition(expendedOperationId.id, expendedOperationId.type) ?: return@LaunchedEffect
 
         snapshotFlow { operations.itemCount }
             .first { it > index }
 
-        listState.scrollToItem(index)
+        val targetKey = "${expendedOperationId.type}:${expendedOperationId.id}"
+        if (!listState.layoutInfo.visibleItemsInfo.any { it.key == targetKey }) {
+            listState.scrollToItem(index)
+        }
     }
 
     Scaffold(
@@ -189,7 +193,7 @@ fun Operations(
         ) {
             OutlinedTextField(
                 value = searchQuery,
-                onValueChange = { searchQuery = it },
+                onValueChange = { viewModel.onSearchQueryChanged(it) },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text(stringResource(R.string.search_operations)) },
                 singleLine = true,

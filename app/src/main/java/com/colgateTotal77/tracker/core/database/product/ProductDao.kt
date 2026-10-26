@@ -37,7 +37,7 @@ interface ProductDao {
             JOIN expense_products tp ON tp.productId = p.id 
             JOIN expenses t ON t.id = tp.expenseId 
             WHERE p.isArchived = 0 
-                AND (:nameQuery IS NULL OR p.normalizedName LIKE '%' || :nameQuery || '%')
+                AND (:nameQuery = '' OR p.normalizedName LIKE '%' || :nameQuery || '%')
                 AND (:startTime IS NULL OR t.date >= :startTime)
                 AND (:endTime IS NULL OR t.date <= :endTime)
                 AND (:marketIds IS NULL OR t.marketId IN (:marketIds))
@@ -55,7 +55,7 @@ interface ProductDao {
             purchaseCount DESC
     """)
     fun query(
-        nameQuery: String?,
+        nameQuery: String,
         sortBy: ProductSort,
         startTime: Long?,
         endTime: Long?,

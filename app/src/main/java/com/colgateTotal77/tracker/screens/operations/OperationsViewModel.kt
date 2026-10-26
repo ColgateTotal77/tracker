@@ -39,19 +39,31 @@ import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductDr
 import com.colgateTotal77.tracker.core.database.operation.OperationWithDetails
 import com.colgateTotal77.tracker.core.enums.OperationType
 import com.colgateTotal77.tracker.screens.overview.OverviewPreferences
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 
 class OperationsViewModel(
     private val database: AppDatabase,
     overviewPreferencesRepository: OverviewPreferences,
 ) : ViewModel() {
-    val operationsFlow: Flow<PagingData<OperationWithDetails>> = Pager(
-        config = PagingConfig(
-            pageSize = 20,
-            enablePlaceholders = true
-        ),
-        pagingSourceFactory = database.operationDao()::query,
-    ).flow.map { pagingData ->
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val operationsFlow: Flow<PagingData<OperationWithDetails>> = searchQuery
+        .flatMapLatest { query ->
+            Pager(
+                config = PagingConfig(
+                    pageSize = 20,
+                    enablePlaceholders = true
+                ),
+                pagingSourceFactory = { database.operationDao().query(query) },
+            ).flow
+        }
+        .map { pagingData ->
         pagingData.map { operationItem ->
             operationItem.copy(
                 expense = operationItem.expense?.let { expense ->
@@ -64,6 +76,10 @@ class OperationsViewModel(
             )
         }
     }.cachedIn(viewModelScope)
+
+    fun onSearchQueryChanged(query: String) {
+        _searchQuery.value = query
+    }
 
     fun addExpense(expense: ExpenseDraft, onCallback: (id: Int) -> Unit) {
         launchWithToast(
@@ -358,8 +374,8 @@ class OperationsViewModel(
 
     suspend fun getOperationPosition(
         id: Int,
-        type: OperationType
-    ): Int = database.operationDao().getPosition(id, type)
+        type: OperationType,
+    ): Int? = database.operationDao().getPosition(id, type, searchQuery.value)
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
