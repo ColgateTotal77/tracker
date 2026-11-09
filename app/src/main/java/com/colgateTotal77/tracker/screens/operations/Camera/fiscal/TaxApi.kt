@@ -44,6 +44,7 @@ object TaxApi {
     private val client = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
+        .callTimeout(10, TimeUnit.SECONDS)
         .retryOnConnectionFailure(true)
         .build()
 
@@ -91,24 +92,12 @@ object TaxApi {
             .get()
             .build()
 
-        var lastError: Exception? = null
-        repeat(3) { attempt ->
-            if (attempt > 0) {
-                Log.w(TAG, "retry attempt ${attempt + 1} after error: $lastError")
-                delay((1000L * attempt).milliseconds)
-            }
-            try {
-                val (body, xmlBytes) = fetchOnce(request)
-                return body to xmlBytes
-            } catch (e: ReceiptHttpException) {
-                if (e.status !in 500..599) throw e
-                lastError = e
-            } catch (e: IOException) {
-                lastError = e
-            }
+        try {
+            val (body, xmlBytes) = fetchOnce(request)
+            return body to xmlBytes
+        } catch (e: Exception) {
+            throw e
         }
-        if (lastError is ReceiptHttpException) throw lastError
-        throw IOException("Tax API unreachable after 3 attempts", lastError)
     }
 
     private suspend fun fetchOnce(request: Request): Pair<String, ByteArray> = withContext(Dispatchers.IO) {

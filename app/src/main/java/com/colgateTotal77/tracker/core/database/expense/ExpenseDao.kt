@@ -7,6 +7,7 @@ import androidx.room.Update
 import androidx.paging.PagingSource
 import androidx.room.OnConflictStrategy
 import androidx.room.Transaction
+import com.colgateTotal77.tracker.core.database.operation.CurrencyBalance
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -30,10 +31,11 @@ interface ExpenseDao {
     suspend fun deleteById(id: Int)
 
     @Query("""
-        SELECT COALESCE(SUM(amountMinor), 0) 
-        FROM expenses 
+        SELECT currency, SUM(amountMinor) AS amountMinor                                                                                              
+        FROM expenses
         WHERE (:startTime IS NULL OR date >= :startTime)
-        AND (:endTime IS NULL OR date <= :endTime)
+            AND (:endTime IS NULL OR date <= :endTime)
+        GROUP BY currency
     """)
-    fun getTotalSpendingFlow(startTime: Long?, endTime: Long?): Flow<Long>
+    fun getTotalSpendingFlow(startTime: Long?, endTime: Long?): Flow<List<CurrencyBalance>>
 }

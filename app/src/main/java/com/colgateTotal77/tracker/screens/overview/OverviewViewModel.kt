@@ -16,13 +16,14 @@ import kotlinx.coroutines.flow.stateIn
 import com.colgateTotal77.tracker.core.database.AppDatabase
 import com.colgateTotal77.tracker.core.database.income.IncomeEntity
 import com.colgateTotal77.tracker.core.database.operation.CurrencyBalance
-import com.colgateTotal77.tracker.core.enums.Currency
 import com.colgateTotal77.tracker.core.enums.IncomeType
 import com.colgateTotal77.tracker.core.enums.toTimeRange
 import com.colgateTotal77.tracker.core.ui.ProgressBarState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
+import kotlin.math.roundToLong
 
 class OverviewViewModel(
     private val database: AppDatabase,
@@ -41,14 +42,20 @@ class OverviewViewModel(
         .flatMapLatest { settings ->
             val range = settings.selectedFilter.toTimeRange()
             val spendingFlow = database.expenseDao().getTotalSpendingFlow(range.start, range.end)
-            spendingFlow.map { spendingAmount ->
+            combine(
+                spendingFlow,
+                preferencesRepository.exchangeRateFlow,
+            ) { spending, rates ->
                 ProgressBarState(
                     settings = settings,
-                    currentSpending = spendingAmount,
+                    currentSpending = calculateBudget(
+                        rates,
+                        spending.associate { it.currency to it.amountMinor },
+                    ).roundToLong(),
                     targetForFilter = calculateTargetBudget(
                         settings.selectedFilter,
-                        settings.targetBudget
-                    )
+                        settings.targetBudget,
+                    ),
                 )
             }
         }

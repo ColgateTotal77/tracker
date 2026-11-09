@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.expense.ExpenseWithMarket
 import com.colgateTotal77.tracker.core.formatMoney
 import com.colgateTotal77.tracker.core.formatTimestamp
@@ -67,7 +68,7 @@ fun ExpenseCard(
                 verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
             ) {
                 Text(
-                    text = expenseItem.market?.name.orEmpty().ifBlank { "Receipt" },
+                    text = expenseItem.market?.name.orEmpty().ifBlank { stringResource(R.string.receipt) },
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
