@@ -25,6 +25,11 @@
     <string name="market">Market</string>
     <string name="rename_market">Rename market</string>
     <string name="create_market">Create market</string>
+    <string name="add_market_name">Which store is this?</string>
+    <string name="add_market_name_description">We don\'t recognize this store yet. Pick it from the list or type a new name. Future receipts from this exact store will be labeled automatically.</string>
+    <string name="market_name">Store name</string>
+    <string name="save_market_name">Save</string>
+    <string name="cancel">Cancel</string>
     <string name="save_expense">Save Expense</string>
     <string name="add_product">Add Product</string>
     <string name="save_product">Save Product</string>
@@ -124,6 +129,7 @@
     <string name="toast_product_archived">Product archived</string>
     <string name="toast_product_restored">Product restored</string>
     <string name="toast_save_expense_failed">Could not save the expense. Please try again.</string>
+    <string name="toast_save_market_failed">Could not save the store name. Please try again.</string>
     <string name="toast_delete_expense_failed">Could not delete the expense. Please try again.</string>
     <string name="toast_save_expense_product_failed">Could not save the product in this expense. Please try again.</string>
     <string name="toast_delete_expense_product_failed">Could not remove the product from this expense. Please try again.</string>

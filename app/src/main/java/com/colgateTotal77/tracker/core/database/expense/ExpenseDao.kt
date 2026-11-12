@@ -7,6 +7,7 @@ import androidx.room.Update
 import androidx.paging.PagingSource
 import androidx.room.OnConflictStrategy
 import androidx.room.Transaction
+import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.core.database.operation.CurrencyBalance
 import kotlinx.coroutines.flow.Flow
 
@@ -38,4 +39,7 @@ interface ExpenseDao {
         GROUP BY currency
     """)
     fun getTotalSpendingFlow(startTime: Long?, endTime: Long?): Flow<List<CurrencyBalance>>
+
+    @Query("UPDATE expenses SET marketId = :toId WHERE marketId = :fromId")
+    suspend fun moveMarket(fromId: Int, toId: Int)
 }

@@ -67,6 +67,7 @@ fun <T> Dropdown(
     modifier: Modifier = Modifier,
     leadingIcon: (@Composable () -> Unit)? = null,
     onTouchChange: (Boolean) -> Unit = {},
+    enableResetButton: Boolean = true,
 ) {
     val currentOnTouchChange by rememberUpdatedState(onTouchChange)
     val dimensions = MaterialTheme.dimensions
@@ -142,7 +143,7 @@ fun <T> Dropdown(
                 leadingIcon = leadingIcon,
                 trailingIcon = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (selected != initialItem) {
+                        if (enableResetButton && selected != initialItem) {
                             CustomIconButton(onClick = { onSelect(initialItem) }) {
                                 Icon(
                                     imageVector = Icons.Default.Clear,

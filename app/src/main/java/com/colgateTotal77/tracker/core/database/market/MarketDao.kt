@@ -12,8 +12,8 @@ interface MarketDao {
     @Query("SELECT * FROM `markets` ORDER BY name")
     fun getAll(): Flow<List<MarketEntity>>
 
-    @Query("SELECT * FROM `markets` WHERE tin = :tin")
-    fun getByTin(tin: String): MarketEntity?
+    @Query("SELECT * FROM `markets` WHERE id = :id")
+    suspend fun getById(id: Int): MarketEntity?
 
     @Query("SELECT * FROM `markets` WHERE LOWER(TRIM(name)) = :normalizedName LIMIT 1")
     suspend fun getByNormalizedName(normalizedName: String): MarketEntity?
@@ -23,4 +23,7 @@ interface MarketDao {
 
     @Update(onConflict = OnConflictStrategy.IGNORE)
     suspend fun update(market: MarketEntity)
+
+    @Query("DELETE FROM `markets` WHERE id = :id")
+    suspend fun deleteById(id: Int)
 }

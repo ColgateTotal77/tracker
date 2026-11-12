@@ -51,6 +51,8 @@ import com.colgateTotal77.tracker.core.database.expense.ExpenseEntity
 import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductDraft
 import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductWithProduct
 import com.colgateTotal77.tracker.core.database.income.IncomeEntity
+import com.colgateTotal77.tracker.core.database.market.MarketChoice
+import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.core.enums.OperationId
 import com.colgateTotal77.tracker.core.enums.OperationType
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
@@ -61,6 +63,7 @@ import com.colgateTotal77.tracker.screens.operations.Exchange.EditExchangeModal
 import com.colgateTotal77.tracker.screens.operations.Exchange.ExchangeCard
 import com.colgateTotal77.tracker.screens.operations.Expense.AddExpenseModal
 import com.colgateTotal77.tracker.screens.operations.Expense.AddExpenseProductModal
+import com.colgateTotal77.tracker.screens.operations.Expense.AddMarketNameModal
 import com.colgateTotal77.tracker.screens.operations.Expense.DeleteExpenseModal
 import com.colgateTotal77.tracker.screens.operations.Expense.DeleteExpenseProductModal
 import com.colgateTotal77.tracker.screens.operations.Expense.EditExpenseModal
@@ -89,9 +92,11 @@ fun Operations(
 
     var isAddMenuOpen by remember { mutableStateOf(false) }
     var operationToAdd by remember { mutableStateOf<OperationType?>(null) }
+    var isAddMarketNameModalOpen by remember { mutableStateOf(false) }
     var isEditExpenseModalOpen by remember { mutableStateOf(false) }
     var isDeleteExpenseModalOpen by remember { mutableStateOf(false) }
     var selectedExpense by remember { mutableStateOf<ExpenseEntity?>(null) }
+    var marketToName by remember { mutableStateOf<MarketEntity?>(null) }
 
     var isEditIncomeModalOpen by remember { mutableStateOf(false) }
     var isDeleteIncomeModalOpen by remember { mutableStateOf(false) }
@@ -329,7 +334,7 @@ fun Operations(
                 markets = markets,
                 onDismiss = { operationToAdd = null },
                 onAdd = { expense ->
-                    viewModel.addExpense(expense) { id ->
+                    viewModel.addExpense(expense) { id, market ->
                         changeExpendedOperationId(
                             OperationId(
                                 id = id,
@@ -337,6 +342,11 @@ fun Operations(
                             )
                         )
                         operationToAdd = null
+
+                        if (market != null && market.name.isNullOrBlank()) {
+                            marketToName = market
+                            isAddMarketNameModalOpen = true
+                        }
                     }
                 },
             )
@@ -360,6 +370,25 @@ fun Operations(
                 },
             )
             null -> Unit
+        }
+
+        if(isAddMarketNameModalOpen) {
+            AddMarketNameModal(
+                markets = markets,
+                onDismiss = {
+                    marketToName = null
+                    isAddMarketNameModalOpen = false
+                },
+                onSave = { choice ->
+                    when (choice) {
+                        is MarketChoice.Existing -> viewModel.mergeMarket(marketToName!!.id, choice.market)
+                        is MarketChoice.New -> viewModel.renameMarket(marketToName!!.copy(name = choice.name.trim()))
+                        else -> Unit
+                    }
+                    marketToName = null
+                    isAddMarketNameModalOpen = false
+                }
+            )
         }
 
         if (isEditExpenseModalOpen) {

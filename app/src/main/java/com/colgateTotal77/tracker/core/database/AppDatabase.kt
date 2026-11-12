@@ -14,6 +14,8 @@ import com.colgateTotal77.tracker.core.database.exchange.ExchangeDao
 import com.colgateTotal77.tracker.core.database.exchange.ExchangeEntity
 import com.colgateTotal77.tracker.core.database.market.MarketDao
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
+import com.colgateTotal77.tracker.core.database.market_tins.MarketTinDao
+import com.colgateTotal77.tracker.core.database.market_tins.MarketTinEntity
 import com.colgateTotal77.tracker.core.database.product.ProductDao
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
 import com.colgateTotal77.tracker.core.database.expense.ExpenseDao
@@ -28,12 +30,13 @@ import com.colgateTotal77.tracker.core.database.operation.OperationDao
     entities = [
         ExpenseEntity::class,
         MarketEntity::class,
+        MarketTinEntity::class,
         ProductEntity::class,
         ExpenseProductEntity::class,
         IncomeEntity::class,
         ExchangeEntity::class
     ],
-    version = 9,
+    version = 10,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 4, to = 5, spec = AppDatabase.Migration4To5::class),
@@ -54,6 +57,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun expenseDao(): ExpenseDao
     abstract fun marketDao(): MarketDao
+    abstract fun marketTinDao(): MarketTinDao
     abstract fun productDao(): ProductDao
     abstract fun expenseProductDao(): ExpenseProductDao
     abstract fun incomeDao(): IncomeDao
@@ -282,7 +286,36 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        val CALLBACK = object : RoomDatabase.Callback() {
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(connection: SQLiteConnection) {
+                connection.execSQL("""
+                    CREATE TABLE `_new_markets` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `name` TEXT
+                    )
+                """.trimIndent())
+                connection.execSQL("INSERT INTO `_new_markets` (`id`, `name`) SELECT `id`, `name` FROM `markets`")
+
+                connection.execSQL("""
+                    CREATE TABLE `market_tins` (
+                        `tin` TEXT NOT NULL,
+                        `marketId` INTEGER NOT NULL,
+                        PRIMARY KEY(`tin`),
+                        FOREIGN KEY(`marketId`) REFERENCES `markets`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                """.trimIndent())
+                connection.execSQL("""
+                    INSERT INTO `market_tins` (`tin`, `marketId`)
+                    SELECT `tin`, `id` FROM `markets` WHERE `tin` IS NOT NULL AND `tin` != ''
+                """.trimIndent())
+                connection.execSQL("CREATE INDEX IF NOT EXISTS `index_market_tins_marketId` ON `market_tins` (`marketId`)")
+
+                connection.execSQL("DROP TABLE `markets`")
+                connection.execSQL("ALTER TABLE `_new_markets` RENAME TO `markets`")
+            }
+        }
+
+        val CALLBACK = object : Callback() {
             override fun onOpen(db: SupportSQLiteDatabase) {
                 super.onOpen(db)
 

@@ -25,6 +25,11 @@
     <string name="market">Магазин</string>
     <string name="rename_market">Перейменувати магазин</string>
     <string name="create_market">Створити магазин</string>
+    <string name="add_market_name">Що це за магазин?</string>
+    <string name="add_market_name_description">Ми ще не знаємо цього магазину. Оберіть його зі списку або введіть нову назву. Наступні чеки саме з цього магазину підпишуться автоматично.</string>
+    <string name="market_name">Назва магазину</string>
+    <string name="save_market_name">Зберегти</string>
+    <string name="cancel">Скасувати</string>
     <string name="save_expense">Зберегти витрату</string>
     <string name="add_product">Додати товар</string>
     <string name="save_product">Зберегти товар</string>
@@ -124,6 +129,7 @@
     <string name="toast_product_archived">Товар архівовано</string>
     <string name="toast_product_restored">Товар відновлено</string>
     <string name="toast_save_expense_failed">Не вдалося зберегти витрату. Спробуйте ще раз.</string>
+    <string name="toast_save_market_failed">Не вдалося зберегти назву магазину. Спробуйте ще раз.</string>
     <string name="toast_delete_expense_failed">Не вдалося видалити витрату. Спробуйте ще раз.</string>
     <string name="toast_save_expense_product_failed">Не вдалося зберегти товар у цій витраті. Спробуйте ще раз.</string>
     <string name="toast_delete_expense_product_failed">Не вдалося видалити товар із цієї витрати. Спробуйте ще раз.</string>

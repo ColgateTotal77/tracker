@@ -13,7 +13,7 @@ data class Dimensions(
     val contentPadding: Dp = 12.dp,
     val spacingMedium: Dp = 16.dp,
     val spacingSmall: Dp = 8.dp,
-    val cornerRadius: Dp = 4.dp,
+    val cornerRadius: Dp = 12.dp,
     val leadingIconSize: Dp = 48.dp,
     val iconContainerPadding: Dp = 4.dp,
     val verticalDividerHeight: Dp = 34.dp,

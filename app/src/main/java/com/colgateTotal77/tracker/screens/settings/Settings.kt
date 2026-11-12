@@ -82,6 +82,7 @@ fun Settings(
                     itemText = { context.getString(it.labelRes) },
                     itemName = stringResource(R.string.language),
                     modifier = Modifier.fillMaxWidth(),
+                    enableResetButton = false
                 )
             }
         }

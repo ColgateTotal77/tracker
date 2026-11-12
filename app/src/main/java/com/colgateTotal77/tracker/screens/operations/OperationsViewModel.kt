@@ -36,6 +36,7 @@ import com.colgateTotal77.tracker.core.database.market.MarketChoice
 import com.colgateTotal77.tracker.core.database.product.ProductChoice
 import com.colgateTotal77.tracker.core.database.expense.ExpenseDraft
 import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductDraft
+import com.colgateTotal77.tracker.core.database.market_tins.MarketTinEntity
 import com.colgateTotal77.tracker.core.database.operation.OperationWithDetails
 import com.colgateTotal77.tracker.core.enums.OperationType
 import com.colgateTotal77.tracker.screens.overview.OverviewPreferences
@@ -81,43 +82,64 @@ class OperationsViewModel(
         _searchQuery.value = query
     }
 
-    fun addExpense(expense: ExpenseDraft, onCallback: (id: Int) -> Unit) {
+    private suspend fun getMarketIdFromMarketChoice(market: MarketChoice): Int? {
+        val marketDao = database.marketDao()
+        val marketTinDao = database.marketTinDao()
+
+        return when (market) {
+            is MarketChoice.Existing -> {
+                val current = marketDao.getById(market.market.id)
+                if (current?.name != market.market.name) marketDao.update(market.market)
+                market.market.id
+            }
+
+            is MarketChoice.ByTin -> {
+                marketTinDao.getMarketByTin(market.tin)?.id ?: run {
+                    val id = marketDao.insert(MarketEntity(name = "")).toInt()
+                    marketTinDao.insert(MarketTinEntity(tin = market.tin, marketId = id))
+                    id
+                }
+            }
+
+            is MarketChoice.New -> {
+                val normalizedName = market.name.lowercase().trim()
+                val existing = marketDao.getByNormalizedName(normalizedName)
+                existing?.id ?: run {
+                    val insertId = marketDao.insert(MarketEntity(name = market.name.trim()))
+                    if (insertId != -1L) insertId.toInt()
+                    else marketDao.getByNormalizedName(normalizedName)?.id
+                }
+            }
+
+            is MarketChoice.None -> null
+        }
+    }
+
+    fun mergeMarket(fromId: Int, toMarket: MarketEntity) {
+        launchWithToast(R.string.toast_save_market_failed) {
+            val marketDao = database.marketDao()
+
+            database.withTransaction {
+                database.marketTinDao().moveTins(fromId, toMarket.id)
+                database.expenseDao().moveMarket(fromId, toMarket.id)
+                marketDao.deleteById(fromId)
+
+                val current = marketDao.getById(toMarket.id)
+                if (current?.name != toMarket.name) marketDao.update(toMarket)
+            }
+        }
+    }
+
+    fun addExpense(expense: ExpenseDraft, onCallback: (id: Int, market: MarketEntity?) -> Unit) {
         launchWithToast(
             error = R.string.toast_save_expense_failed,
             success = R.string.toast_receipt_added.takeIf { expense.source == ExpenseSource.QR_CODE },
         ) {
-            val expenseId = database.withTransaction {
-                val marketDao = database.marketDao()
+            val (expenseId, marketId) = database.withTransaction {
                 val productDao = database.productDao()
                 val now = System.currentTimeMillis()
 
-                val marketId: Int? = when (val market = expense.market) {
-                    is MarketChoice.Existing -> {
-                        marketDao.update(market.market)
-                        market.market.id
-                    }
-
-                    is MarketChoice.ByTin -> {
-                        val existing = marketDao.getByTin(market.tin)
-                        existing?.id ?: run {
-                            val insertId = marketDao.insert(MarketEntity(tin = market.tin, name = ""))
-                            if (insertId != -1L) insertId.toInt()
-                            else marketDao.getByTin(market.tin)?.id
-                        }
-                    }
-
-                    is MarketChoice.New -> {
-                        val normalizedName = market.name.lowercase().trim()
-                        val existing = marketDao.getByNormalizedName(normalizedName)
-                        existing?.id ?: run {
-                            val insertId = marketDao.insert(MarketEntity(tin = null, name = normalizedName))
-                            if (insertId != -1L) insertId.toInt()
-                            else marketDao.getByNormalizedName(normalizedName)?.id
-                        }
-                    }
-
-                    is MarketChoice.None -> null
-                }
+                val marketId: Int? = getMarketIdFromMarketChoice(expense.market)
 
                 val expenseId = database.expenseDao().insert(
                     ExpenseEntity(
@@ -137,7 +159,7 @@ class OperationsViewModel(
                 if (expenseId == -1L) {
                     if(expense.fiscalId != null) {
                         val expense = database.expenseDao().getTransactionByFiscalId(expense.fiscalId);
-                        onCallback(expense.id)
+                        onCallback(expense.id, null);
                     }
                     throw ToastFailure(R.string.toast_duplicate_receipt)
                 }
@@ -147,7 +169,7 @@ class OperationsViewModel(
                     val normalizedName = ProductNameNormalizer.normalize(name)
                     normalizedName to item
                 }.toMap()
-                if (distinctProducts.isEmpty()) return@withTransaction expenseId.toInt()
+                if (distinctProducts.isEmpty()) return@withTransaction expenseId.toInt() to marketId
 
                 val newProducts = distinctProducts.map { (normalizedName, item) ->
                     ProductEntity(
@@ -183,40 +205,27 @@ class OperationsViewModel(
                     )
                 }
 
-                if (expenseProducts.isEmpty()) return@withTransaction expenseId.toInt()
-
+                if (expenseProducts.isEmpty()) return@withTransaction expenseId.toInt() to marketId
                 database.expenseProductDao().insertAll(expenseProducts)
 
-                expenseId.toInt()
+                expenseId.toInt() to marketId
             }
 
-            onCallback(expenseId)
+            val market = marketId?.let { database.marketDao().getById(it) }
+
+            onCallback(expenseId, market)
+        }
+    }
+    fun renameMarket(market: MarketEntity) {
+        launchWithToast(R.string.toast_save_market_failed) {
+            database.marketDao().update(market)
         }
     }
 
     fun updateExpense(expense: ExpenseEntity, market: MarketChoice) {
         launchWithToast(R.string.toast_save_expense_failed) {
             database.withTransaction {
-                val marketDao = database.marketDao()
-
-                val marketId: Int? = when (market) {
-                    is MarketChoice.Existing -> {
-                        marketDao.update(market.market)
-                        market.market.id
-                    }
-
-                    is MarketChoice.New -> {
-                        val normalizedName = market.name.lowercase().trim()
-                        val existing = marketDao.getByNormalizedName(normalizedName)
-                        existing?.id ?: run {
-                            val insertId = marketDao.insert(MarketEntity(tin = null, name = normalizedName))
-                            if (insertId != -1L) insertId.toInt()
-                            else marketDao.getByNormalizedName(normalizedName)?.id
-                        }
-                    }
-
-                    else -> null
-                }
+                val marketId = getMarketIdFromMarketChoice(market)
                 database.expenseDao().update(expense.copy(marketId = marketId))
             }
         }

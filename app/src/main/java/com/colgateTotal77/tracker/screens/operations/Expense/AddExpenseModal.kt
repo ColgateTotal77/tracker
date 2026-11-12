@@ -13,7 +13,6 @@ import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -53,7 +52,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddExpenseModal(
     markets: List<MarketEntity>,
@@ -154,7 +152,7 @@ fun AddExpenseModal(
                             false
                         } else {
                             selectedMarket = selectedMarket?.copy(name = newName)
-                                ?: MarketEntity(tin = null, name = newName)
+                                ?: MarketEntity(name = newName)
                             true
                         }
                     },

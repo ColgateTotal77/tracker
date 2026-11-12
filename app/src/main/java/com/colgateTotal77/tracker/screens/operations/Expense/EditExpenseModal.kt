@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -43,7 +42,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditExpenseModal(
     expense: ExpenseEntity,
@@ -130,7 +128,7 @@ fun EditExpenseModal(
                             false
                         } else {
                             selectedMarket = selectedMarket?.copy(name = newName)
-                                ?: MarketEntity(tin = null, name = newName)
+                                ?: MarketEntity(name = newName)
                             true
                         }
                     },

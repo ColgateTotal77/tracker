@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,7 +16,6 @@ import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArchiveProductModal(
     product: ProductEntity,
