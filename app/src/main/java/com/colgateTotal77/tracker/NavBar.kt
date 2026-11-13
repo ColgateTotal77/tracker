@@ -7,13 +7,13 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -39,8 +39,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
@@ -49,9 +48,7 @@ import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.screens.operations.Operations
 import com.colgateTotal77.tracker.screens.overview.Overview
 
-private val NavigationBarHeight = 80.dp
-private val IndicatorWidth = 64.dp
-private val IndicatorHeight = 32.dp
+private val NavigationBarHeight = 64.dp
 
 @Composable
 fun NavBar() {
@@ -72,44 +69,62 @@ fun NavBar() {
 
     var expendedOperationId by rememberSaveable { mutableStateOf<OperationId?>(null) }
 
-    Scaffold(
-        bottomBar = {
-            NavigationBar {
-                items.forEachIndexed { index, item ->
-                    NavBarItem(
-                        selected = selectedItemIndex == index,
-                        onClick = { selectedItemIndex = index },
-                        icon = { Icon(icons[index], contentDescription = stringResource(item)) },
-                        label = {
-                            Text(stringResource(item), style = MaterialTheme.typography.labelMedium)
-                        },
+    val dimensions = LocalDimensions.current
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold { paddingValues ->
+            val contentModifier = Modifier
+                .padding(paddingValues)
+                .consumeWindowInsets(paddingValues)
+
+            when (selectedItemIndex) {
+                0 -> Overview(
+                    onOperationClick = { id ->
+                        expendedOperationId = id
+                        selectedItemIndex = 1
+                    },
+                    modifier = contentModifier
+                )
+
+                1 -> Operations(
+                    expendedOperationId = expendedOperationId,
+                    changeExpendedOperationId = { id ->
+                        expendedOperationId = id
+                    },
+                    modifier = contentModifier
+                )
+
+                else -> Box(
+                    modifier = contentModifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(
+                            R.string.screen_name,
+                            stringResource(items[selectedItemIndex])
+                        )
                     )
                 }
             }
         }
-    ) { paddingValues ->
-        when (selectedItemIndex) {
-            0 -> Overview(
-                onOperationClick = { id ->
-                    expendedOperationId = id
-                    selectedItemIndex = 1
-                },
-                modifier = Modifier.padding(paddingValues)
-            )
-            1 -> Operations(
-                expendedOperationId = expendedOperationId,
-                changeExpendedOperationId = { id ->
-                    expendedOperationId = id
-                },
-                modifier = Modifier.padding(paddingValues)
-            )
-            else -> Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = stringResource(R.string.screen_name, stringResource(items[selectedItemIndex])))
+
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(horizontal = dimensions.screenHorizontalPadding, vertical = 12.dp)
+                .shadow(12.dp, RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f), RoundedCornerShape(12.dp)),
+        ) {
+            items.forEachIndexed { index, item ->
+                NavBarItem(
+                    selected = selectedItemIndex == index,
+                    onClick = { selectedItemIndex = index },
+                    icon = { Icon(icons[index], contentDescription = stringResource(item)) },
+                    label = {
+                        Text(stringResource(item), style = MaterialTheme.typography.labelMedium)
+                    },
+                )
             }
         }
     }
@@ -122,14 +137,11 @@ private fun RowScope.NavBarItem(
     icon: @Composable () -> Unit,
     label: @Composable () -> Unit,
 ) {
-    val dimensions = LocalDimensions.current
-    val colors = NavigationBarItemDefaults.colors()
-
     val iconColor by animateColorAsState(
-        targetValue = if (selected) colors.selectedIconColor else colors.unselectedIconColor
+        if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
     )
     val textColor by animateColorAsState(
-        targetValue = if (selected) colors.selectedTextColor else colors.unselectedTextColor
+        if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
     )
 
     Column(
@@ -146,26 +158,11 @@ private fun RowScope.NavBarItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Box(
-            modifier = Modifier
-                .padding(top = dimensions.spacingSmall)
-                .size(width = IndicatorWidth, height = IndicatorHeight)
-                .clip(RoundedCornerShape(dimensions.cornerRadius))
-                .background(if (selected) colors.selectedIndicatorColor else Color.Transparent)
-                .clickable(
-                    onClick = onClick,
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = ripple(),
-                    role = Role.Tab,
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
+        Box(contentAlignment = Alignment.Center) {
             CompositionLocalProvider(LocalContentColor provides iconColor) {
                 icon()
             }
         }
-
-        Spacer(modifier = Modifier.height(dimensions.spacingSmall))
 
         CompositionLocalProvider(LocalContentColor provides textColor) {
             label()

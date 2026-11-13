@@ -123,7 +123,7 @@ private fun ToastContent(message: AppToast.Message) {
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
-            .padding(horizontal = dimensions.screenPadding)
+            .padding(horizontal = dimensions.screenHorizontalPadding)
             .padding(top = 64.dp),
         contentAlignment = Alignment.TopEnd,
     ) {

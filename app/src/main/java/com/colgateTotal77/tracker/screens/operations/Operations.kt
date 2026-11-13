@@ -141,7 +141,10 @@ fun Operations(
     Scaffold(
         modifier = modifier,
         floatingActionButton = {
-            Box(modifier = Modifier.size(56.dp)) {
+            Box(modifier = Modifier
+                .padding(bottom = dimensions.navigationBarHeightAndPadding)
+                .size(56.dp)
+            ) {
                 if (!isAddMenuOpen) {
                     FloatingActionButton(
                         onClick = { isAddMenuOpen = true },
@@ -192,8 +195,7 @@ fun Operations(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(dimensions.screenPadding)
-                .padding(paddingValues),
+                .padding( horizontal = dimensions.screenHorizontalPadding),
             verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
         ) {
             OutlinedTextField(
@@ -238,7 +240,7 @@ fun Operations(
             } else {
                 LazyColumn(
                     state = listState,
-                    contentPadding = PaddingValues(bottom = dimensions.screenBottomPadding),
+                    contentPadding = PaddingValues(bottom = dimensions.screenBottomPadding + dimensions.navigationBarHeightAndPadding),
                     verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
                 ) {
                     items(

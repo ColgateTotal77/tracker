@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -31,7 +32,6 @@ import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.DropdownPopup
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Products(
     onBack: () -> Unit,
@@ -59,16 +59,23 @@ fun Products(
     Scaffold(
         modifier = modifier,
         floatingActionButton = {
-            FloatingActionButton(onClick = { isAddProductModalOpen = true }) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_product))
+            Box(modifier = Modifier
+                .padding(bottom = dimensions.navigationBarHeightAndPadding)
+                .size(56.dp)
+            ) {
+                FloatingActionButton(onClick = { isAddProductModalOpen = true }) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = stringResource(R.string.add_product)
+                    )
+                }
             }
         },
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(dimensions.screenPadding)
-                .padding(paddingValues),
+                .padding( horizontal = dimensions.screenHorizontalPadding),
             verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
@@ -136,7 +143,7 @@ fun Products(
                 }
             } else {
                 LazyColumn(
-                    contentPadding = PaddingValues(bottom = dimensions.screenBottomPadding),
+                    contentPadding = PaddingValues(bottom = dimensions.screenBottomPadding + dimensions.navigationBarHeightAndPadding),
                     verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
                 ) {
                     items(

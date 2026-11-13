@@ -86,133 +86,130 @@ fun Overview(
         .filter { (balances[it] ?: 0L) != 0L }
         .joinToString("/") { it.code }
 
-    Scaffold(modifier = modifier) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(dimensions.screenPadding)
-                .padding(paddingValues),
-            verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(dimensions.screenPadding),
+        verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
+            Box(modifier = Modifier.weight(1f)) {
+                ProgressBar(
+                    progressState = progressState,
+                    label = stringResource(R.string.budget, stringResource(settings.selectedFilter.labelRes), formatMoney(spending), formatMoney(progressState.targetForFilter)),
+                    color =
+                        if (spending > progressState.targetForFilter) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.primary,
+                    updateProgressBarPreferences = { settings ->
+                        viewModel.updateProgressBarPreferences(settings)
+                    },
+                )
+            }
+            CustomIconButton(onClick = { isSettingsOpen = true }) {
+                Icon(
+                    Icons.Default.Settings,
+                    contentDescription = stringResource(R.string.tab_settings),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+
+        CardWrapper(
+            modifier = Modifier
+                .fillMaxWidth(1f / 3f)
+                .aspectRatio(1f),
+            contentPadding = PaddingValues(0.dp),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(dimensions.cornerRadius))
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
+                    .clickable { isAdjustBalanceModalOpen = true }
+                    .padding(dimensions.contentPadding),
+                verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall, Alignment.CenterVertically),
             ) {
-                Box(modifier = Modifier.weight(1f)) {
-                    ProgressBar(
-                        progressState = progressState,
-                        label = stringResource(R.string.budget, stringResource(settings.selectedFilter.labelRes), formatMoney(spending), formatMoney(progressState.targetForFilter)),
-                        color =
-                            if (spending > progressState.targetForFilter) MaterialTheme.colorScheme.error
-                            else MaterialTheme.colorScheme.primary,
-                        updateProgressBarPreferences = { settings ->
-                            viewModel.updateProgressBarPreferences(settings)
-                        },
-                    )
-                }
-                CustomIconButton(onClick = { isSettingsOpen = true }) {
-                    Icon(
-                        Icons.Default.Settings,
-                        contentDescription = stringResource(R.string.tab_settings),
-                        tint = MaterialTheme.colorScheme.primary,
+                Text(
+                    text = stringResource(R.string.available_balance),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+                Text(
+                    text = formatMoney(calculateBudget(exchangeRates, balances)),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+                if (includedCurrencies.isNotEmpty()) {
+                    Text(
+                        text = stringResource(R.string.balance_includes, includedCurrencies),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
                 }
             }
+        }
 
-            CardWrapper(
+        if (operations.count() == 0) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth(1f / 3f)
-                    .aspectRatio(1f),
-                contentPadding = PaddingValues(0.dp),
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center,
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(dimensions.cornerRadius))
-                        .background(MaterialTheme.colorScheme.secondaryContainer)
-                        .clickable { isAdjustBalanceModalOpen = true }
-                        .padding(dimensions.contentPadding),
-                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall, Alignment.CenterVertically),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall),
                 ) {
-                    Text(
-                        text = stringResource(R.string.available_balance),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    )
-                    Text(
-                        text = formatMoney(calculateBudget(exchangeRates, balances)),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    )
-                    if (includedCurrencies.isNotEmpty()) {
-                        Text(
-                            text = stringResource(R.string.balance_includes, includedCurrencies),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        )
-                    }
+                    Icon(Icons.AutoMirrored.Default.ReceiptLong, contentDescription = null)
+                    Text(stringResource(R.string.no_operations_yet), style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.add_first_operation))
                 }
             }
-
-            if (operations.count() == 0) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall),
-                    ) {
-                        Icon(Icons.AutoMirrored.Default.ReceiptLong, contentDescription = null)
-                        Text(stringResource(R.string.no_operations_yet), style = MaterialTheme.typography.bodyLarge)
-                        Text(stringResource(R.string.add_first_operation))
+        } else {
+            Column(modifier = Modifier
+                .border(1.dp, MaterialTheme.colorScheme.outline, shape = RoundedCornerShape(dimensions.cornerRadius))
+            ) {
+                operations.forEach { operation ->
+                    operation.expense?.let {
+                        key("${operation.operation.type}:${it.expense.id}") {
+                            ExpenseCard(
+                                it,
+                                onClick = {onOperationClick(
+                                    OperationId(
+                                        id = it.expense.id,
+                                        type = operation.operation.type
+                                    )
+                                )}
+                            )
+                        }
                     }
-                }
-            } else {
-                Column(modifier = Modifier
-                    .border(1.dp, MaterialTheme.colorScheme.outline, shape = RoundedCornerShape(dimensions.cornerRadius))
-                ) {
-                    operations.forEach { operation ->
-                        operation.expense?.let {
-                            key("${operation.operation.type}:${it.expense.id}") {
-                                ExpenseCard(
-                                    it,
-                                    onClick = {onOperationClick(
-                                        OperationId(
-                                            id = it.expense.id,
-                                            type = operation.operation.type
-                                        )
-                                    )}
-                                )
-                            }
+                    operation.income?.let {
+                        key("${operation.operation.type}:${it.id}") {
+                            IncomeCard(
+                                it,
+                                onClick = {onOperationClick(
+                                    OperationId(
+                                        id = it.id,
+                                        type = operation.operation.type
+                                    )
+                                )}
+                            )
                         }
-                        operation.income?.let {
-                            key("${operation.operation.type}:${it.id}") {
-                                IncomeCard(
-                                    it,
-                                    onClick = {onOperationClick(
-                                        OperationId(
-                                            id = it.id,
-                                            type = operation.operation.type
-                                        )
-                                    )}
-                                )
-                            }
-                        }
-                        operation.exchange?.let {
-                            key("${operation.operation.type}:${it.id}") {
-                                ExchangeCard(
-                                    it,
-                                    onClick = {onOperationClick(
-                                        OperationId(
-                                            id = it.id,
-                                            type = operation.operation.type
-                                        )
-                                    )}
-                                )
-                            }
+                    }
+                    operation.exchange?.let {
+                        key("${operation.operation.type}:${it.id}") {
+                            ExchangeCard(
+                                it,
+                                onClick = {onOperationClick(
+                                    OperationId(
+                                        id = it.id,
+                                        type = operation.operation.type
+                                    )
+                                )}
+                            )
                         }
                     }
                 }
@@ -231,3 +228,4 @@ fun Overview(
         }
     }
 }
+

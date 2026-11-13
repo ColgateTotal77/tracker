@@ -13,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,48 +42,46 @@ fun Settings(
 
     Log.d("Settings", settings.toString())
 
-    Scaffold(modifier = modifier) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(dimensions.screenPadding)
-                .padding(paddingValues),
-            verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(dimensions.screenPadding),
+        verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall),
+            CustomIconButton(
+                onClick = onBack,
+                modifier = Modifier.size(dimensions.leadingIconSize),
             ) {
-                CustomIconButton(
-                    onClick = onBack,
-                    modifier = Modifier.size(dimensions.leadingIconSize),
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.tab_overview),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-                Text(stringResource(R.string.tab_settings), style = MaterialTheme.typography.titleLarge)
-            }
-
-            settings?.let { settings ->
-                Dropdown(
-                    items = Language.entries,
-                    selected = settings.language,
-                    onSelect = { language ->
-                        language?.let {
-                            viewModel.updateSettings(settings.copy(language = it))
-                            viewModel.applyLanguage(it)
-                        }
-                    },
-                    itemText = { context.getString(it.labelRes) },
-                    itemName = stringResource(R.string.language),
-                    modifier = Modifier.fillMaxWidth(),
-                    enableResetButton = false
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.tab_overview),
+                    tint = MaterialTheme.colorScheme.primary,
                 )
             }
+            Text(stringResource(R.string.tab_settings), style = MaterialTheme.typography.titleLarge)
+        }
+
+        settings?.let { settings ->
+            Dropdown(
+                items = Language.entries,
+                selected = settings.language,
+                onSelect = { language ->
+                    language?.let {
+                        viewModel.updateSettings(settings.copy(language = it))
+                        viewModel.applyLanguage(it)
+                    }
+                },
+                itemText = { context.getString(it.labelRes) },
+                itemName = stringResource(R.string.language),
+                modifier = Modifier.fillMaxWidth(),
+                enableResetButton = false
+            )
         }
     }
 }
+
