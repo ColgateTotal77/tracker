@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import com.colgateTotal77.tracker.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,7 +31,12 @@ fun <T> DropdownPopup(
             readOnly = true,
             placeholder = { Text(stringResource(R.string.select_item, itemName)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Transparent,
+                unfocusedBorderColor = Color.Transparent,
+                disabledBorderColor = Color.Transparent,
+                errorBorderColor = Color.Transparent,
+            ),
             modifier = Modifier.menuAnchor(
                 type = MenuAnchorType.PrimaryNotEditable,
                 enabled = true

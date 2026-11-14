@@ -1,9 +1,11 @@
 package com.colgateTotal77.tracker.screens.products
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterAlt
@@ -18,6 +20,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -31,6 +35,7 @@ import com.colgateTotal77.tracker.core.enums.ProductSort
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.DropdownPopup
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
+import com.colgateTotal77.tracker.core.ui.theme.addPadding
 
 @Composable
 fun Products(
@@ -56,79 +61,31 @@ fun Products(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val currentSort by viewModel.sortBy.collectAsState()
 
-    Scaffold(
-        modifier = modifier,
-        floatingActionButton = {
-            Box(modifier = Modifier
-                .padding(bottom = dimensions.navigationBarHeightAndPadding)
-                .size(56.dp)
-            ) {
-                FloatingActionButton(onClick = { isAddProductModalOpen = true }) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = stringResource(R.string.add_product)
-                    )
-                }
-            }
-        },
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding( horizontal = dimensions.screenHorizontalPadding),
-            verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { viewModel.onSearchQueryChanged(it) },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(stringResource(R.string.search_products)) },
-                    singleLine = true,
-                    trailingIcon = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            VerticalDivider(modifier = Modifier.height(dimensions.verticalDividerHeight))
-                            CustomIconButton(onClick = onBack) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = stringResource(R.string.tab_operations),
-                                    tint = MaterialTheme.colorScheme.primary,
-                                )
-                            }
-                        }
-                    },
-                )
-
-                Row(
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = modifier,
+            floatingActionButton = {
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(IntrinsicSize.Min),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall / 2)
+                        .padding(bottom = dimensions.navigationBarHeightAndPadding)
+                        .size(56.dp)
                 ) {
-                    DropdownPopup(
-                        items = ProductSort.entries,
-                        selected = currentSort,
-                        onSelect = { selectedSort ->
-                            selectedSort?.let { viewModel.onSortChanged(it) }
-                        },
-                        itemText = { sort -> context.getString(sort.labelRes) },
-                        itemName = stringResource(R.string.sort),
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    CustomIconButton(onClick = { isFilterModalOpen = true }) {
+                    FloatingActionButton(onClick = { isAddProductModalOpen = true }) {
                         Icon(
-                            imageVector = Icons.Default.FilterAlt,
-                            contentDescription = stringResource(R.string.filter),
-                            tint = MaterialTheme.colorScheme.primary,
+                            Icons.Default.Add,
+                            contentDescription = stringResource(R.string.add_product)
                         )
                     }
                 }
-            }
-
-            if (products.itemCount == 0) {
-                Box(
+            },
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = dimensions.screenHorizontalPadding),
+                verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
+            ) {
+                if (products.itemCount == 0) return@Scaffold Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -137,36 +94,112 @@ fun Products(
                         verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall),
                     ) {
                         Icon(Icons.Default.ProductionQuantityLimits, contentDescription = null)
-                        Text(stringResource(R.string.no_products_yet), style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            stringResource(R.string.no_products_yet),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
                         Text(stringResource(R.string.add_first_product))
                     }
                 }
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(bottom = dimensions.screenBottomPadding + dimensions.navigationBarHeightAndPadding),
-                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
-                ) {
-                    items(
-                        count = products.itemCount,
-                        key = products.itemKey { it.product.id }
-                    ) { index ->
-                        val productFromQuery = products[index] ?: return@items
+            }
+            LazyColumn(
+                contentPadding = paddingValues.addPadding(
+                    top = dimensions.searchBarHeightAndPadding * 2,
+                    bottom = dimensions.screenBottomPadding + dimensions.navigationBarHeightAndPadding
+                ),
+                verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
+            ) {
+                items(
+                    count = products.itemCount,
+                    key = products.itemKey { it.product.id }
+                ) { index ->
+                    val productFromQuery = products[index] ?: return@items
 
-                        ProductCard(
-                            productFromQuery = productFromQuery,
-                            onGetProductHistory = { id ->
-                                viewModel.getProductHistoryFlow(id)
-                            },
-                            onEdit = {
-                                selectedProduct = productFromQuery.product
-                                isEditProductModalOpen = true
-                            },
-                            onArchive = {
-                                selectedProduct = productFromQuery.product
-                                isArchiveProductModalOpen = true
-                            }
-                        )
+                    ProductCard(
+                        productFromQuery = productFromQuery,
+                        onGetProductHistory = { id ->
+                            viewModel.getProductHistoryFlow(id)
+                        },
+                        onEdit = {
+                            selectedProduct = productFromQuery.product
+                            isEditProductModalOpen = true
+                        },
+                        onArchive = {
+                            selectedProduct = productFromQuery.product
+                            isArchiveProductModalOpen = true
+                        }
+                    )
+                }
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .padding(horizontal = dimensions.screenHorizontalPadding, vertical = dimensions.spacingSmall),
+            verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
+        ) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { viewModel.onSearchQueryChanged(it) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(12.dp, RoundedCornerShape(dimensions.cornerRadius))
+                    .background(
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                        RoundedCornerShape(dimensions.cornerRadius)
+                    ),
+                placeholder = { Text(stringResource(R.string.search_products)) },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
+                    disabledBorderColor = Color.Transparent,
+                    errorBorderColor = Color.Transparent,
+                ),
+                trailingIcon = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        VerticalDivider(modifier = Modifier.height(dimensions.verticalDividerHeight))
+                        CustomIconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.tab_operations),
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
                     }
+                },
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall / 2)
+            ) {
+                DropdownPopup(
+                    items = ProductSort.entries,
+                    selected = currentSort,
+                    onSelect = { selectedSort ->
+                        selectedSort?.let { viewModel.onSortChanged(it) }
+                    },
+                    itemText = { sort -> context.getString(sort.labelRes) },
+                    itemName = stringResource(R.string.sort),
+                    modifier = Modifier
+                        .weight(1f)
+                        .shadow(12.dp, RoundedCornerShape(dimensions.cornerRadius))
+                        .background(
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                            RoundedCornerShape(dimensions.cornerRadius)
+                        ),
+                )
+
+                CustomIconButton(onClick = { isFilterModalOpen = true }) {
+                    Icon(
+                        imageVector = Icons.Default.FilterAlt,
+                        contentDescription = stringResource(R.string.filter),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
                 }
             }
         }

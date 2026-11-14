@@ -79,7 +79,7 @@ fun ExpenseCardExpandable(
                 Box(
                     modifier = Modifier
                         .size(dimensions.leadingIconSize)
-                        .clip(RoundedCornerShape(dimensions.cornerRadius))
+                        .clip(RoundedCornerShape(36.dp))
                         .background(MaterialTheme.colorScheme.secondaryContainer),
                     contentAlignment = Alignment.Center
                 ) {

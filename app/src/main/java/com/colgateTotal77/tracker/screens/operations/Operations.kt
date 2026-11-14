@@ -1,18 +1,21 @@
 package com.colgateTotal77.tracker.screens.operations
 
+import androidx.compose.foundation.background
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Add
@@ -25,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +42,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
@@ -57,6 +63,7 @@ import com.colgateTotal77.tracker.core.enums.OperationId
 import com.colgateTotal77.tracker.core.enums.OperationType
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
+import com.colgateTotal77.tracker.core.ui.theme.addPadding
 import com.colgateTotal77.tracker.screens.operations.Exchange.AddExchangeModal
 import com.colgateTotal77.tracker.screens.operations.Exchange.DeleteExchangeModal
 import com.colgateTotal77.tracker.screens.operations.Exchange.EditExchangeModal
@@ -138,198 +145,229 @@ fun Operations(
         }
     }
 
-    Scaffold(
-        modifier = modifier,
-        floatingActionButton = {
-            Box(modifier = Modifier
-                .padding(bottom = dimensions.navigationBarHeightAndPadding)
-                .size(56.dp)
-            ) {
-                if (!isAddMenuOpen) {
-                    FloatingActionButton(
-                        onClick = { isAddMenuOpen = true },
-                        modifier = Modifier.fillMaxSize(),
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_operation))
-                    }
-                } else {
-                    Popup(
-                        alignment = Alignment.BottomEnd,
-                        onDismissRequest = { isAddMenuOpen = false },
-                        properties = PopupProperties(focusable = true),
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.End,
-                            verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
-                        ) {
-                            ExtendedFloatingActionButton(
-                                text = { Text(stringResource(R.string.exchange)) },
-                                icon = { Icon(Icons.Default.CurrencyExchange, contentDescription = null) },
-                                onClick = {
-                                    operationToAdd = OperationType.EXCHANGE
-                                    isAddMenuOpen = false
-                                },
-                            )
-                            ExtendedFloatingActionButton(
-                                text = { Text(stringResource(R.string.income)) },
-                                icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                                onClick = {
-                                    operationToAdd = OperationType.INCOME
-                                    isAddMenuOpen = false
-                                },
-                            )
-                            ExtendedFloatingActionButton(
-                                text = { Text(stringResource(R.string.expense)) },
-                                icon = { Icon(Icons.Default.Remove, contentDescription = null) },
-                                onClick = {
-                                    operationToAdd = OperationType.EXPENSE
-                                    isAddMenuOpen = false
-                                },
-                            )
-                        }
-                    }
-                }
-            }
-        },
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding( horizontal = dimensions.screenHorizontalPadding),
-            verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
-        ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { viewModel.onSearchQueryChanged(it) },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text(stringResource(R.string.search_operations)) },
-                singleLine = true,
-                trailingIcon = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        VerticalDivider(modifier = Modifier.height(dimensions.verticalDividerHeight))
-                        CustomIconButton(onClick = { isProductsOpen = true }) {
-                            Icon(
-                                imageVector = Icons.Default.ShoppingCart,
-                                contentDescription = stringResource(R.string.tab_products),
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                        }
-                    }
-                },
-            )
-
-            if (operations.itemCount == 0) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = modifier,
+            floatingActionButton = {
                 Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center,
+                        .navigationBarsPadding()
+                        .padding(bottom = dimensions.navigationBarHeightAndPadding)
+                        .size(56.dp)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall),
-                    ) {
-                        Icon(Icons.AutoMirrored.Default.ReceiptLong, contentDescription = null)
-                        Text(
-                            stringResource(R.string.no_operations_yet),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Text(stringResource(R.string.add_first_operation))
+                    if (!isAddMenuOpen) {
+                        FloatingActionButton(
+                            onClick = { isAddMenuOpen = true },
+                            modifier = Modifier.fillMaxSize(),
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = stringResource(R.string.add_operation)
+                            )
+                        }
+                    } else {
+                        Popup(
+                            alignment = Alignment.BottomEnd,
+                            onDismissRequest = { isAddMenuOpen = false },
+                            properties = PopupProperties(focusable = true),
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.End,
+                                verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
+                            ) {
+                                ExtendedFloatingActionButton(
+                                    text = { Text(stringResource(R.string.exchange)) },
+                                    icon = {
+                                        Icon(
+                                            Icons.Default.CurrencyExchange,
+                                            contentDescription = null
+                                        )
+                                    },
+                                    onClick = {
+                                        operationToAdd = OperationType.EXCHANGE
+                                        isAddMenuOpen = false
+                                    },
+                                )
+                                ExtendedFloatingActionButton(
+                                    text = { Text(stringResource(R.string.income)) },
+                                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                                    onClick = {
+                                        operationToAdd = OperationType.INCOME
+                                        isAddMenuOpen = false
+                                    },
+                                )
+                                ExtendedFloatingActionButton(
+                                    text = { Text(stringResource(R.string.expense)) },
+                                    icon = {
+                                        Icon(
+                                            Icons.Default.Remove,
+                                            contentDescription = null
+                                        )
+                                    },
+                                    onClick = {
+                                        operationToAdd = OperationType.EXPENSE
+                                        isAddMenuOpen = false
+                                    },
+                                )
+                            }
+                        }
                     }
                 }
-            } else {
-                LazyColumn(
-                    state = listState,
-                    contentPadding = PaddingValues(bottom = dimensions.screenBottomPadding + dimensions.navigationBarHeightAndPadding),
-                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
+            },
+        ) { paddingValues ->
+            if (operations.itemCount == 0) return@Scaffold Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = dimensions.screenHorizontalPadding,
+                        end = dimensions.screenHorizontalPadding,
+                        top = dimensions.searchBarHeightAndPadding
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall),
                 ) {
-                    items(
-                        count = operations.itemCount,
-                        key = operations.itemKey {
-                            "${it.operation.type}:${it.operation.expenseId ?: it.operation.incomeId ?: it.operation.exchangeId}"
-                        },
-                    ) { index ->
-                        val operation = operations[index]
+                    Icon(Icons.AutoMirrored.Default.ReceiptLong, contentDescription = null)
+                    Text(
+                        stringResource(R.string.no_operations_yet),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(stringResource(R.string.add_first_operation))
+                }
+            }
 
-                        if (operation == null) {
-                            Box(Modifier.fillMaxWidth().height(80.dp))
-                            return@items
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.padding( horizontal = dimensions.screenHorizontalPadding),
+                contentPadding = paddingValues.addPadding(
+                    top = dimensions.searchBarHeightAndPadding,
+                    bottom = dimensions.screenBottomPadding + dimensions.navigationBarHeightAndPadding
+                ),
+                verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
+            ) {
+                items(
+                    count = operations.itemCount,
+                    key = operations.itemKey {
+                        "${it.operation.type}:${it.operation.expenseId ?: it.operation.incomeId ?: it.operation.exchangeId}"
+                    },
+                ) { index ->
+                    val operation = operations[index]
+
+                    if (operation == null) {
+                        Box(Modifier.fillMaxWidth().height(80.dp))
+                        return@items
+                    }
+
+                    when (operation.operation.type) {
+                        OperationType.EXPENSE -> {
+                            val expenseItem = operation.expense ?: return@items
+                            val operationId = OperationId(
+                                id = expenseItem.expense.id,
+                                type = OperationType.EXPENSE,
+                            )
+                            val isExpanded = expendedOperationId == operationId
+
+                            ExpenseCardExpandable(
+                                expenseItem = expenseItem,
+                                isExpanded = isExpanded,
+                                onExpandedChange = {
+                                    if (isExpanded) changeExpendedOperationId(null)
+                                    else changeExpendedOperationId(operationId)
+                                },
+                                onEdit = {
+                                    selectedExpense = expenseItem.expense
+                                    isEditExpenseModalOpen = true
+                                },
+                                onDelete = {
+                                    selectedExpense = expenseItem.expense
+                                    isDeleteExpenseModalOpen = true
+                                },
+                                onAddExpenseProduct = { nextPosition ->
+                                    selectedExpense = expenseItem.expense
+                                    nextExpenseProductPosition = nextPosition
+                                    isAddExpenseProductModalOpen = true
+                                },
+                                onEditExpenseProduct = { expenseProduct ->
+                                    selectedExpenseProduct = expenseProduct
+                                    isEditExpenseProductModalOpen = true
+                                },
+                                onDeleteExpenseProduct = { expenseProduct ->
+                                    selectedExpenseProduct = expenseProduct
+                                    isDeleteExpenseProductModalOpen = true
+                                },
+                            )
                         }
 
-                        when (operation.operation.type) {
-                            OperationType.EXPENSE -> {
-                                val expenseItem = operation.expense ?: return@items
-                                val operationId = OperationId(
-                                    id = expenseItem.expense.id,
-                                    type = OperationType.EXPENSE,
-                                )
-                                val isExpanded = expendedOperationId == operationId
+                        OperationType.INCOME -> {
+                            val income = operation.income ?: return@items
+                            IncomeCard(
+                                income = income,
+                                onEdit = {
+                                    selectedIncome = income
+                                    isEditIncomeModalOpen = true
+                                },
+                                onDelete = {
+                                    selectedIncome = income
+                                    isDeleteIncomeModalOpen = true
+                                },
+                            )
+                        }
 
-                                ExpenseCardExpandable(
-                                    expenseItem = expenseItem,
-                                    isExpanded = isExpanded,
-                                    onExpandedChange = {
-                                        if (isExpanded) changeExpendedOperationId(null)
-                                        else changeExpendedOperationId(operationId)
-                                    },
-                                    onEdit = {
-                                        selectedExpense = expenseItem.expense
-                                        isEditExpenseModalOpen = true
-                                    },
-                                    onDelete = {
-                                        selectedExpense = expenseItem.expense
-                                        isDeleteExpenseModalOpen = true
-                                    },
-                                    onAddExpenseProduct = { nextPosition ->
-                                        selectedExpense = expenseItem.expense
-                                        nextExpenseProductPosition = nextPosition
-                                        isAddExpenseProductModalOpen = true
-                                    },
-                                    onEditExpenseProduct = { expenseProduct ->
-                                        selectedExpenseProduct = expenseProduct
-                                        isEditExpenseProductModalOpen = true
-                                    },
-                                    onDeleteExpenseProduct = { expenseProduct ->
-                                        selectedExpenseProduct = expenseProduct
-                                        isDeleteExpenseProductModalOpen = true
-                                    },
-                                )
-                            }
-                            OperationType.INCOME -> {
-                                val income = operation.income ?: return@items
-                                IncomeCard(
-                                    income = income,
-                                    onEdit = {
-                                        selectedIncome = income
-                                        isEditIncomeModalOpen = true
-                                    },
-                                    onDelete = {
-                                        selectedIncome = income
-                                        isDeleteIncomeModalOpen = true
-                                    },
-                                )
-                            }
+                        OperationType.EXCHANGE -> {
+                            val exchange = operation.exchange ?: return@items
 
-                            OperationType.EXCHANGE -> {
-                                val exchange = operation.exchange ?: return@items
-
-                                ExchangeCard(
-                                    exchange = exchange,
-                                    onEdit = {
-                                        selectedExchange = exchange
-                                        isEditExchangeModalOpen = true
-                                    },
-                                    onDelete = {
-                                        selectedExchange = exchange
-                                        isDeleteExchangeModalOpen = true
-                                    },
-                                )
-                            }
+                            ExchangeCard(
+                                exchange = exchange,
+                                onEdit = {
+                                    selectedExchange = exchange
+                                    isEditExchangeModalOpen = true
+                                },
+                                onDelete = {
+                                    selectedExchange = exchange
+                                    isDeleteExchangeModalOpen = true
+                                },
+                            )
                         }
                     }
                 }
             }
         }
+
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { viewModel.onSearchQueryChanged(it) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = dimensions.screenHorizontalPadding, vertical = dimensions.spacingSmall)
+                .shadow(12.dp, RoundedCornerShape(dimensions.cornerRadius))
+                .background(
+                    MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                    RoundedCornerShape(dimensions.cornerRadius)
+                ),
+            placeholder = { Text(stringResource(R.string.search_operations)) },
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Transparent,
+                unfocusedBorderColor = Color.Transparent,
+                disabledBorderColor = Color.Transparent,
+                errorBorderColor = Color.Transparent,
+            ),
+            trailingIcon = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    VerticalDivider(modifier = Modifier.height(dimensions.verticalDividerHeight))
+                    CustomIconButton(onClick = { isProductsOpen = true }) {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingCart,
+                            contentDescription = stringResource(R.string.tab_products),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+            },
+        )
 
         when (operationToAdd) {
             OperationType.EXPENSE -> AddExpenseModal(
@@ -352,29 +390,48 @@ fun Operations(
                     }
                 },
             )
+
             OperationType.INCOME -> AddIncomeModal(
                 onDismiss = { operationToAdd = null },
                 onAdd = { amountMinor, currency, date ->
                     viewModel.addIncome(amountMinor, currency, date) { id ->
-                        changeExpendedOperationId(OperationId(id = id, type = OperationType.INCOME))
+                        changeExpendedOperationId(
+                            OperationId(
+                                id = id,
+                                type = OperationType.INCOME
+                            )
+                        )
                         operationToAdd = null
                     }
                 },
             )
+
             OperationType.EXCHANGE -> AddExchangeModal(
                 exchangeRates = exchangeRates,
                 onDismiss = { operationToAdd = null },
                 onAdd = { fromAmountMinor, fromCurrency, toAmountMinor, toCurrency, date ->
-                    viewModel.addExchange(fromAmountMinor, fromCurrency, toAmountMinor, toCurrency, date) { id ->
-                        changeExpendedOperationId(OperationId(id = id, type = OperationType.EXCHANGE))
+                    viewModel.addExchange(
+                        fromAmountMinor,
+                        fromCurrency,
+                        toAmountMinor,
+                        toCurrency,
+                        date
+                    ) { id ->
+                        changeExpendedOperationId(
+                            OperationId(
+                                id = id,
+                                type = OperationType.EXCHANGE
+                            )
+                        )
                         operationToAdd = null
                     }
                 },
             )
+
             null -> Unit
         }
 
-        if(isAddMarketNameModalOpen) {
+        if (isAddMarketNameModalOpen) {
             AddMarketNameModal(
                 markets = markets,
                 onDismiss = {
@@ -383,7 +440,11 @@ fun Operations(
                 },
                 onSave = { choice ->
                     when (choice) {
-                        is MarketChoice.Existing -> viewModel.mergeMarket(marketToName!!.id, choice.market)
+                        is MarketChoice.Existing -> viewModel.mergeMarket(
+                            marketToName!!.id,
+                            choice.market
+                        )
+
                         is MarketChoice.New -> viewModel.renameMarket(marketToName!!.copy(name = choice.name.trim()))
                         else -> Unit
                     }

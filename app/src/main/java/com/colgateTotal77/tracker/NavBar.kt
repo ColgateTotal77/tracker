@@ -2,7 +2,6 @@ package com.colgateTotal77.tracker
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,11 +23,8 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -112,9 +108,9 @@ fun NavBar() {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
-                .padding(horizontal = dimensions.screenHorizontalPadding, vertical = 12.dp)
-                .shadow(12.dp, RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f), RoundedCornerShape(12.dp)),
+                .padding(horizontal = dimensions.screenHorizontalPadding, vertical = dimensions.spacingSmall)
+                .shadow(12.dp, RoundedCornerShape(dimensions.cornerRadius))
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.95f), RoundedCornerShape(dimensions.cornerRadius)),
         ) {
             items.forEachIndexed { index, item ->
                 NavBarItem(
