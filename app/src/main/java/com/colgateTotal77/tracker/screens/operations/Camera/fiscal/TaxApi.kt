@@ -22,6 +22,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 private const val TAG = "TaxApi"
 private const val CHECK_ENDPOINT = "https://cabinet.tax.gov.ua/ws/api_public/rro/chkAllWeb"
+private const val CHECK_PAGE = "https://cabinet.tax.gov.ua/cashregs/check"
 private const val CHECK_TYPE = "3"
 
 data class FiscalQrParams(
@@ -82,6 +83,16 @@ object TaxApi {
             .addQueryParameter("sm", params.sm)
             .build()
 
+    fun checkPageUrl(params: FiscalQrParams): String =
+        CHECK_PAGE.toHttpUrl().newBuilder()
+            .addQueryParameter("date", params.date)
+            .apply { params.time?.let { addQueryParameter("time", it) } }
+            .addQueryParameter("id", params.id)
+            .addQueryParameter("sm", params.sm)
+            .addQueryParameter("fn", params.fn)
+            .build()
+            .toString()
+
     suspend fun fetchCheckXml(params: FiscalQrParams, captcha: String?): Pair<String, ByteArray> {
         val request = Request.Builder()
             .url(buildRequestUrl(params, captcha))
@@ -115,6 +126,9 @@ object TaxApi {
             fun optField(name: String) = json.optString(name).takeIf { it.isNotBlank() && it != "null" }
 
             val apiError = optField("error_description")
+            if (apiError?.contains("CAPTCHA", ignoreCase = true) == true) {
+                throw CaptchaRequiredException(apiError)
+            }
             if ((response.code == 400 || response.isSuccessful) &&
                 apiError?.contains("Не знайдено", ignoreCase = true) == true
             ) throw ReceiptNotFoundException(apiError)

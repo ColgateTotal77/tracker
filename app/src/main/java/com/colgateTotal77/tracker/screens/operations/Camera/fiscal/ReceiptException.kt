@@ -4,7 +4,8 @@ open class ReceiptException(message: String, cause: Throwable? = null) : Excepti
 
 class ReceiptNotFoundException(description: String) : ReceiptException("Receipt not found: $description")
 
-class CaptchaRequiredException : ReceiptException("Tax API requires captcha")
+class CaptchaRequiredException(description: String? = null) :
+    ReceiptException(description ?: "Tax API requires captcha")
 
 class ReceiptApiException(code: String, description: String) :
     ReceiptException("Tax API rejected request: code=$code, description=$description")

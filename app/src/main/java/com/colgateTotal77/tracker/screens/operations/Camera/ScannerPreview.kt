@@ -44,6 +44,9 @@ import com.colgateTotal77.tracker.core.database.expense.ExpenseDraft
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.AppToast
 import com.colgateTotal77.tracker.core.ui.ToastType
+import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.CaptchaRequiredException
+import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.FetchedCheck
+import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.FiscalCaptchaDialog
 import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.FiscalQrParams
 import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.ReceiptNotFoundException
 import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.TaxApi.fetchFiscalCheck
@@ -52,12 +55,36 @@ import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.toDraft
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.concurrent.Executors
 
 private const val TAG = "Camera"
+
+private class CaptchaGate {
+    var params by mutableStateOf<FiscalQrParams?>(null)
+        private set
+    private var deferred: CompletableDeferred<String?>? = null
+
+    suspend fun request(params: FiscalQrParams): String? {
+        val pending = CompletableDeferred<String?>()
+        withContext(Dispatchers.Main) {
+            deferred = pending
+            this@CaptchaGate.params = params
+        }
+        return pending.await()
+    }
+
+    fun resolve(token: String?) {
+        deferred?.complete(token)
+        deferred = null
+        params = null
+    }
+}
 
 @Composable
 fun ScannerPreview(
@@ -79,6 +106,14 @@ fun ScannerPreview(
     var hasScanned by remember { mutableStateOf(false) }
     var isTorchOn by remember { mutableStateOf(false) }
     var camera by remember { mutableStateOf<Camera?>(null) }
+    val captchaGate = remember { CaptchaGate() }
+
+    suspend fun fetchCheck(params: FiscalQrParams): FetchedCheck? = try {
+        fetchFiscalCheck(params)
+    } catch (e: CaptchaRequiredException) {
+        val token = captchaGate.request(params) ?: return null
+        fetchFiscalCheck(params, token)
+    }
 
     var lastErrorToastAt by remember { mutableStateOf<Long?>(null) }
     fun showScannerError(messageRes: Int, e: Exception? = null) {
@@ -134,7 +169,11 @@ fun ScannerPreview(
                                     hasScanned = false
                                     return@launch
                                 }
-                                val parsedCheck = fetchFiscalCheck(params)
+                                val parsedCheck = fetchCheck(params)
+                                if (parsedCheck == null) {
+                                    hasScanned = false
+                                    return@launch
+                                }
                                 Log.d(TAG, "parsedCheck $parsedCheck")
                                 onAdd(parsedCheck.toDraft())
                             } catch (e: CancellationException) {
@@ -237,5 +276,13 @@ fun ScannerPreview(
         ) {
             Icon(Icons.Default.Close, contentDescription = context.getString(R.string.close), tint = MaterialTheme.colorScheme.onPrimary)
         }
+    }
+
+    captchaGate.params?.let { params ->
+        FiscalCaptchaDialog(
+            params = params,
+            onToken = captchaGate::resolve,
+            onCancel = { captchaGate.resolve(null) },
+        )
     }
 }

@@ -143,6 +143,8 @@
     <string name="scanner_failed">Could not scan the QR code. Please try again.</string>
     <string name="camera_start_failed">Could not start the camera. Close it and try again.</string>
     <string name="receipt_load_failed">Could not load this receipt. Please try again.</string>
+    <string name="captcha_title">Confirming receipt check</string>
+    <string name="captcha_hint">Confirm you are not a robot. Usually this happens automatically; if a challenge appears, complete it.</string>
     <string name="balance_includes">Includes %1$s</string>
     <string name="exchange">Exchange</string>
     <string name="add_exchange">Add exchange</string>
