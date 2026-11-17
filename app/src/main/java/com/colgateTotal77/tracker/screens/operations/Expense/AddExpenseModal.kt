@@ -17,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.colgateTotal77.tracker.R
 import androidx.compose.runtime.Composable
@@ -91,6 +92,7 @@ fun AddExpenseModal(
     }
 
     val dimensions = LocalDimensions.current
+    val context = LocalContext.current
     val duplicateMarketMessage = stringResource(R.string.duplicate_name, stringResource(R.string.market))
 
     AppModalBottomSheet(
@@ -128,7 +130,7 @@ fun AddExpenseModal(
                     onSelect = { selectedCurrency ->
                         selectedCurrency?.let { currency = it }
                     },
-                    itemText = { it.dropdownText },
+                    itemText = { it.dropdownText(context) },
                     itemName = stringResource(R.string.currency),
                     modifier = Modifier.fillMaxWidth(),
                 )

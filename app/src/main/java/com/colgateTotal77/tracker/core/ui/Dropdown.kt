@@ -6,8 +6,6 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -35,6 +33,7 @@ import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,8 +45,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.ui.theme.dimensions
@@ -103,24 +100,11 @@ fun <T> Dropdown(
         }
     }
 
+    LaunchedEffect(isExpanded) { currentOnTouchChange(isExpanded) }
+
     Column(modifier = modifier
         .fillMaxWidth()
         .nestedScroll(blockParentScroll)
-        .pointerInput(Unit) {
-            try {
-                awaitEachGesture {
-                    awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                    currentOnTouchChange(isExpanded)
-                    while (true) {
-                        val event = awaitPointerEvent(PointerEventPass.Initial)
-                        if (event.changes.none { it.pressed }) break
-                    }
-                    currentOnTouchChange(false)
-                }
-            } finally {
-                currentOnTouchChange(false)
-            }
-        }
     ) {
         ExposedDropdownMenuBox(
             expanded = isExpanded,

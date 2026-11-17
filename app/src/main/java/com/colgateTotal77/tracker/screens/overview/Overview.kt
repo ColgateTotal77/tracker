@@ -19,7 +19,6 @@ import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -72,6 +71,7 @@ fun Overview(
     val operations by viewModel.recentOperations.collectAsStateWithLifecycle()
 
     val progressState by viewModel.progressBarState.collectAsStateWithLifecycle()
+    val barChartData by viewModel.barChartData.collectAsStateWithLifecycle()
     val settings = progressState.settings
     val spending = progressState.currentSpending
 
@@ -152,7 +152,11 @@ fun Overview(
             }
         }
 
-        if (operations.count() == 0) {
+        ExpensesBarChart(
+            data = barChartData
+        )
+
+        if (operations.isEmpty()) {
             Box(
                 modifier = Modifier
                     .weight(1f)

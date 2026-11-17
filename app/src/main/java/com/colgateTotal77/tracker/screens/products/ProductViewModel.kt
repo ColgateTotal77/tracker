@@ -56,12 +56,11 @@ class ProductViewModel(
     ) { query, sort, filters ->
         Triple(query, sort, filters)
     }.flatMapLatest { (query, sort, filters) ->
-        val productDao = database.productDao()
         val range = filters.date.toTimeRange()
         Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
-                productDao.query(
+                database.productDao().query(
                     nameQuery = query,
                     sortBy = sort,
                     startTime = range.start,
@@ -84,10 +83,6 @@ class ProductViewModel(
 
     fun onFiltersChanged(filters: ProductFilters) {
         _filters.value = filters
-    }
-
-    fun clearFilters() {
-        _filters.value = ProductFilters()
     }
 
     fun insertProduct(product: ProductEntity) {

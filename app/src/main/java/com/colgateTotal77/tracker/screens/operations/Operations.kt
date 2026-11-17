@@ -20,8 +20,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CurrencyExchange
+import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -81,7 +81,7 @@ import com.colgateTotal77.tracker.screens.operations.Income.DeleteIncomeModal
 import com.colgateTotal77.tracker.screens.operations.Income.EditIncomeModal
 import com.colgateTotal77.tracker.screens.operations.Income.IncomeCard
 import com.colgateTotal77.tracker.screens.overview.ExchangeRatesPreferences
-import com.colgateTotal77.tracker.screens.products.Products
+import com.colgateTotal77.tracker.screens.operations.FilterModal
 import kotlinx.coroutines.flow.first
 
 @Composable
@@ -91,12 +91,6 @@ fun Operations(
     modifier: Modifier = Modifier,
     viewModel: OperationsViewModel = viewModel(factory = OperationsViewModel.Factory),
 ) {
-    var isProductsOpen by remember { mutableStateOf(false) }
-    if (isProductsOpen) {
-        Products(modifier = modifier, onBack = { isProductsOpen = false })
-        return
-    }
-
     var isAddMenuOpen by remember { mutableStateOf(false) }
     var operationToAdd by remember { mutableStateOf<OperationType?>(null) }
     var isAddMarketNameModalOpen by remember { mutableStateOf(false) }
@@ -124,8 +118,10 @@ fun Operations(
     val operations = viewModel.operationsFlow.collectAsLazyPagingItems()
     val markets by viewModel.marketsFlow.collectAsStateWithLifecycle()
     val products by viewModel.productFlow.collectAsStateWithLifecycle()
-
+    val filters by viewModel.filters.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsState()
+
+    var isFilterModalOpen by remember { mutableStateOf(false) }
 
     val exchangeRates by viewModel.exchangeRates.collectAsStateWithLifecycle(
         initialValue = ExchangeRatesPreferences(),
@@ -358,10 +354,10 @@ fun Operations(
             trailingIcon = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     VerticalDivider(modifier = Modifier.height(dimensions.verticalDividerHeight))
-                    CustomIconButton(onClick = { isProductsOpen = true }) {
+                    CustomIconButton(onClick = { isFilterModalOpen = true }) {
                         Icon(
-                            imageVector = Icons.Default.ShoppingCart,
-                            contentDescription = stringResource(R.string.tab_products),
+                            imageVector = Icons.Default.FilterAlt,
+                            contentDescription = stringResource(R.string.filter),
                             tint = MaterialTheme.colorScheme.primary,
                         )
                     }
@@ -588,6 +584,18 @@ fun Operations(
                 onDelete = {
                     viewModel.deleteExchangeById(selectedExchange!!.id)
                     isDeleteExchangeModalOpen = false
+                },
+            )
+        }
+
+        if (isFilterModalOpen) {
+            FilterModal(
+                markets = markets,
+                filters = filters,
+                onDismiss = { isFilterModalOpen = false },
+                onApply = { newFilters ->
+                    viewModel.onFiltersChanged(newFilters)
+                    isFilterModalOpen = false
                 },
             )
         }

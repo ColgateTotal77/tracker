@@ -27,6 +27,7 @@ import com.colgateTotal77.tracker.core.enums.Language
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.Dropdown
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
+import com.colgateTotal77.tracker.core.ui.theme.ThemeMode
 
 @Composable
 fun Settings(
@@ -39,8 +40,6 @@ fun Settings(
     val dimensions = LocalDimensions.current
     val context = LocalContext.current
     val settings by viewModel.settings.collectAsStateWithLifecycle()
-
-    Log.d("Settings", settings.toString())
 
     Column(
         modifier = modifier
@@ -78,6 +77,20 @@ fun Settings(
                 },
                 itemText = { context.getString(it.labelRes) },
                 itemName = stringResource(R.string.language),
+                modifier = Modifier.fillMaxWidth(),
+                enableResetButton = false
+            )
+
+            Dropdown(
+                items = ThemeMode.entries,
+                selected = settings.theme,
+                onSelect = { theme ->
+                    theme?.let {
+                        viewModel.updateSettings(settings.copy(theme = it))
+                    }
+                },
+                itemText = { context.getString(it.themeRes) },
+                itemName = stringResource(R.string.theme),
                 modifier = Modifier.fillMaxWidth(),
                 enableResetButton = false
             )

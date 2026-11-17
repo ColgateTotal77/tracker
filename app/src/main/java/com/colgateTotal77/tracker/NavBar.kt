@@ -18,8 +18,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.CreditCard
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +43,7 @@ import com.colgateTotal77.tracker.core.enums.OperationId
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.screens.operations.Operations
 import com.colgateTotal77.tracker.screens.overview.Overview
+import com.colgateTotal77.tracker.screens.products.Products
 
 private val NavigationBarHeight = 64.dp
 
@@ -53,13 +54,13 @@ fun NavBar() {
     val items = listOf(
         R.string.tab_overview,
         R.string.tab_operations,
-        R.string.tab_portfolio,
+        R.string.tab_products,
         R.string.tab_analytics,
     )
     val icons = listOf(
         Icons.Default.Home,
         Icons.Default.CreditCard,
-        Icons.Default.Folder,
+        Icons.Default.ShoppingCart,
         Icons.Default.Analytics,
     )
 
@@ -90,7 +91,9 @@ fun NavBar() {
                     modifier = contentModifier
                 )
 
-                else -> Box(
+                2 -> Products(modifier = contentModifier)
+
+                3 -> Box(
                     modifier = contentModifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {

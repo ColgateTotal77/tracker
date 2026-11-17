@@ -1,9 +1,12 @@
 package com.colgateTotal77.tracker.core.ui.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.text.font.Font
@@ -19,8 +22,23 @@ private val NotoSans = FontFamily(
     Font(R.font.noto_sans_italic, FontWeight.Normal, FontStyle.Italic),
 )
 
+enum class ThemeMode(val themeRes: Int) {
+    System(R.string.theme_system),
+    Light(R.string.theme_light),
+    Dark(R.string.theme_dark)
+}
+
 @Composable
-fun Theme(content: @Composable () -> Unit) {
+fun Theme(
+    theme: ThemeMode = ThemeMode.System,
+    content: @Composable () -> Unit,
+) {
+    val colorScheme = when (theme) {
+        ThemeMode.System -> if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()
+        ThemeMode.Light -> lightColorScheme()
+        ThemeMode.Dark -> darkColorScheme()
+    }
+
     val dimensions = Dimensions()
     val shape = RoundedCornerShape(dimensions.cornerRadius)
     val shapes = Shapes(
@@ -50,7 +68,7 @@ fun Theme(content: @Composable () -> Unit) {
         )
     }
 
-    MaterialTheme(shapes = shapes, typography = typography) {
+    MaterialTheme(colorScheme, shapes = shapes, typography = typography) {
         CompositionLocalProvider(LocalDimensions provides dimensions) {
             content()
         }

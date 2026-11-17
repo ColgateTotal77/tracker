@@ -33,6 +33,7 @@ android {
         }
     }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -71,6 +72,8 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.vico.compose.m3)
     implementation(libs.androidx.work.runtime.ktx)
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
+    implementation(libs.androidx.core.splashscreen)
 }
 
 tasks.register<Exec>("run") {

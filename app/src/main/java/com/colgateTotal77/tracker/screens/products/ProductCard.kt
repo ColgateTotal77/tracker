@@ -51,22 +51,20 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
+import com.patrykandpatrick.vico.compose.cartesian.data.lineModel
 import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.marker.DefaultCartesianMarker
+import com.patrykandpatrick.vico.compose.cartesian.marker.LineCartesianLayerMarkerTarget
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.common.ProvideVicoTheme
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import com.patrykandpatrick.vico.compose.m3.common.rememberM3VicoTheme
-import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
-import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
-import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
-import com.patrykandpatrick.vico.core.cartesian.marker.LineCartesianLayerMarkerTarget
 
 fun formatProductMeasure(measureUnit: MeasureUnit, quantity: Int): String {
     val df = DecimalFormat("#.###")
@@ -187,7 +185,7 @@ fun ProductCard(
                         val modelProducer = remember { CartesianChartModelProducer() }
                         LaunchedEffect(history) {
                             modelProducer.runTransaction {
-                                lineSeries {
+                                lineModel {
                                     series(history.map { it.unitPriceMinor.toDouble() / 100.0 })
                                 }
                             }
@@ -202,7 +200,7 @@ fun ProductCard(
                             }
                         }
 
-                        val markerLabel = rememberTextComponent(color = MaterialTheme.colorScheme.onSurface)
+                        val markerLabel = rememberTextComponent()
                         val markerValueFormatter = remember(history) {
                             DefaultCartesianMarker.ValueFormatter { _, targets ->
                                 val entry =

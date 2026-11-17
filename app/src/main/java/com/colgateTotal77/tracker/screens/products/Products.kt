@@ -39,12 +39,9 @@ import com.colgateTotal77.tracker.core.ui.theme.addPadding
 
 @Composable
 fun Products(
-    onBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ProductViewModel = viewModel(factory = ProductViewModel.Factory),
 ) {
-    BackHandler(onBack = onBack)
-
     var isAddProductModalOpen by remember { mutableStateOf(false) }
     var isEditProductModalOpen by remember { mutableStateOf(false) }
     var isArchiveProductModalOpen by remember { mutableStateOf(false) }
@@ -86,7 +83,13 @@ fun Products(
                 verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
             ) {
                 if (products.itemCount == 0) return@Scaffold Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = dimensions.screenHorizontalPadding,
+                            end = dimensions.screenHorizontalPadding,
+                            top = dimensions.searchBarHeightAndPadding
+                        ),
                     contentAlignment = Alignment.Center,
                 ) {
                     Column(
@@ -137,7 +140,10 @@ fun Products(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .padding(horizontal = dimensions.screenHorizontalPadding, vertical = dimensions.spacingSmall),
+                .padding(
+                    horizontal = dimensions.screenHorizontalPadding,
+                    vertical = dimensions.spacingSmall
+                ),
             verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
         ) {
             OutlinedTextField(
@@ -161,10 +167,10 @@ fun Products(
                 trailingIcon = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         VerticalDivider(modifier = Modifier.height(dimensions.verticalDividerHeight))
-                        CustomIconButton(onClick = onBack) {
+                        CustomIconButton(onClick = { isFilterModalOpen = true }) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.tab_operations),
+                                imageVector = Icons.Default.FilterAlt,
+                                contentDescription = stringResource(R.string.filter),
                                 tint = MaterialTheme.colorScheme.primary,
                             )
                         }
@@ -172,37 +178,24 @@ fun Products(
                 },
             )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall / 2)
-            ) {
-                DropdownPopup(
-                    items = ProductSort.entries,
-                    selected = currentSort,
-                    onSelect = { selectedSort ->
-                        selectedSort?.let { viewModel.onSortChanged(it) }
-                    },
-                    itemText = { sort -> context.getString(sort.labelRes) },
-                    itemName = stringResource(R.string.sort),
-                    modifier = Modifier
-                        .weight(1f)
-                        .shadow(12.dp, RoundedCornerShape(dimensions.cornerRadius))
-                        .background(
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-                            RoundedCornerShape(dimensions.cornerRadius)
-                        ),
-                )
-
-                CustomIconButton(onClick = { isFilterModalOpen = true }) {
-                    Icon(
-                        imageVector = Icons.Default.FilterAlt,
-                        contentDescription = stringResource(R.string.filter),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            }
+            DropdownPopup(
+                items = ProductSort.entries,
+                selected = currentSort,
+                onSelect = { selectedSort ->
+                    selectedSort?.let { viewModel.onSortChanged(it) }
+                },
+                itemText = { sort -> context.getString(sort.labelRes) },
+                itemName = stringResource(R.string.sort),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(12.dp, RoundedCornerShape(dimensions.cornerRadius))
+                    .background(
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                        RoundedCornerShape(dimensions.cornerRadius)
+                    ),
+            )
         }
+
 
         if (isAddProductModalOpen) {
             AddProductModal(

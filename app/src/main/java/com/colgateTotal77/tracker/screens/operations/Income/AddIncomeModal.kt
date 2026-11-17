@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import com.colgateTotal77.tracker.R
@@ -36,6 +37,7 @@ fun AddIncomeModal(
     onAdd: (amountMinor: Long, currency: Currency, date: Long) -> Unit,
 ) {
     val dimensions = LocalDimensions.current
+    val context = LocalContext.current
 
     var amountInput by remember { mutableStateOf("0") }
     var currency by remember { mutableStateOf(Currency.UAH) }
@@ -78,7 +80,7 @@ fun AddIncomeModal(
                     items = Currency.entries,
                     selected = currency,
                     onSelect = { it?.let { currency = it } },
-                    itemText = { it.dropdownText },
+                    itemText = { it.dropdownText(context) },
                     itemName = stringResource(R.string.currency),
                     modifier = Modifier.fillMaxWidth(),
                 )

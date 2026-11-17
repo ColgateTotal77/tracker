@@ -1,0 +1,161 @@
+package com.colgateTotal77.tracker.screens.operations
+
+import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import com.colgateTotal77.tracker.R
+import com.colgateTotal77.tracker.core.database.market.MarketEntity
+import com.colgateTotal77.tracker.core.enums.DateFilter
+import com.colgateTotal77.tracker.core.enums.OperationType
+import com.colgateTotal77.tracker.core.filterDecimal
+import com.colgateTotal77.tracker.core.formatMoney
+import com.colgateTotal77.tracker.core.parseInputToMinor
+import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
+import com.colgateTotal77.tracker.core.ui.CardWrapper
+import com.colgateTotal77.tracker.core.ui.CustomButton
+import com.colgateTotal77.tracker.core.ui.CustomIconButton
+import com.colgateTotal77.tracker.core.ui.Dropdown
+import com.colgateTotal77.tracker.core.ui.DropdownMultiSelect
+import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
+
+data class OperationFilters(
+    val date: DateFilter = DateFilter.AllTime,
+    val marketIds: Set<Int> = emptySet(),
+    val operations: Set<OperationType> = emptySet(),
+    val maxPrice: Long? = null,
+    val minPrice: Long? = null,
+)
+
+@Composable
+fun FilterModal(
+    markets: List<MarketEntity>,
+    filters: OperationFilters,
+    onDismiss: () -> Unit,
+    onApply: (filters: OperationFilters) -> Unit,
+) {
+    var dropdownTouched by remember { mutableStateOf(false) }
+    var date by remember { mutableStateOf(filters.date) }
+    var selectedMarketIds by remember { mutableStateOf(filters.marketIds) }
+    var selectedOperations by remember { mutableStateOf(filters.operations) }
+    var minPrice by remember { mutableStateOf(filters.minPrice?.let { formatMoney(it) }.orEmpty()) }
+    var maxPrice by remember { mutableStateOf(filters.maxPrice?.let { formatMoney(it) }.orEmpty()) }
+
+    val displayMarkets = markets.filter { !it.name.isNullOrBlank() }
+    val dimensions = LocalDimensions.current
+    val context = LocalContext.current
+
+    AppModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetGesturesEnabled = !dropdownTouched,
+    ) {
+        CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
+            Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        stringResource(R.string.filter_operations),
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                    CustomIconButton(
+                        onClick = {
+                            date = DateFilter.AllTime
+                            selectedMarketIds = emptySet()
+                            selectedOperations = emptySet()
+                            minPrice = filters.minPrice?.let { formatMoney(it) }.orEmpty()
+                            maxPrice = filters.maxPrice?.let { formatMoney(it) }.orEmpty()
+                        }
+                    ) {
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.reset_selection))
+                    }
+                }
+
+                DropdownMultiSelect(
+                    onTouchChange = { dropdownTouched = it },
+                    items = OperationType.entries,
+                    selectedKeys = selectedOperations,
+                    key = { it },
+                    itemText = { context.getString(it.labelRes) },
+                    itemName = stringResource(R.string.tab_operations),
+                    onSelectionChange = { selectedOperations = it },
+                )
+
+                DropdownMultiSelect(
+                    onTouchChange = { dropdownTouched = it },
+                    items = displayMarkets,
+                    selectedKeys = selectedMarketIds,
+                    key = { it.id },
+                    itemText = { it.name ?: "" },
+                    itemName = stringResource(R.string.markets),
+                    onSelectionChange = { selectedMarketIds = it },
+                )
+
+                Row(horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)) {
+                    OutlinedTextField(
+                        value = minPrice,
+                        onValueChange = { minPrice = it.filterDecimal() },
+                        label = { Text(stringResource(R.string.min_price)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.weight(1f),
+                    )
+
+                    OutlinedTextField(
+                        value = maxPrice,
+                        onValueChange = { maxPrice = it.filterDecimal() },
+                        label = { Text(stringResource(R.string.max_price)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+
+                Dropdown(
+                    onTouchChange = { dropdownTouched = it },
+                    items = DateFilter.entries,
+                    selected = date,
+                    onSelect = { selectedDateFilter ->
+                        selectedDateFilter?.let { date = it }
+                    },
+                    itemText = { dateFilter -> context.getString(dateFilter.labelRes) },
+                    itemName = stringResource(R.string.date_filter),
+                )
+
+                CustomButton(
+                    onClick = {
+                        val newFilters = OperationFilters(
+                            date = date,
+                            marketIds = selectedMarketIds,
+                            operations = selectedOperations,
+                            minPrice = parseInputToMinor(minPrice),
+                            maxPrice = parseInputToMinor(maxPrice)
+                        )
+                        onApply(newFilters)
+                        onDismiss()
+                    },
+                    buttonText = stringResource(R.string.apply),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}

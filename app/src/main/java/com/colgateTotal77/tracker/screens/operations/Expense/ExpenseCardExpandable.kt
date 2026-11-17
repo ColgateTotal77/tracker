@@ -95,7 +95,7 @@ fun ExpenseCardExpandable(
                     verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
                 ) {
                     Text(
-                        text = expenseItem.market?.name.orEmpty().ifBlank { "Receipt" },
+                        text = expenseItem.market?.name.orEmpty().ifBlank { stringResource(R.string.receipt) },
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,

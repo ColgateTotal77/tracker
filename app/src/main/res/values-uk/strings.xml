@@ -52,6 +52,10 @@
     <string name="grant_camera_permission">Надати доступ до камери</string>
     <string name="close">Закрити</string>
     <string name="filter_products">Фільтр товарів</string>
+    <string name="filter_operations">Фільтр операцій</string>
+    <string name="currency_uah">Українська гривня</string>
+    <string name="currency_usd">Долар США</string>
+    <string name="currency_eur">Євро</string>
     <string name="markets">Магазини</string>
     <string name="min_price">Мінімальна ціна</string>
     <string name="max_price">Максимальна ціна</string>
@@ -96,7 +100,6 @@
     <string name="tab_overview">Огляд</string>
     <string name="tab_operations">Операції</string>
     <string name="tab_products">Товари</string>
-    <string name="tab_portfolio">Портфель</string>
     <string name="tab_analytics">Аналітика</string>
     <string name="tab_settings">Налаштування</string>
     <string name="screen_name">Екран «%1$s»</string>
@@ -121,6 +124,10 @@
     <string name="language_system_default">Мова системи</string>
     <string name="language_english">Англійська</string>
     <string name="language_ukrainian">Українська</string>
+    <string name="theme">Тема</string>
+    <string name="theme_system">Системна</string>
+    <string name="theme_light">Світла</string>
+    <string name="theme_dark">Темна</string>
     <string name="toast_duplicate_receipt">Цей чек уже додано</string>
     <string name="toast_duplicate_product">Цей товар уже існує</string>
     <string name="toast_receipt_added">Чек додано</string>

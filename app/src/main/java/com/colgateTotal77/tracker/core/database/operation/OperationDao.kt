@@ -13,36 +13,50 @@ interface OperationDao {
     @Query("""
         SELECT id AS expenseId, NULL AS incomeId, NULL AS exchangeId, 'EXPENSE' AS type, date                                                                                                                                                                                                                                            
         FROM expenses                                                                                                                                                                                                                                                
-        WHERE :searchQuery == '' 
-            OR note LIKE '%' || :searchQuery || '%'
-            OR EXISTS (
-                SELECT 1
-                FROM markets AS m
-                WHERE m.id = expenses.marketId AND m.name LIKE '%' || :searchQuery || '%'
-            )
-            OR EXISTS (
-                SELECT 1
-                FROM expense_products AS ep
-                JOIN products AS p ON p.id = ep.productId
-                WHERE ep.expenseId = expenses.id AND p.alias LIKE '%' || :searchQuery || '%'
+        WHERE COALESCE('EXPENSE' IN (:operationTypes), 1)
+            AND (:startTime IS NULL OR date >= :startTime)
+            AND (:endTime IS NULL OR date <= :endTime)
+            AND (:minPrice IS NULL OR amountMinor >= :minPrice)
+            AND (:maxPrice IS NULL OR amountMinor <= :maxPrice)
+            AND COALESCE(marketId IN (:marketIds), 1)
+            AND (:searchQuery == '' 
+                OR note LIKE '%' || :searchQuery || '%'
+                OR CAST(amountMinor AS TEXT) LIKE '%' || :searchQuery || '%'
+                OR EXISTS (SELECT 1 FROM markets AS m WHERE m.id = expenses.marketId AND m.name LIKE '%' || :searchQuery || '%')
+                OR EXISTS (SELECT 1 FROM expense_products AS ep JOIN products AS p ON p.id = ep.productId WHERE ep.expenseId = expenses.id AND p.alias LIKE '%' || :searchQuery || '%')
             )
 
         UNION ALL                                                                                                                                                                                                                                                                 
                                                                                                                                                                                                                                                                          
         SELECT NULL AS expenseId, id AS incomeId, NULL AS exchangeId, 'INCOME' AS type, date                                                                                                                                                                                                                                             
         FROM incomes                                                                                                                                                                                                                                                              
-        WHERE incomes.type != 'BALANCE_ADJUSTMENT' AND (:searchQuery = '' OR note LIKE '%' || :searchQuery || '%')                                                                                                                                                                                                                                       
-                                                                                                                                                                                                                                                                         
+        WHERE incomes.type != 'BALANCE_ADJUSTMENT'
+            AND COALESCE('INCOME' IN (:operationTypes), 1)
+            AND (:startTime IS NULL OR date >= :startTime)
+            AND (:endTime IS NULL OR date <= :endTime)
+            AND (:minPrice IS NULL OR amountMinor >= :minPrice)
+            AND (:maxPrice IS NULL OR amountMinor <= :maxPrice)
+            AND (:searchQuery = '' OR note LIKE '%' || :searchQuery || '%' OR CAST(amountMinor AS TEXT) LIKE '%' || :searchQuery || '%')        
+                                                                                                                                                                                           
         UNION ALL                                                                                                                                                                                                                                                                 
                                                                                                                                                                                                                                                                          
         SELECT NULL AS expenseId, NULL AS incomeId, id AS exchangeId, 'EXCHANGE' AS type, date                                                                                                                                                                                                                                           
         FROM exchanges                                                                                                                                                                                                                                                            
-        WHERE :searchQuery = '' OR note LIKE '%' || :searchQuery || '%'
+        WHERE COALESCE('EXCHANGE' IN (:operationTypes), 1)
+            AND (:startTime IS NULL OR date >= :startTime)
+            AND (:endTime IS NULL OR date <= :endTime)
+            AND (:searchQuery = '' OR note LIKE '%' || :searchQuery || '%')
                                                                                                                                                                                                                                                                        
         ORDER BY date DESC, expenseId DESC, incomeId DESC, exchangeId DESC 
     """)
     fun query(
         searchQuery: String,
+        startTime: Long?,
+        endTime: Long?,
+        minPrice: Long? = null,
+        maxPrice: Long? = null,
+        marketIds: List<Int>? = null,
+        operationTypes: List<OperationType>? = null,
     ): PagingSource<Int, OperationWithDetails>
 
     @Transaction
@@ -70,31 +84,39 @@ interface OperationDao {
         WITH operations AS (                                                                                                         
         SELECT id, 'EXPENSE' AS type, 3 AS priority, date                                                                        
         FROM expenses                                                                                                            
-        WHERE :searchQuery == '' 
-            OR note LIKE '%' || :searchQuery || '%'
-            OR EXISTS (
-                SELECT 1
-                FROM markets AS m
-                WHERE m.id = expenses.marketId AND m.name LIKE '%' || :searchQuery || '%'
-            )
-            OR EXISTS (
-                SELECT 1
-                FROM expense_products AS ep
-                JOIN products AS p ON p.id = ep.productId
-                WHERE ep.expenseId = expenses.id AND p.alias LIKE '%' || :searchQuery || '%'
+        WHERE COALESCE('EXPENSE' IN (:operationTypes), 1)
+            AND (:startTime IS NULL OR date >= :startTime)
+            AND (:endTime IS NULL OR date <= :endTime)
+            AND (:minPrice IS NULL OR amountMinor >= :minPrice)
+            AND (:maxPrice IS NULL OR amountMinor <= :maxPrice)
+            AND COALESCE(marketId IN (:marketIds), 1)
+            AND (:searchQuery == '' 
+                OR note LIKE '%' || :searchQuery || '%'
+                OR CAST(amountMinor AS TEXT) LIKE '%' || :searchQuery || '%'
+                OR EXISTS (SELECT 1 FROM markets AS m WHERE m.id = expenses.marketId AND m.name LIKE '%' || :searchQuery || '%')
+                OR EXISTS (SELECT 1 FROM expense_products AS ep JOIN products AS p ON p.id = ep.productId WHERE ep.expenseId = expenses.id AND p.alias LIKE '%' || :searchQuery || '%')
             )
                                                                                                                     
         UNION ALL                                                                                                                
                                                                                                                                 
         SELECT id, 'INCOME' AS type, 2 AS priority, date                                                                         
         FROM incomes                                                                                                             
-        WHERE incomes.type != 'BALANCE_ADJUSTMENT' AND (:searchQuery = '' OR note LIKE '%' || :searchQuery || '%')                                                                                        
-                                                                                                                                
+        WHERE incomes.type != 'BALANCE_ADJUSTMENT'
+            AND COALESCE('INCOME' IN (:operationTypes), 1)
+            AND (:startTime IS NULL OR date >= :startTime)
+            AND (:endTime IS NULL OR date <= :endTime)
+            AND (:minPrice IS NULL OR amountMinor >= :minPrice)
+            AND (:maxPrice IS NULL OR amountMinor <= :maxPrice)
+            AND (:searchQuery = '' OR note LIKE '%' || :searchQuery || '%' OR CAST(amountMinor AS TEXT) LIKE '%' || :searchQuery || '%')         
+
         UNION ALL                                                                                                                
                                                                                                                                 
         SELECT id, 'EXCHANGE' AS type, 1 AS priority, date                                                                       
         FROM exchanges                                                                                                           
-        WHERE :searchQuery = '' OR note LIKE '%' || :searchQuery || '%'
+        WHERE COALESCE('EXCHANGE' IN (:operationTypes), 1)
+            AND (:startTime IS NULL OR date >= :startTime)
+            AND (:endTime IS NULL OR date <= :endTime)
+            AND (:searchQuery = '' OR note LIKE '%' || :searchQuery || '%')
        
         )                                                                                                                            
         SELECT (                                                                                                                     
@@ -118,6 +140,12 @@ interface OperationDao {
         id: Int,
         type: OperationType,
         searchQuery: String,
+        startTime: Long?,
+        endTime: Long?,
+        minPrice: Long? = null,
+        maxPrice: Long? = null,
+        marketIds: List<Int>? = null,
+        operationTypes: List<OperationType>? = null,
     ): Int?
 
     @Query("""

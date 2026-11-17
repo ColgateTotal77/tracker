@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.stateIn
 import com.colgateTotal77.tracker.core.database.AppDatabase
 import com.colgateTotal77.tracker.core.database.income.IncomeEntity
 import com.colgateTotal77.tracker.core.database.operation.CurrencyBalance
+import com.colgateTotal77.tracker.core.enums.DateFilter
 import com.colgateTotal77.tracker.core.enums.IncomeType
 import com.colgateTotal77.tracker.core.enums.toTimeRange
 import com.colgateTotal77.tracker.core.ui.ProgressBarState
@@ -23,6 +24,10 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
+import java.time.Instant
+import java.time.ZoneId
+import java.time.YearMonth
 import kotlin.math.roundToLong
 
 class OverviewViewModel(
@@ -101,6 +106,28 @@ class OverviewViewModel(
             }
         }
     }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val barChartData: StateFlow<ChartData?> = preferencesRepository.progressBarSettingsFlow
+        .flatMapLatest { settings ->
+            val filter = settings.selectedFilter
+            if (filter != DateFilter.Month && filter != DateFilter.PrevMonth) return@flatMapLatest flowOf(null)
+
+            val range = filter.toTimeRange()
+            val startInstant = Instant.ofEpochMilli(range.start!!)
+            val startZdt = startInstant.atZone(ZoneId.systemDefault())
+            val yearMonth = YearMonth.of(startZdt.year, startZdt.month)
+
+            database.expenseDao().getDailySumsFlow(range.start, range.end!!)
+                .map { dailySums ->
+                    buildWeeklyChartData(yearMonth, dailySums)
+                }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {

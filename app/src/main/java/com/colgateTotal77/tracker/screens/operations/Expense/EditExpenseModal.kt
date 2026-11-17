@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.screens.operations.Expense
 
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -75,6 +76,7 @@ fun EditExpenseModal(
     }
 
     val dimensions = LocalDimensions.current
+    val context = LocalContext.current
     val duplicateMarketMessage = stringResource(R.string.duplicate_name, stringResource(R.string.market))
 
     AppModalBottomSheet(
@@ -84,7 +86,7 @@ fun EditExpenseModal(
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
                 Text(
-                    "Expense",
+                    stringResource(R.string.expense),
                     style = MaterialTheme.typography.titleLarge,
                 )
 
@@ -104,7 +106,7 @@ fun EditExpenseModal(
                     onSelect = { selectedCurrency ->
                         selectedCurrency?.let { currency = it }
                     },
-                    itemText = { it.dropdownText },
+                    itemText = { it.dropdownText(context) },
                     itemName = stringResource(R.string.currency),
                     modifier = Modifier.fillMaxWidth(),
                 )
