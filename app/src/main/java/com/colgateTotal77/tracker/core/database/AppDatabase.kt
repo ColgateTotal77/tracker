@@ -36,12 +36,13 @@ import com.colgateTotal77.tracker.core.database.operation.OperationDao
         IncomeEntity::class,
         ExchangeEntity::class
     ],
-    version = 10,
+    version = 11,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 4, to = 5, spec = AppDatabase.Migration4To5::class),
         AutoMigration(from = 6, to = 7, spec = AppDatabase.Migration6To7::class),
         AutoMigration(from = 8, to = 9, spec = AppDatabase.Migration8To9::class),
+        AutoMigration(from = 10, to = 11),
     ],
     exportSchema = true
 )

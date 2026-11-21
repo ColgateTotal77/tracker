@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.core.database.expense
 
+import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -29,6 +30,8 @@ data class ExpenseEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val amountMinor: Long,
     val currency: Currency,
+    @ColumnInfo(defaultValue = "1.0")
+    val currencyChangeRate: Double = 1.0,
     val note: String?,
     val status: ExpenseStatus,
     val source: ExpenseSource,

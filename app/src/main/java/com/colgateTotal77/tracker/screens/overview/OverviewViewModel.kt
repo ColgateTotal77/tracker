@@ -54,10 +54,10 @@ class OverviewViewModel(
                 ProgressBarState(
                     settings = settings,
                     currentSpending = calculateBudget(
-                        rates,
+                        rates.exchangeRatesMap,
                         spending.associate { it.currency to it.amountMinor },
                     ).roundToLong(),
-                    targetForFilter = calculateTargetBudget(
+                    target = calculateTargetBudget(
                         settings.selectedFilter,
                         settings.targetBudget,
                     ),
@@ -107,27 +107,15 @@ class OverviewViewModel(
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val barChartData: StateFlow<ChartData?> = preferencesRepository.progressBarSettingsFlow
-        .flatMapLatest { settings ->
-            val filter = settings.selectedFilter
-            if (filter != DateFilter.Month && filter != DateFilter.PrevMonth) return@flatMapLatest flowOf(null)
-
-            val range = filter.toTimeRange()
-            val startInstant = Instant.ofEpochMilli(range.start!!)
-            val startZdt = startInstant.atZone(ZoneId.systemDefault())
-            val yearMonth = YearMonth.of(startZdt.year, startZdt.month)
-
-            database.expenseDao().getDailySumsFlow(range.start, range.end!!)
-                .map { dailySums ->
-                    buildWeeklyChartData(yearMonth, dailySums)
-                }
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null
-        )
+    val barChartData: StateFlow<ChartData> =
+        database.expenseDao().getWeeklySumsFlow()
+            .map { weeklySums ->
+                buildWeeklyChartData(weeklySums)
+            }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ChartData(emptyList(), emptyList())
+    )
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {

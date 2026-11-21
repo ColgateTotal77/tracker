@@ -36,11 +36,7 @@ fun calculateAmountInput(
     exchangeRates: ExchangeRatesPreferences,
 ): String {
     fun uahRate(currency: Currency): BigDecimal? {
-        val rate = when (currency) {
-            Currency.UAH -> 1.0
-            Currency.USD -> exchangeRates.usdUahExchangeRate
-            Currency.EUR -> exchangeRates.eurUahExchangeRate
-        }
+        val rate = if (currency == Currency.UAH) 1.0 else exchangeRates.exchangeRatesMap[currency] ?: 1.0
         return rate.takeIf { it.isFinite() && it > 0 }?.let(BigDecimal::valueOf)
     }
 

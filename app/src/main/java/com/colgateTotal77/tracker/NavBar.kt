@@ -113,7 +113,7 @@ fun NavBar() {
                 .navigationBarsPadding()
                 .padding(horizontal = dimensions.screenHorizontalPadding, vertical = dimensions.spacingSmall)
                 .shadow(12.dp, RoundedCornerShape(dimensions.cornerRadius))
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.95f), RoundedCornerShape(dimensions.cornerRadius)),
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f), RoundedCornerShape(dimensions.cornerRadius)),
         ) {
             items.forEachIndexed { index, item ->
                 NavBarItem(

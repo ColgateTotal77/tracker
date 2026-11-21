@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.core.workers.exchangeRates
 
+import com.colgateTotal77.tracker.core.enums.Currency
 import com.colgateTotal77.tracker.screens.overview.ExchangeRatesPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -28,10 +29,12 @@ suspend fun fetchExchangeRates(): ExchangeRatesPreferences {
                 .map { entries.getJSONObject(it) }
                 .associate { it.getString("cc") to it.getDouble("rate") }
 
-            ExchangeRatesPreferences(
-                usdUahExchangeRate = rates["USD"] ?: throw IOException("Missing USD rate"),
-                eurUahExchangeRate = rates["EUR"] ?: throw IOException("Missing EUR rate"),
-            )
+            val map = buildMap {
+                put(Currency.USD, rates["USD"] ?: throw IOException("Missing USD rate"))
+                put(Currency.EUR, rates["EUR"] ?: throw IOException("Missing EUR rate"))
+            }
+
+            ExchangeRatesPreferences(map)
         }
     }
 }

@@ -44,13 +44,13 @@ import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.screens.settings.Settings
 
 fun calculateBudget(
-    exchangeRates: ExchangeRatesPreferences,
+    exchangeRatesMap: Map<Currency, Double>,
     balances: Map<Currency, Long>
 ): Double {
     return (
-        (balances[Currency.UAH] ?: 0) +
-            (balances[Currency.USD] ?: 0) * exchangeRates.usdUahExchangeRate +
-            (balances[Currency.EUR] ?: 0) * exchangeRates.eurUahExchangeRate
+        (balances[Currency.UAH] ?: 0L).toDouble() +
+            (balances[Currency.USD] ?: 0L) * (exchangeRatesMap[Currency.USD] ?: 1.0) +
+            (balances[Currency.EUR] ?: 0L) * (exchangeRatesMap[Currency.EUR] ?: 1.0)
     )
 }
 
@@ -99,9 +99,9 @@ fun Overview(
             Box(modifier = Modifier.weight(1f)) {
                 ProgressBar(
                     progressState = progressState,
-                    label = stringResource(R.string.budget, stringResource(settings.selectedFilter.labelRes), formatMoney(spending), formatMoney(progressState.targetForFilter)),
+                    label = stringResource(R.string.budget, stringResource(settings.selectedFilter.labelRes), formatMoney(spending), formatMoney(progressState.target)),
                     color =
-                        if (spending > progressState.targetForFilter) MaterialTheme.colorScheme.error
+                        if (spending > progressState.target) MaterialTheme.colorScheme.error
                         else MaterialTheme.colorScheme.primary,
                     updateProgressBarPreferences = { settings ->
                         viewModel.updateProgressBarPreferences(settings)
@@ -138,7 +138,7 @@ fun Overview(
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                 )
                 Text(
-                    text = formatMoney(calculateBudget(exchangeRates, balances)),
+                    text = formatMoney(calculateBudget(exchangeRates.exchangeRatesMap, balances)),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                 )
@@ -152,8 +152,9 @@ fun Overview(
             }
         }
 
-        ExpensesBarChart(
-            data = barChartData
+        WeeklySpendingBarChart(
+            data = barChartData,
+            weeklyTarget = settings.targetBudget * 12 / 52 / 100
         )
 
         if (operations.isEmpty()) {

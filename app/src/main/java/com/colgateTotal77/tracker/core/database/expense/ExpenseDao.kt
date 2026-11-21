@@ -43,18 +43,17 @@ interface ExpenseDao {
     @Query("UPDATE expenses SET marketId = :toId WHERE marketId = :fromId")
     suspend fun moveMarket(fromId: Int, toId: Int)
 
-    data class DailySum(
-        val dayOfMonth: Int,
-        val totalAmountMinor: Long
+    data class WeeklySum(
+        val weekStartDate: String,
+        val totalAmountMinor: Long,
     )
 
     @Query("""
         SELECT 
-            CAST(strftime('%d', date / 1000, 'unixepoch', 'localtime') AS INTEGER) as dayOfMonth,
-            SUM(amountMinor) as totalAmountMinor
+            date(date / 1000, 'unixepoch', 'localtime', 'weekday 0', '-6 days') AS weekStartDate,
+            SUM(amountMinor * currencyChangeRate) as totalAmountMinor
         FROM expenses
-        WHERE date >= :startTime AND date <= :endTime
-        GROUP BY dayOfMonth
+        GROUP BY weekStartDate
     """)
-    fun getDailySumsFlow(startTime: Long, endTime: Long): Flow<List<DailySum>>
+    fun getWeeklySumsFlow(): Flow<List<WeeklySum>>
 }

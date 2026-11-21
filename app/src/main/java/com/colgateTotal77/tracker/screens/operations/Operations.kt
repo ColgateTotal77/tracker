@@ -340,7 +340,7 @@ fun Operations(
                 .padding(horizontal = dimensions.screenHorizontalPadding, vertical = dimensions.spacingSmall)
                 .shadow(12.dp, RoundedCornerShape(dimensions.cornerRadius))
                 .background(
-                    MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                    MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f),
                     RoundedCornerShape(dimensions.cornerRadius)
                 ),
             placeholder = { Text(stringResource(R.string.search_operations)) },

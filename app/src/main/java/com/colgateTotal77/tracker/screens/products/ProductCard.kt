@@ -96,7 +96,7 @@ fun ProductCard(
     var expanded by remember { mutableStateOf(false) }
     val dimensions = LocalDimensions.current
 
-    val history by remember(expanded, product.id) {
+    val pricePoints by remember(expanded, product.id) {
         if (expanded) onGetProductHistory(product.id)
         else flowOf(emptyList())
     }.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -175,76 +175,14 @@ fun ProductCard(
                         color = MaterialTheme.colorScheme.surfaceVariant
                     )
 
-                    if (history.isNotEmpty()) {
+                    if (pricePoints.isNotEmpty()) {
                         Text(
                             text = stringResource(R.string.price_history),
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
-                        val modelProducer = remember { CartesianChartModelProducer() }
-                        LaunchedEffect(history) {
-                            modelProducer.runTransaction {
-                                lineModel {
-                                    series(history.map { it.unitPriceMinor.toDouble() / 100.0 })
-                                }
-                            }
-                        }
-
-                        val dateTimeFormatter = remember { SimpleDateFormat("dd MMM", Locale.getDefault()) }
-                        val bottomAxisFormatter = remember(history) {
-                            CartesianValueFormatter { _, value, _ ->
-                                history.getOrNull(value.toInt())?.date?.let { dateLong ->
-                                    dateTimeFormatter.format(Date(dateLong))
-                                } ?: ""
-                            }
-                        }
-
-                        val markerLabel = rememberTextComponent()
-                        val markerValueFormatter = remember(history) {
-                            DefaultCartesianMarker.ValueFormatter { _, targets ->
-                                val entry =
-                                    (targets.firstOrNull() as? LineCartesianLayerMarkerTarget)?.points?.firstOrNull()?.entry
-                                        ?: return@ValueFormatter ""
-
-                                val point = history.getOrNull(entry.x.toInt())
-                                buildString {
-                                    append(formatMoney((entry.y * 100).toInt()))
-                                    if (point == null) return@buildString
-                                    append(" · ")
-                                    append(formatChartProductMeasure(measureUnit, point.quantity))
-                                    append(" · ")
-                                    append(dateTimeFormatter.format(Date(point.date)))
-                                }
-                            }
-                        }
-                        val marker = rememberDefaultCartesianMarker(
-                            label = markerLabel,
-                            valueFormatter = markerValueFormatter,
-                        )
-
-                        val maxY = remember(history) {
-                            (history.maxOfOrNull { it.unitPriceMinor } ?: 0) * 1.1 / 100.0
-                        }
-
-                        ProvideVicoTheme(theme = rememberM3VicoTheme()) {
-                            CartesianChartHost(
-                                chart = rememberCartesianChart(
-                                    rememberLineCartesianLayer(
-                                        rangeProvider = CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = maxY)
-                                    ),
-                                    startAxis = VerticalAxis.rememberStart(),
-                                    bottomAxis = HorizontalAxis.rememberBottom(
-                                        valueFormatter = bottomAxisFormatter,
-                                    ),
-                                    marker = marker,
-                                ),
-                                modelProducer = modelProducer,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(150.dp)
-                            )
-                        }
+                        ProductChart(pricePoints, measureUnit);
                     }
 
                     Row(

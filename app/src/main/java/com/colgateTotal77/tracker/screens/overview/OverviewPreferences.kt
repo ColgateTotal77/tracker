@@ -4,18 +4,25 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.colgateTotal77.tracker.core.enums.Currency
 import com.colgateTotal77.tracker.core.enums.DateFilter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
+@Serializable
 data class ProgressBarPreferences(
     var targetBudget: Double = 1000.0,
     val selectedFilter: DateFilter = DateFilter.Month
 )
 
+@Serializable
 data class ExchangeRatesPreferences(
-    val usdUahExchangeRate: Double = 0.0,
-    val eurUahExchangeRate: Double = 0.0,
+    val exchangeRatesMap: Map<Currency, Double> = buildMap {
+        put(Currency.USD, 1.0)
+        put(Currency.EUR, 1.0)
+    },
     val updatedAt: Long = 0
 )
 
@@ -26,42 +33,31 @@ class OverviewPreferences(
     private val EXCHANGE_RATES_KEY = stringPreferencesKey("exchangeRates")
 
     val progressBarSettingsFlow: Flow<ProgressBarPreferences> = dataStore.data.map { prefs ->
-        val savedString = prefs[PROGRESS_BAR_SETTINGS_KEY] ?: return@map ProgressBarPreferences()
+        val savedString = prefs[PROGRESS_BAR_SETTINGS_KEY]
+        if (savedString.isNullOrEmpty()) return@map ProgressBarPreferences()
 
-        val parts = savedString.split("|")
-
-        val budget = parts.getOrNull(0)?.toDoubleOrNull() ?: 1000.0
-
-        val filterName = parts.getOrNull(1) ?: DateFilter.Month.name
-        val filter = runCatching { DateFilter.valueOf(filterName) }
-            .getOrDefault(DateFilter.Month)
-
-        ProgressBarPreferences(targetBudget = budget, selectedFilter = filter)
+        try { Json.decodeFromString<ProgressBarPreferences>(savedString) }
+        catch (e: Exception) { ProgressBarPreferences() }
     }
 
     suspend fun updateProgressBarPreferences(progressBarSettings: ProgressBarPreferences) {
         dataStore.edit { prefs ->
-            val stringToSave = "${progressBarSettings.targetBudget}|${progressBarSettings.selectedFilter.name}"
-            prefs[PROGRESS_BAR_SETTINGS_KEY] = stringToSave
+            prefs[PROGRESS_BAR_SETTINGS_KEY] = Json.encodeToString(progressBarSettings)
         }
     }
 
     val exchangeRateFlow: Flow<ExchangeRatesPreferences> = dataStore.data.map { prefs ->
-        val savedString = prefs[EXCHANGE_RATES_KEY] ?: return@map ExchangeRatesPreferences()
+        val savedString = prefs[EXCHANGE_RATES_KEY]
+        if (savedString.isNullOrEmpty()) return@map ExchangeRatesPreferences()
 
-        val parts = savedString.split("|")
-
-        val usdUahExchangeRate = parts.getOrNull(0)?.toDoubleOrNull() ?: 0.0
-        val eurUahExchangeRate = parts.getOrNull(1)?.toDoubleOrNull() ?: 0.0
-        val updatedAt = parts.getOrNull(2)?.toLongOrNull() ?: 0L
-
-        ExchangeRatesPreferences(usdUahExchangeRate, eurUahExchangeRate, updatedAt)
+        try { Json.decodeFromString<ExchangeRatesPreferences>(savedString) }
+        catch (e: Exception) { ExchangeRatesPreferences() }
     }
 
     suspend fun updateExchangeRatesPreferences(exchangeRates: ExchangeRatesPreferences) {
         dataStore.edit { prefs ->
-            val stringToSave = "${exchangeRates.usdUahExchangeRate}|${exchangeRates.eurUahExchangeRate}|${System.currentTimeMillis()}"
-            prefs[EXCHANGE_RATES_KEY] = stringToSave
+            val ratesToSave = exchangeRates.copy(updatedAt = System.currentTimeMillis())
+            prefs[EXCHANGE_RATES_KEY] = Json.encodeToString(ratesToSave)
         }
     }
 }

@@ -8,7 +8,10 @@ import com.colgateTotal77.tracker.core.enums.Language
 import com.colgateTotal77.tracker.core.ui.theme.ThemeMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
+@Serializable
 data class SettingsPref(
     val language: Language = Language.SYSTEM_LANGUAGE,
     val theme: ThemeMode = ThemeMode.System
@@ -17,25 +20,18 @@ data class SettingsPref(
 class SettingsPreferences(
     private val dataStore: DataStore<Preferences>,
 ) {
-    private val languageKey = stringPreferencesKey("language")
-    private val themeKey = stringPreferencesKey("theme")
-
+    private val SETTINGS_KEY = stringPreferencesKey("settings")
     val settingsFlow: Flow<SettingsPref> = dataStore.data.map { prefs ->
-        val language = prefs[languageKey]
-            ?.let { saved -> runCatching { Language.valueOf(saved) }.getOrNull() }
-            ?: Language.SYSTEM_LANGUAGE
+        val savedString = prefs[SETTINGS_KEY]
+        if (savedString.isNullOrEmpty()) return@map SettingsPref()
 
-        val theme = prefs[themeKey]
-            ?.let { saved -> runCatching { ThemeMode.valueOf(saved) }.getOrNull() }
-            ?: ThemeMode.System
-
-        SettingsPref(language, theme)
+        try { Json.decodeFromString<SettingsPref>(savedString) }
+        catch (e: Exception) { SettingsPref() }
     }
 
     suspend fun updateSettings(settings: SettingsPref) {
         dataStore.edit { prefs ->
-            prefs[languageKey] = settings.language.name
-            prefs[themeKey] = settings.theme.name
+            prefs[SETTINGS_KEY] = Json.encodeToString(settings)
         }
     }
 }

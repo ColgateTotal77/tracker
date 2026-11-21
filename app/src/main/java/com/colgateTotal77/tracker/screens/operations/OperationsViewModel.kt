@@ -45,6 +45,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlin.collections.ifEmpty
@@ -90,9 +91,7 @@ class OperationsViewModel(
             operationItem.copy(
                 expense = operationItem.expense?.let { expense ->
                     expense.copy(
-                        items = expense.items.sortedBy {
-                            it.expenseProduct.position
-                        }
+                        items = expense.items.sortedByDescending { it.expenseProduct.totalMinor }
                     )
                 }
             )
@@ -170,6 +169,7 @@ class OperationsViewModel(
                     ExpenseEntity(
                         amountMinor = expense.amountMinor,
                         currency = expense.currency,
+                        currencyChangeRate = exchangeRates.first().exchangeRatesMap[expense.currency] ?: 1.0,
                         status = ExpenseStatus.DONE,
                         source = expense.source,
                         marketId = marketId,

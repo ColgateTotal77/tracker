@@ -86,9 +86,7 @@ fun Products(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
-                            start = dimensions.screenHorizontalPadding,
-                            end = dimensions.screenHorizontalPadding,
-                            top = dimensions.searchBarHeightAndPadding
+                            top = dimensions.searchBarHeightAndPadding * 2,
                         ),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -153,7 +151,7 @@ fun Products(
                     .fillMaxWidth()
                     .shadow(12.dp, RoundedCornerShape(dimensions.cornerRadius))
                     .background(
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                        MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f),
                         RoundedCornerShape(dimensions.cornerRadius)
                     ),
                 placeholder = { Text(stringResource(R.string.search_products)) },
@@ -190,7 +188,7 @@ fun Products(
                     .fillMaxWidth()
                     .shadow(12.dp, RoundedCornerShape(dimensions.cornerRadius))
                     .background(
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                        MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f),
                         RoundedCornerShape(dimensions.cornerRadius)
                     ),
             )
