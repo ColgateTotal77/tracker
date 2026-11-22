@@ -22,6 +22,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 private const val TAG = "TaxApi"
 private const val CHECK_ENDPOINT = "https://cabinet.tax.gov.ua/ws/api_public/rro/chkAllWeb"
+internal const val CHECK_PAGE = "https://cabinet.tax.gov.ua/cashregs/check"
 private const val CHECK_TYPE = "3"
 
 data class FiscalQrParams(
@@ -70,19 +71,27 @@ object TaxApi {
         return FiscalQrParams(date = date, time = time, id = id, sm = sm, fn = fn)
     }
 
-    private fun buildRequestUrl(params: FiscalQrParams, captcha: String?): HttpUrl =
+    private fun buildRequestUrl(params: FiscalQrParams, captcha: String): HttpUrl =
         CHECK_ENDPOINT.toHttpUrl().newBuilder()
             .addQueryParameter("date", params.apiDateTime)
             .addQueryParameter("type", CHECK_TYPE)
             .addQueryParameter("id", params.id)
-            .apply {
-                if (!captcha.isNullOrBlank()) addQueryParameter("captcha", captcha)
-            }
+            .addQueryParameter("captcha", captcha)
             .addQueryParameter("fn", params.fn)
             .addQueryParameter("sm", params.sm)
             .build()
 
-    suspend fun fetchCheckXml(params: FiscalQrParams, captcha: String?): Pair<String, ByteArray> {
+    fun checkPageUrl(params: FiscalQrParams): String =
+        CHECK_PAGE.toHttpUrl().newBuilder()
+            .addQueryParameter("date", params.date)
+            .apply { params.time?.let { addQueryParameter("time", it) } }
+            .addQueryParameter("id", params.id)
+            .addQueryParameter("sm", params.sm)
+            .addQueryParameter("fn", params.fn)
+            .build()
+            .toString()
+
+    suspend fun fetchCheckXml(params: FiscalQrParams, captcha: String): Pair<String, ByteArray> {
         val request = Request.Builder()
             .url(buildRequestUrl(params, captcha))
             .header(
@@ -115,6 +124,7 @@ object TaxApi {
             fun optField(name: String) = json.optString(name).takeIf { it.isNotBlank() && it != "null" }
 
             val apiError = optField("error_description")
+            if (apiError?.contains("CAPTCHA", ignoreCase = true) == true) throw CaptchaRequiredException(apiError)
             if ((response.code == 400 || response.isSuccessful) &&
                 apiError?.contains("Не знайдено", ignoreCase = true) == true
             ) throw ReceiptNotFoundException(apiError)
@@ -140,7 +150,7 @@ object TaxApi {
         }
     }
 
-    suspend fun fetchFiscalCheck(params: FiscalQrParams, captcha: String? = null): FetchedCheck =
+    suspend fun fetchFiscalCheck(params: FiscalQrParams, captcha: String): FetchedCheck =
         withContext(Dispatchers.IO) {
             val (responseBody, xmlBytes) = fetchCheckXml(params, captcha)
             val check = try {

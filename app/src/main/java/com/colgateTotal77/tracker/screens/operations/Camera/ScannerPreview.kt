@@ -44,6 +44,10 @@ import com.colgateTotal77.tracker.core.database.expense.ExpenseDraft
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.AppToast
 import com.colgateTotal77.tracker.core.ui.ToastType
+import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.CaptchaRequiredException
+import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.FetchedCheck
+import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.CaptchaGate
+import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.FiscalCaptcha
 import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.FiscalQrParams
 import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.ReceiptNotFoundException
 import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.TaxApi.fetchFiscalCheck
@@ -52,8 +56,8 @@ import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.toDraft
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.concurrent.Executors
 
@@ -79,6 +83,15 @@ fun ScannerPreview(
     var hasScanned by remember { mutableStateOf(false) }
     var isTorchOn by remember { mutableStateOf(false) }
     var camera by remember { mutableStateOf<Camera?>(null) }
+    val captchaGate = remember { CaptchaGate() }
+
+    suspend fun fetchCheck(params: FiscalQrParams): FetchedCheck? {
+        return try {
+            fetchFiscalCheck(params, captchaGate.request(params) ?: return null)
+        } catch (_: CaptchaRequiredException) {
+            fetchFiscalCheck(params, captchaGate.request(params) ?: return null)
+        }
+    }
 
     var lastErrorToastAt by remember { mutableStateOf<Long?>(null) }
     fun showScannerError(messageRes: Int, e: Exception? = null) {
@@ -134,7 +147,11 @@ fun ScannerPreview(
                                     hasScanned = false
                                     return@launch
                                 }
-                                val parsedCheck = fetchFiscalCheck(params)
+                                val parsedCheck = fetchCheck(params)
+                                if (parsedCheck == null) {
+                                    hasScanned = false
+                                    return@launch
+                                }
                                 Log.d(TAG, "parsedCheck $parsedCheck")
                                 onAdd(parsedCheck.toDraft())
                             } catch (e: CancellationException) {
@@ -237,5 +254,7 @@ fun ScannerPreview(
         ) {
             Icon(Icons.Default.Close, contentDescription = context.getString(R.string.close), tint = MaterialTheme.colorScheme.onPrimary)
         }
+
+        FiscalCaptcha(captchaGate, Modifier.align(Alignment.BottomCenter))
     }
 }
