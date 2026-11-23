@@ -2,6 +2,7 @@ package com.colgateTotal77.tracker.screens.operations
 
 import androidx.compose.foundation.background
 import androidx.compose.ui.res.stringResource
+import com.colgateTotal77.tracker.core.ui.OneActionModal
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,6 +50,7 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.colgateTotal77.tracker.R
@@ -65,23 +67,18 @@ import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.core.ui.theme.addPadding
 import com.colgateTotal77.tracker.screens.operations.Exchange.AddExchangeModal
-import com.colgateTotal77.tracker.screens.operations.Exchange.DeleteExchangeModal
 import com.colgateTotal77.tracker.screens.operations.Exchange.EditExchangeModal
 import com.colgateTotal77.tracker.screens.operations.Exchange.ExchangeCard
 import com.colgateTotal77.tracker.screens.operations.Expense.AddExpenseModal
 import com.colgateTotal77.tracker.screens.operations.Expense.AddExpenseProductModal
 import com.colgateTotal77.tracker.screens.operations.Expense.AddMarketNameModal
-import com.colgateTotal77.tracker.screens.operations.Expense.DeleteExpenseModal
-import com.colgateTotal77.tracker.screens.operations.Expense.DeleteExpenseProductModal
 import com.colgateTotal77.tracker.screens.operations.Expense.EditExpenseModal
 import com.colgateTotal77.tracker.screens.operations.Expense.EditExpenseProductModal
 import com.colgateTotal77.tracker.screens.operations.Expense.ExpenseCardExpandable
 import com.colgateTotal77.tracker.screens.operations.Income.AddIncomeModal
-import com.colgateTotal77.tracker.screens.operations.Income.DeleteIncomeModal
 import com.colgateTotal77.tracker.screens.operations.Income.EditIncomeModal
 import com.colgateTotal77.tracker.screens.operations.Income.IncomeCard
 import com.colgateTotal77.tracker.screens.overview.ExchangeRatesPreferences
-import com.colgateTotal77.tracker.screens.operations.FilterModal
 import kotlinx.coroutines.flow.first
 
 @Composable
@@ -211,7 +208,7 @@ fun Operations(
                 }
             },
         ) { paddingValues ->
-            if (operations.itemCount == 0) return@Scaffold Box(
+            if (operations.loadState.refresh is LoadState.NotLoading && operations.itemCount == 0) return@Scaffold Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -337,7 +334,7 @@ fun Operations(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(horizontal = dimensions.screenHorizontalPadding, vertical = dimensions.spacingSmall)
+                .padding(horizontal = dimensions.screenHorizontalPadding, vertical = dimensions.spacingMedium)
                 .shadow(12.dp, RoundedCornerShape(dimensions.cornerRadius))
                 .background(
                     MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f),
@@ -471,9 +468,12 @@ fun Operations(
         }
 
         if (isDeleteExpenseModalOpen) {
-            DeleteExpenseModal(
+            OneActionModal(
+                title = stringResource(R.string.delete_expense),
+                mainText = stringResource(R.string.confirm_delete_expense),
+                actionButtonText = stringResource(R.string.delete_expense),
                 onDismiss = { isDeleteExpenseModalOpen = false },
-                onDelete = {
+                onAction = {
                     viewModel.deleteExpenseById(selectedExpense!!.id)
                     isDeleteExpenseModalOpen = false
                 }
@@ -518,10 +518,12 @@ fun Operations(
         }
 
         if (isDeleteExpenseProductModalOpen) {
-            DeleteExpenseProductModal(
-                expenseProduct = selectedExpenseProduct!!,
+            OneActionModal(
+                title = stringResource(R.string.delete_product),
+                mainText = stringResource(R.string.confirm_delete_expense_product, selectedExpenseProduct!!.product.alias),
+                actionButtonText = stringResource(R.string.delete_product),
                 onDismiss = { isDeleteExpenseProductModalOpen = false },
-                onDelete = {
+                onAction = {
                     viewModel.deleteExpenseProductById(selectedExpenseProduct!!.expenseProduct.id)
                     isDeleteExpenseProductModalOpen = false
                 }
@@ -548,9 +550,12 @@ fun Operations(
         }
 
         if (isDeleteIncomeModalOpen) {
-            DeleteIncomeModal(
+            OneActionModal(
+                title = stringResource(R.string.delete_income),
+                mainText = stringResource(R.string.confirm_delete_income),
+                actionButtonText = stringResource(R.string.delete_income),
                 onDismiss = { isDeleteIncomeModalOpen = false },
-                onDelete = {
+                onAction = {
                     viewModel.deleteIncomeById(selectedIncome!!.id)
                     isDeleteIncomeModalOpen = false
                 },
@@ -579,9 +584,12 @@ fun Operations(
         }
 
         if (isDeleteExchangeModalOpen) {
-            DeleteExchangeModal(
+            OneActionModal(
+                title = stringResource(R.string.delete_exchange),
+                mainText = stringResource(R.string.confirm_delete_exchange),
+                actionButtonText = stringResource(R.string.delete_exchange),
                 onDismiss = { isDeleteExchangeModalOpen = false },
-                onDelete = {
+                onAction = {
                     viewModel.deleteExchangeById(selectedExchange!!.id)
                     isDeleteExchangeModalOpen = false
                 },

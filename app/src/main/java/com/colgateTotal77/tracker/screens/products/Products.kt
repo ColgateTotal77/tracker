@@ -1,138 +1,77 @@
 package com.colgateTotal77.tracker.screens.products
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.ui.res.stringResource
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterAlt
-import androidx.compose.material.icons.filled.ProductionQuantityLimits
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
 import com.colgateTotal77.tracker.R
-import com.colgateTotal77.tracker.core.ProductNameNormalizer
-import com.colgateTotal77.tracker.core.database.product.ProductEntity
 import com.colgateTotal77.tracker.core.enums.ProductSort
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.DropdownPopup
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
-import com.colgateTotal77.tracker.core.ui.theme.addPadding
+import com.colgateTotal77.tracker.screens.products.markets.MarketViewModel
+import com.colgateTotal77.tracker.screens.products.markets.Markets
+import com.colgateTotal77.tracker.screens.products.products.ProductViewModel
+import com.colgateTotal77.tracker.screens.products.products.Products
 
 @Composable
-fun Products(
+fun ProductsScreen(
     modifier: Modifier = Modifier,
-    viewModel: ProductViewModel = viewModel(factory = ProductViewModel.Factory),
+    productViewModel: ProductViewModel = viewModel(factory = ProductViewModel.Factory),
+    marketViewModel: MarketViewModel = viewModel(factory = MarketViewModel.Factory)
 ) {
-    var isAddProductModalOpen by remember { mutableStateOf(false) }
-    var isEditProductModalOpen by remember { mutableStateOf(false) }
-    var isArchiveProductModalOpen by remember { mutableStateOf(false) }
-    var selectedProduct by remember { mutableStateOf<ProductEntity?>(null) }
+    var selected by rememberSaveable { mutableIntStateOf(0) }
+    val options = listOf(R.string.tab_products, R.string.markets)
 
     val dimensions = LocalDimensions.current
-    val context = LocalContext.current
 
-    val markets by viewModel.marketsFlow.collectAsStateWithLifecycle()
-    val filters by viewModel.filters.collectAsStateWithLifecycle()
-
+    val searchQuery by (if (selected == 0) productViewModel.searchQuery else marketViewModel.searchQuery).collectAsStateWithLifecycle()
+    val currentSort by productViewModel.sortBy.collectAsState()
     var isFilterModalOpen by remember { mutableStateOf(false) }
-    val products = viewModel.productFlow.collectAsLazyPagingItems()
-    val searchQuery by viewModel.searchQuery.collectAsState()
-    val currentSort by viewModel.sortBy.collectAsState()
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            modifier = modifier,
-            floatingActionButton = {
-                Box(
-                    modifier = Modifier
-                        .padding(bottom = dimensions.navigationBarHeightAndPadding)
-                        .size(56.dp)
-                ) {
-                    FloatingActionButton(onClick = { isAddProductModalOpen = true }) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = stringResource(R.string.add_product)
-                        )
-                    }
-                }
-            },
-        ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = dimensions.screenHorizontalPadding),
-                verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
-            ) {
-                if (products.itemCount == 0) return@Scaffold Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            top = dimensions.searchBarHeightAndPadding * 2,
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall),
-                    ) {
-                        Icon(Icons.Default.ProductionQuantityLimits, contentDescription = null)
-                        Text(
-                            stringResource(R.string.no_products_yet),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Text(stringResource(R.string.add_first_product))
-                    }
-                }
-            }
-            LazyColumn(
-                contentPadding = paddingValues.addPadding(
-                    top = dimensions.searchBarHeightAndPadding * 2,
-                    bottom = dimensions.screenBottomPadding + dimensions.navigationBarHeightAndPadding
-                ),
-                verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
-            ) {
-                items(
-                    count = products.itemCount,
-                    key = products.itemKey { it.product.id }
-                ) { index ->
-                    val productFromQuery = products[index] ?: return@items
-
-                    ProductCard(
-                        productFromQuery = productFromQuery,
-                        onGetProductHistory = { id ->
-                            viewModel.getProductHistoryFlow(id)
-                        },
-                        onEdit = {
-                            selectedProduct = productFromQuery.product
-                            isEditProductModalOpen = true
-                        },
-                        onArchive = {
-                            selectedProduct = productFromQuery.product
-                            isArchiveProductModalOpen = true
-                        }
-                    )
-                }
-            }
-        }
+    Box(modifier.fillMaxSize()) {
+        if (selected == 0) Products(
+            isFilterModalOpen,
+            {it: Boolean -> isFilterModalOpen = it },
+            viewModel = productViewModel
+        )
+        else Markets(viewModel = marketViewModel)
 
         Column(
             modifier = Modifier
@@ -144,9 +83,32 @@ fun Products(
                 ),
             verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
         ) {
+            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+                SingleChoiceSegmentedButtonRow(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    options.forEachIndexed { index, label ->
+                        SegmentedButton(
+                            selected = selected == index,
+                            onClick = { selected = index },
+                            shape = SegmentedButtonDefaults.itemShape(
+                                index,
+                                options.size,
+                                RoundedCornerShape(dimensions.cornerRadius)
+                            ),
+                            colors = SegmentedButtonDefaults.colors(
+                                inactiveContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f),
+                            )
+                        ) {
+                            Text(stringResource(label))
+                        }
+                    }
+                }
+            }
+
             OutlinedTextField(
                 value = searchQuery,
-                onValueChange = { viewModel.onSearchQueryChanged(it) },
+                onValueChange = { if (selected == 0) productViewModel.onSearchQueryChanged(it) else marketViewModel.onSearchQueryChanged(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .shadow(12.dp, RoundedCornerShape(dimensions.cornerRadius))
@@ -154,7 +116,7 @@ fun Products(
                         MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f),
                         RoundedCornerShape(dimensions.cornerRadius)
                     ),
-                placeholder = { Text(stringResource(R.string.search_products)) },
+                placeholder = { Text(stringResource(if (selected == 0) R.string.search_products else R.string.search_markets)) },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.Transparent,
@@ -163,7 +125,7 @@ fun Products(
                     errorBorderColor = Color.Transparent,
                 ),
                 trailingIcon = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (selected == 0) Row(verticalAlignment = Alignment.CenterVertically) {
                         VerticalDivider(modifier = Modifier.height(dimensions.verticalDividerHeight))
                         CustomIconButton(onClick = { isFilterModalOpen = true }) {
                             Icon(
@@ -176,81 +138,24 @@ fun Products(
                 },
             )
 
-            DropdownPopup(
-                items = ProductSort.entries,
-                selected = currentSort,
-                onSelect = { selectedSort ->
-                    selectedSort?.let { viewModel.onSortChanged(it) }
-                },
-                itemText = { sort -> context.getString(sort.labelRes) },
-                itemName = stringResource(R.string.sort),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(12.dp, RoundedCornerShape(dimensions.cornerRadius))
-                    .background(
-                        MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f),
-                        RoundedCornerShape(dimensions.cornerRadius)
-                    ),
-            )
-        }
-
-
-        if (isAddProductModalOpen) {
-            AddProductModal(
-                onDismiss = { isAddProductModalOpen = false },
-                onAdd = { name ->
-                    val now = System.currentTimeMillis()
-
-                    viewModel.insertProduct(
-                        ProductEntity(
-                            normalizedName = ProductNameNormalizer.normalize(name),
-                            alias = name,
-                            lastPrice = 0,
-                            createdAt = now,
-                            updatedAt = now,
-                        )
-                    )
-                    isAddProductModalOpen = false
-                },
-            )
-        }
-
-        if (isEditProductModalOpen) {
-            EditProductModal(
-                product = selectedProduct!!,
-                onDismiss = { isEditProductModalOpen = false },
-                onUpdate = { alias ->
-                    viewModel.updateProduct(
-                        selectedProduct!!.copy(
-                            alias = alias
-                        )
-                    )
-                    isEditProductModalOpen = false
-                },
-            )
-        }
-
-        if (isArchiveProductModalOpen) {
-            ArchiveProductModal(
-                product = selectedProduct!!,
-                onDismiss = { isArchiveProductModalOpen = false },
-                onArchive = { id ->
-                    viewModel.archiveProductById(id)
-                    isArchiveProductModalOpen = false
-                }
-            )
-        }
-
-        if (isFilterModalOpen) {
-            FilterModal(
-                markets = markets,
-                filters = filters,
-                onDismiss = { isFilterModalOpen = false },
-                onApply = { newFilters ->
-                    viewModel.onFiltersChanged(newFilters)
-                    isFilterModalOpen = false
-                },
-            )
+            if (selected == 0) {
+                DropdownPopup(
+                    items = ProductSort.entries,
+                    selected = currentSort,
+                    onSelect = { selectedSort ->
+                        selectedSort?.let { productViewModel.onSortChanged(it) }
+                    },
+                    itemText = { sort -> stringResource(sort.labelRes) },
+                    itemName = stringResource(R.string.sort),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(12.dp, RoundedCornerShape(dimensions.cornerRadius))
+                        .background(
+                            MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f),
+                            RoundedCornerShape(dimensions.cornerRadius)
+                        ),
+                )
+            }
         }
     }
 }

@@ -109,6 +109,7 @@ class OperationsViewModel(
     private suspend fun getMarketIdFromMarketChoice(market: MarketChoice): Int? {
         val marketDao = database.marketDao()
         val marketTinDao = database.marketTinDao()
+        val now = System.currentTimeMillis()
 
         return when (market) {
             is MarketChoice.Existing -> {
@@ -119,7 +120,7 @@ class OperationsViewModel(
 
             is MarketChoice.ByTin -> {
                 marketTinDao.getMarketByTin(market.tin)?.id ?: run {
-                    val id = marketDao.insert(MarketEntity(name = "")).toInt()
+                    val id = marketDao.insert(MarketEntity(name = "", createdAt = now, updatedAt = now)).toInt()
                     marketTinDao.insert(MarketTinEntity(tin = market.tin, marketId = id))
                     id
                 }
@@ -129,7 +130,7 @@ class OperationsViewModel(
                 val normalizedName = market.name.lowercase().trim()
                 val existing = marketDao.getByNormalizedName(normalizedName)
                 existing?.id ?: run {
-                    val insertId = marketDao.insert(MarketEntity(name = market.name.trim()))
+                    val insertId = marketDao.insert(MarketEntity(name = market.name.trim(), createdAt = now, updatedAt = now))
                     if (insertId != -1L) insertId.toInt()
                     else marketDao.getByNormalizedName(normalizedName)?.id
                 }
@@ -189,11 +190,11 @@ class OperationsViewModel(
                     throw ToastFailure(R.string.toast_duplicate_receipt)
                 }
 
-                val distinctProducts = expense.items.mapNotNull { item ->
-                    val name = item.name ?: return@mapNotNull null
+                val distinctProducts = expense.items.associateBy { item ->
+                    val name = item.name
                     val normalizedName = ProductNameNormalizer.normalize(name)
-                    normalizedName to item
-                }.toMap()
+                    normalizedName
+                }
                 if (distinctProducts.isEmpty()) return@withTransaction expenseId.toInt() to marketId
 
                 val newProducts = distinctProducts.map { (normalizedName, item) ->
@@ -213,7 +214,7 @@ class OperationsViewModel(
                 val productIdMap = fetchedProducts.associate { it.normalizedName to it.id }
 
                 val expenseProducts = expense.items.mapIndexedNotNull { index, item ->
-                    val name = item.name ?: return@mapIndexedNotNull null
+                    val name = item.name
                     val normalizedName = ProductNameNormalizer.normalize(name)
 
                     val productId = productIdMap[normalizedName] ?: return@mapIndexedNotNull null

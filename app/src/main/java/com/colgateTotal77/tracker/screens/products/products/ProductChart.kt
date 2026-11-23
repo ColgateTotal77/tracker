@@ -1,4 +1,4 @@
-package com.colgateTotal77.tracker.screens.products
+package com.colgateTotal77.tracker.screens.products.products
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -11,7 +11,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.unit.dp
 import com.colgateTotal77.tracker.core.MeasureUnit
-import com.colgateTotal77.tracker.core.database.product.PricePoint
+import com.colgateTotal77.tracker.core.database.product.ProductDao.PricePoint
 import com.colgateTotal77.tracker.core.formatMoney
 import com.colgateTotal77.tracker.core.ui.vico.bottomAxis
 import com.colgateTotal77.tracker.core.ui.vico.rememberMarker

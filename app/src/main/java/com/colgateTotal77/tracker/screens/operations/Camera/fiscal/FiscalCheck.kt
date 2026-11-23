@@ -11,7 +11,7 @@ data class FiscalCheck(
 
 data class FiscalItem(
     val position: Int? = null,
-    val name: String? = null,
+    val name: String = "",
     val barcode: String? = null,
     val quantity: Int = 1000,
     val unitPriceMinor: Long,

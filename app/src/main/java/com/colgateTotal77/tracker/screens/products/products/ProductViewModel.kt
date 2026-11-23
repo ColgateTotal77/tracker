@@ -1,4 +1,4 @@
-package com.colgateTotal77.tracker.screens.products
+package com.colgateTotal77.tracker.screens.products.products
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -13,7 +13,6 @@ import androidx.paging.cachedIn
 import com.colgateTotal77.tracker.TrackerApplication
 import com.colgateTotal77.tracker.core.database.AppDatabase
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
-import com.colgateTotal77.tracker.core.database.product.PricePoint
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
 import com.colgateTotal77.tracker.core.database.product.ProductFromQuery
 import com.colgateTotal77.tracker.core.enums.ProductSort
@@ -23,6 +22,7 @@ import com.colgateTotal77.tracker.core.ui.AppToast
 import com.colgateTotal77.tracker.core.ui.ToastFailure
 import com.colgateTotal77.tracker.core.ui.launchWithToast
 import androidx.room.withTransaction
+import com.colgateTotal77.tracker.core.database.product.ProductDao.PricePoint
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -61,7 +61,7 @@ class ProductViewModel(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
                 database.productDao().query(
-                    nameQuery = query,
+                    query = query,
                     sortBy = sort,
                     startTime = range.start,
                     endTime = range.end,
@@ -128,7 +128,6 @@ class ProductViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
-
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {

@@ -130,6 +130,7 @@
     <string name="theme_dark">Темна</string>
     <string name="toast_duplicate_receipt">Цей чек уже додано</string>
     <string name="toast_duplicate_product">Цей товар уже існує</string>
+    <string name="toast_duplicate_market">Магазин з такою назвою вже існує</string>
     <string name="toast_receipt_added">Чек додано</string>
     <string name="toast_expense_deleted">Витрату видалено</string>
     <string name="toast_expense_product_deleted">Товар видалено з витрати</string>
@@ -164,4 +165,15 @@
     <string name="toast_save_exchange_failed">Не вдалося зберегти обмін. Спробуйте ще раз.</string>
     <string name="toast_delete_exchange_failed">Не вдалося видалити обмін. Спробуйте ще раз.</string>
     <string name="toast_exchange_deleted">Обмін видалено</string>
+    <string name="add_market">Додати магазин</string>
+    <string name="edit_market">Редагувати магазин</string>
+    <string name="save_market">Зберегти магазин</string>
+    <string name="delete_market">Видалити магазин</string>
+    <string name="search_markets">Пошук магазинів...</string>
+    <string name="no_markets_yet">Поки що немає магазинів</string>
+    <string name="add_first_market">Натисніть +, щоб додати перший магазин</string>
+    <string name="toast_market_deleted">Магазин видалено</string>
+    <string name="toast_delete_market_failed">Не вдалося видалити магазин. Спробуйте ще раз.</string>
+    <string name="unnamed_market">Магазин без назви #%1$d</string>
+    <string name="delete_market_confirm">Витрати з цього магазину залишаться, але більше не будуть до нього прив\'язані. Якщо пізніше відскануєте чек із цього магазину, буде створено новий магазин.</string>
 </resources>

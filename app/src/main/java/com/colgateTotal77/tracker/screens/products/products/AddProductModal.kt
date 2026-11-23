@@ -1,4 +1,4 @@
-package com.colgateTotal77.tracker.screens.products
+package com.colgateTotal77.tracker.screens.products.products
 
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
@@ -6,40 +6,51 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.window.Dialog
 import com.colgateTotal77.tracker.R
-import com.colgateTotal77.tracker.core.database.product.ProductEntity
+import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
 @Composable
-fun ArchiveProductModal(
-    product: ProductEntity,
+fun AddProductModal(
     onDismiss: () -> Unit,
-    onArchive: (id: Int) -> Unit,
+    onAdd: (name: String) -> Unit,
 ) {
+    var nameInput by remember { mutableStateOf("") }
+
     val dimensions = LocalDimensions.current
 
-    Dialog(onDismissRequest = onDismiss) {
+    AppModalBottomSheet(onDismissRequest = onDismiss) {
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
                 Text(
-                    stringResource(R.string.archive_product),
+                    stringResource(R.string.add_product),
                     style = MaterialTheme.typography.titleLarge,
                 )
 
-                Text(
-                    "Are you sure that you want to archive “${product.alias}”?",
-                    style = MaterialTheme.typography.bodyMedium,
+                OutlinedTextField(
+                    value = nameInput,
+                    onValueChange = { nameInput = it },
+                    label = { Text(stringResource(R.string.product_name)) },
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 CustomButton(
-                    onClick = { onArchive(product.id) },
-                    buttonText = stringResource(R.string.archive_product),
+                    onClick = {
+                        val name = nameInput.trim()
+                        if (name.isNotEmpty()) onAdd(name)
+                    },
+                    buttonText = stringResource(R.string.save_product),
+                    enabled = nameInput.isNotBlank(),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

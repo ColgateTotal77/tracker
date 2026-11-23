@@ -2,10 +2,14 @@ package com.colgateTotal77.tracker.core.ui.vico
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import com.patrykandpatrick.vico.compose.cartesian.CartesianDrawingContext
+import com.patrykandpatrick.vico.compose.cartesian.CartesianMeasuringContext
 import com.patrykandpatrick.vico.compose.cartesian.axis.Axis
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
+import com.patrykandpatrick.vico.compose.cartesian.layer.CartesianLayerDimensions
 import com.patrykandpatrick.vico.compose.common.Fill
 import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
 
@@ -38,6 +42,29 @@ fun bottomAxis(
         tick = null,
         guideline = null,
         valueFormatter = valueFormatter,
-        itemPlacer = HorizontalAxis.ItemPlacer.aligned(addExtremeLabelPadding = addExtremeLabelPadding),
+        itemPlacer = remember(addExtremeLabelPadding) {
+            val base = HorizontalAxis.ItemPlacer.aligned(addExtremeLabelPadding = addExtremeLabelPadding)
+            object : HorizontalAxis.ItemPlacer by base {
+                override fun getLabelValues(
+                    context: CartesianDrawingContext,
+                    visibleXRange: ClosedFloatingPointRange<Double>,
+                    fullXRange: ClosedFloatingPointRange<Double>,
+                    maxLabelWidth: Float,
+                ) = base.getLabelValues(context, visibleXRange, fullXRange, maxLabelWidth).filter { it >= 0 }
+
+                override fun getWidthMeasurementLabelValues(
+                    context: CartesianMeasuringContext,
+                    layerDimensions: CartesianLayerDimensions,
+                    fullXRange: ClosedFloatingPointRange<Double>,
+                ) = base.getWidthMeasurementLabelValues(context, layerDimensions, fullXRange).filter { it >= 0 }
+
+                override fun getHeightMeasurementLabelValues(
+                    context: CartesianMeasuringContext,
+                    layerDimensions: CartesianLayerDimensions,
+                    fullXRange: ClosedFloatingPointRange<Double>,
+                    maxLabelWidth: Float,
+                ) = base.getHeightMeasurementLabelValues(context, layerDimensions, fullXRange, maxLabelWidth).filter { it >= 0 }
+            }
+        }
     )
 }

@@ -154,7 +154,15 @@ fun AddExpenseModal(
                             false
                         } else {
                             selectedMarket = selectedMarket?.copy(name = newName)
-                                ?: MarketEntity(name = newName)
+                                ?: run {
+                                    val now = System.currentTimeMillis()
+
+                                    MarketEntity(
+                                        name = newName,
+                                        createdAt = now,
+                                        updatedAt = now,
+                                    )
+                                }
                             true
                         }
                     },

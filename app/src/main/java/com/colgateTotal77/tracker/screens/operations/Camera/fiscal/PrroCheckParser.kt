@@ -33,7 +33,7 @@ object PrroCheckParser {
         val cost = element.textOf("COST")?.toMinorMinor()
         return FiscalItem(
             position = element.attr("ROWNUM")?.toIntOrNull(),
-            name = element.textOf("NAME")?.let(ProductNameNormalizer::repairDisplay),
+            name = element.textOf("NAME")?.let(ProductNameNormalizer::repairDisplay) ?: "",
             barcode = null,
             quantity = quantity,
             unitPriceMinor = price ?: ((cost ?: 0L) * 1000L / quantity),

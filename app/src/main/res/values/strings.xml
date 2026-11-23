@@ -130,6 +130,7 @@
     <string name="theme_dark">Dark</string>
     <string name="toast_duplicate_receipt">This receipt has already been added</string>
     <string name="toast_duplicate_product">This product already exists</string>
+    <string name="toast_duplicate_market">A market with this name already exists</string>
     <string name="toast_receipt_added">Receipt added</string>
     <string name="toast_expense_deleted">Expense deleted</string>
     <string name="toast_expense_product_deleted">Product removed from expense</string>
@@ -164,4 +165,15 @@
     <string name="toast_save_exchange_failed">Could not save the exchange. Please try again.</string>
     <string name="toast_delete_exchange_failed">Could not delete the exchange. Please try again.</string>
     <string name="toast_exchange_deleted">Exchange deleted</string>
+    <string name="add_market">Add Market</string>
+    <string name="edit_market">Edit Market</string>
+    <string name="save_market">Save Market</string>
+    <string name="delete_market">Delete Market</string>
+    <string name="search_markets">Search markets...</string>
+    <string name="no_markets_yet">No markets yet</string>
+    <string name="add_first_market">Tap + to add your first market</string>
+    <string name="toast_market_deleted">Market deleted</string>
+    <string name="toast_delete_market_failed">Could not delete the market. Please try again.</string>
+    <string name="unnamed_market">Unnamed market #%1$d</string>
+    <string name="delete_market_confirm">Expenses from this market will be kept but no longer linked to it. If you scan a receipt from this store later, a new market will be created.</string>
 </resources>

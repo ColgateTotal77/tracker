@@ -1,4 +1,4 @@
-package com.colgateTotal77.tracker.screens.products
+package com.colgateTotal77.tracker.screens.products.products
 
 import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.AnimatedVisibility
@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,7 +22,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.MeasureUnit
-import com.colgateTotal77.tracker.core.database.product.PricePoint
+import com.colgateTotal77.tracker.core.database.product.ProductDao.PricePoint
 import com.colgateTotal77.tracker.core.database.product.ProductFromQuery
 import com.colgateTotal77.tracker.core.formatMoney
 import com.colgateTotal77.tracker.core.getMeasureUnit
@@ -47,24 +45,6 @@ import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import java.text.DecimalFormat
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
-import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
-import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
-import com.patrykandpatrick.vico.compose.cartesian.data.lineModel
-import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
-import com.patrykandpatrick.vico.compose.cartesian.marker.DefaultCartesianMarker
-import com.patrykandpatrick.vico.compose.cartesian.marker.LineCartesianLayerMarkerTarget
-import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
-import com.patrykandpatrick.vico.compose.common.ProvideVicoTheme
-import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
-import com.patrykandpatrick.vico.compose.m3.common.rememberM3VicoTheme
 
 fun formatProductMeasure(measureUnit: MeasureUnit, quantity: Int): String {
     val df = DecimalFormat("#.###")
@@ -83,7 +63,6 @@ fun formatChartProductMeasure(measureUnit: MeasureUnit, quantity: Int): String {
         MeasureUnit.G -> "$quantity g"
     }
 }
-
 
 @Composable
 fun ProductCard(

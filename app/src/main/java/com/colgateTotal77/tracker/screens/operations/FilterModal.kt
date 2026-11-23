@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.text.input.KeyboardType
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
@@ -59,9 +60,9 @@ fun FilterModal(
     var minPrice by remember { mutableStateOf(filters.minPrice?.let { formatMoney(it) }.orEmpty()) }
     var maxPrice by remember { mutableStateOf(filters.maxPrice?.let { formatMoney(it) }.orEmpty()) }
 
-    val displayMarkets = markets.filter { !it.name.isNullOrBlank() }
     val dimensions = LocalDimensions.current
     val context = LocalContext.current
+    val resources = LocalResources.current
 
     AppModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -103,10 +104,10 @@ fun FilterModal(
 
                 DropdownMultiSelect(
                     onTouchChange = { dropdownTouched = it },
-                    items = displayMarkets,
+                    items = markets,
                     selectedKeys = selectedMarketIds,
                     key = { it.id },
-                    itemText = { it.name ?: "" },
+                    itemText = { it.name.orEmpty().ifBlank { resources.getString(R.string.unnamed_market, it.id) } },
                     itemName = stringResource(R.string.markets),
                     onSelectionChange = { selectedMarketIds = it },
                 )

@@ -26,7 +26,7 @@ object RroCheckParser {
             ?: ((totalMinor ?: 0) * 1000L / quantity)
         return FiscalItem(
             position = element.attr("N")?.toIntOrNull(),
-            name = element.attr("NM")?.let(ProductNameNormalizer::repairDisplay),
+            name = element.attr("NM")?.let(ProductNameNormalizer::repairDisplay) ?: "",
             barcode = element.attr("CD"),
             quantity = quantity,
             unitPriceMinor = unitPriceMinor,

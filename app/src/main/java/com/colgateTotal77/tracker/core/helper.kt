@@ -40,8 +40,8 @@ private fun String.hasWeightMarker(): Boolean {
     return tokens.any { it == "ваг" || it == "ваг." || it.startsWith("вагов") }
 }
 
-fun getMeasureUnit(quantity: Int, name: String?): MeasureUnit {
-    val isWeight = quantity % 1000 != 0 || name?.hasWeightMarker() == true
+fun getMeasureUnit(quantity: Int, name: String): MeasureUnit {
+    val isWeight = quantity % 1000 != 0 || name.hasWeightMarker()
 
     return when {
         !isWeight -> MeasureUnit.PIECE

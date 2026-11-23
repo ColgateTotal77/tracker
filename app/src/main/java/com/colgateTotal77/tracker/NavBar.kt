@@ -43,9 +43,7 @@ import com.colgateTotal77.tracker.core.enums.OperationId
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.screens.operations.Operations
 import com.colgateTotal77.tracker.screens.overview.Overview
-import com.colgateTotal77.tracker.screens.products.Products
-
-private val NavigationBarHeight = 64.dp
+import com.colgateTotal77.tracker.screens.products.ProductsScreen
 
 @Composable
 fun NavBar() {
@@ -91,7 +89,7 @@ fun NavBar() {
                     modifier = contentModifier
                 )
 
-                2 -> Products(modifier = contentModifier)
+                2 -> ProductsScreen(modifier = contentModifier)
 
                 3 -> Box(
                     modifier = contentModifier.fillMaxSize(),
@@ -146,7 +144,7 @@ private fun RowScope.NavBarItem(
     Column(
         modifier = Modifier
             .weight(1f)
-            .defaultMinSize(minHeight = NavigationBarHeight)
+            .defaultMinSize(minHeight = LocalDimensions.current.navigationBarHeight)
             .selectable(
                 selected = selected,
                 onClick = onClick,

@@ -1,26 +1,26 @@
-package com.colgateTotal77.tracker.screens.operations.Expense
+package com.colgateTotal77.tracker.core.ui
 
-import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.stringResource
+import com.colgateTotal77.tracker.R
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Dialog
-import com.colgateTotal77.tracker.R
-import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductWithProduct
-import com.colgateTotal77.tracker.core.ui.CardWrapper
-import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
 @Composable
-fun DeleteExpenseProductModal(
-    expenseProduct: ExpenseProductWithProduct,
+fun OneActionModal(
+    title: String,
+    mainText: String,
+    actionButtonText: String,
     onDismiss: () -> Unit,
-    onDelete: () -> Unit,
+    onAction: () -> Unit,
 ) {
     val dimensions = LocalDimensions.current
 
@@ -30,20 +30,26 @@ fun DeleteExpenseProductModal(
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
                 Text(
-                    stringResource(R.string.delete_product),
+                    title,
                     style = MaterialTheme.typography.titleLarge,
                 )
 
                 Text(
-                    "Are you sure that you want to delete \"${expenseProduct.product.alias}\" from this expense?",
+                    mainText,
                     style = MaterialTheme.typography.bodyMedium,
                 )
-
-                CustomButton(
-                    onClick = onDelete,
-                    buttonText = stringResource(R.string.delete_product),
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)) {
+                    CustomButton(
+                        onClick = onAction,
+                        buttonText = actionButtonText,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    CustomButton(
+                        onClick = onDismiss,
+                        buttonText = stringResource(R.string.cancel),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         }
     }

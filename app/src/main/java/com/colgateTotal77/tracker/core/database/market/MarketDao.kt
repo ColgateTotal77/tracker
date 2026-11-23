@@ -1,5 +1,6 @@
 package com.colgateTotal77.tracker.core.database.market
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -9,7 +10,14 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MarketDao {
-    @Query("SELECT * FROM `markets` ORDER BY name")
+    @Query("""
+        SELECT * FROM `markets` m
+        WHERE :query = '' OR m.name LIKE '%' || :query || '%'
+        ORDER BY lastVisited DESC
+    """)
+    fun query(query: String): PagingSource<Int, MarketEntity>
+
+    @Query("SELECT * FROM `markets` ORDER BY lastVisited DESC")
     fun getAll(): Flow<List<MarketEntity>>
 
     @Query("SELECT * FROM `markets` WHERE id = :id")
@@ -26,4 +34,20 @@ interface MarketDao {
 
     @Query("DELETE FROM `markets` WHERE id = :id")
     suspend fun deleteById(id: Int)
+
+    data class MarketPricePoint(
+        val amountMinor: Long,
+        val day: String
+    )
+
+    @Query("""
+        SELECT 
+            SUM(amountMinor * currencyChangeRate) as amountMinor,
+            DATE(e.date / 1000, 'unixepoch', 'localtime') AS day
+        FROM expenses e
+        WHERE e.marketId = :id
+        GROUP BY day
+        ORDER BY day ASC
+    """)
+    fun getHistoryById(id: Int): Flow<List<MarketPricePoint>>
 }

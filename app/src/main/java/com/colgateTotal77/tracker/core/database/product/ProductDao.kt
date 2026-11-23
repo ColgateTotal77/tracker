@@ -17,30 +17,21 @@ interface ProductDao {
             SELECT 
                 p.id, 
                 p.normalizedName, 
-                p.alias, 
+                p.alias,
+                p.lastPrice,
                 p.isArchived, 
                 p.createdAt, 
                 p.updatedAt,
-                COALESCE(SUM(tp.quantity), 0) AS purchaseCount,
-                COALESCE(SUM((tp.quantity * tp.unitPriceMinor) / 1000), 0) AS spentMinor,
-                COALESCE((
-                    SELECT tp2.unitPriceMinor 
-                    FROM expense_products tp2 
-                    JOIN expenses t2 ON t2.id = tp2.expenseId 
-                    WHERE tp2.productId = p.id 
-                        AND (:startTime IS NULL OR t2.date >= :startTime)
-                        AND (:endTime IS NULL OR t2.date <= :endTime)
-                    ORDER BY t2.date DESC 
-                    LIMIT 1
-                ), 0) AS lastPrice
+                COALESCE(SUM(ep.quantity), 0) AS purchaseCount,
+                COALESCE(SUM((ep.quantity * ep.unitPriceMinor) / 1000), 0) AS spentMinor
             FROM products p
-            JOIN expense_products tp ON tp.productId = p.id 
-            JOIN expenses t ON t.id = tp.expenseId 
+            JOIN expense_products ep ON ep.productId = p.id 
+            JOIN expenses e ON e.id = ep.expenseId 
             WHERE p.isArchived = 0 
-                AND (:nameQuery = '' OR p.normalizedName LIKE '%' || :nameQuery || '%')
-                AND (:startTime IS NULL OR t.date >= :startTime)
-                AND (:endTime IS NULL OR t.date <= :endTime)
-                AND (:marketIds IS NULL OR t.marketId IN (:marketIds))
+                AND (:query = '' OR p.normalizedName LIKE '%' || :query || '%')
+                AND (:startTime IS NULL OR e.date >= :startTime)
+                AND (:endTime IS NULL OR e.date <= :endTime)
+                AND (:marketIds IS NULL OR e.marketId IN (:marketIds))
             GROUP BY p.id
         ) filtered
         WHERE (:minPrice IS NULL OR lastPrice >= :minPrice)
@@ -55,7 +46,7 @@ interface ProductDao {
             purchaseCount DESC
     """)
     fun query(
-        nameQuery: String,
+        query: String,
         sortBy: ProductSort,
         startTime: Long?,
         endTime: Long?,
@@ -63,6 +54,7 @@ interface ProductDao {
         maxPrice: Long? = null,
         marketIds: List<Int>? = null,
     ): PagingSource<Int, ProductFromQuery>
+
     @Query("SELECT * FROM products WHERE isArchived = 0 ORDER BY purchaseCount DESC")
     fun getAllActive(): Flow<List<ProductEntity>>
 
@@ -114,18 +106,18 @@ interface ProductDao {
     @Query("UPDATE products SET alias = :alias WHERE id = :id")
     suspend fun updateAlliesById(id: Int, alias: String)
 
+    data class PricePoint(
+        val unitPriceMinor: Long,
+        val quantity: Int,
+        val date: Long
+    )
+
     @Query("""
-        SELECT tp.unitPriceMinor, t.date, tp.quantity
-        FROM expense_products tp
-        JOIN expenses t ON t.id = tp.expenseId  
+        SELECT ep.unitPriceMinor, e.date, ep.quantity
+        FROM expense_products ep
+        JOIN expenses e ON e.id = ep.expenseId  
         WHERE productId = :id 
-        ORDER BY t.date ASC
+        ORDER BY e.date ASC
     """)
     fun getHistoryById(id: Int): Flow<List<PricePoint>>
 }
-
-data class PricePoint(
-    val unitPriceMinor: Long,
-    val quantity: Int,
-    val date: Long
-)

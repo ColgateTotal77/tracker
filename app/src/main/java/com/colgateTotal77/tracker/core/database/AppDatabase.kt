@@ -36,13 +36,14 @@ import com.colgateTotal77.tracker.core.database.operation.OperationDao
         IncomeEntity::class,
         ExchangeEntity::class
     ],
-    version = 11,
+    version = 12,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 4, to = 5, spec = AppDatabase.Migration4To5::class),
         AutoMigration(from = 6, to = 7, spec = AppDatabase.Migration6To7::class),
         AutoMigration(from = 8, to = 9, spec = AppDatabase.Migration8To9::class),
         AutoMigration(from = 10, to = 11),
+        AutoMigration(from = 11, to = 12),
     ],
     exportSchema = true
 )
@@ -67,6 +68,45 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         private val TRIGGERS = listOf(
+            "update_market_after_expense_creation" to """
+                CREATE TRIGGER update_market_after_expense_creation
+                AFTER INSERT ON expenses
+                BEGIN
+                    UPDATE markets
+                    SET
+                        lastVisited = NEW.date,
+                        updatedAt = (strftime('%s','now') * 1000)
+                    WHERE id = NEW.marketId AND (lastVisited IS NULL OR lastVisited < NEW.date);
+                END;
+            """.trimIndent(),
+
+            "update_market_after_expense_update" to """
+                CREATE TRIGGER update_market_after_expense_update
+                AFTER UPDATE OF date, marketId ON expenses
+                WHEN OLD.date != NEW.date OR OLD.marketId IS NOT NEW.marketId
+                BEGIN
+                    UPDATE markets SET
+                        lastVisited = COALESCE((SELECT e.date FROM expenses e
+                                     WHERE e.marketId = markets.id
+                                     ORDER BY e.date DESC LIMIT 1), -1),
+                        updatedAt = (strftime('%s','now') * 1000)
+                    WHERE id IN (OLD.marketId, NEW.marketId);
+                END;
+            """.trimIndent(),
+
+            "update_market_after_expense_delete" to """
+                CREATE TRIGGER update_market_after_expense_delete
+                AFTER DELETE ON expenses
+                BEGIN
+                    UPDATE markets SET
+                        lastVisited = COALESCE((SELECT e.date FROM expenses e
+                                     WHERE e.marketId = markets.id
+                                     ORDER BY e.date DESC LIMIT 1), -1),
+                        updatedAt = (strftime('%s','now') * 1000)
+                    WHERE id = OLD.marketId;
+                END;
+            """.trimIndent(),
+            
             "update_product_after_expense_product_creation" to """
                 CREATE TRIGGER update_product_after_expense_product_creation
                 AFTER INSERT ON expense_products
@@ -86,10 +126,10 @@ abstract class AppDatabase : RoomDatabase() {
                 WHEN OLD.unitPriceMinor != NEW.unitPriceMinor OR OLD.productId != NEW.productId OR OLD.quantity != NEW.quantity
                 BEGIN
                     UPDATE products SET
-                        lastPrice = COALESCE((SELECT tp.unitPriceMinor FROM expense_products tp
-                                     JOIN expenses t ON t.id = tp.expenseId
-                                     WHERE tp.productId = products.id
-                                     ORDER BY t.date DESC LIMIT 1), lastPrice),
+                        lastPrice = COALESCE((SELECT ep.unitPriceMinor FROM expense_products ep
+                                     JOIN expenses e ON e.id = ep.expenseId
+                                     WHERE ep.productId = products.id
+                                     ORDER BY e.date DESC LIMIT 1), lastPrice),
                         purchaseCount = purchaseCount
                                       + (CASE WHEN products.id = NEW.productId THEN NEW.quantity ELSE 0 END)
                                       - (CASE WHEN products.id = OLD.productId THEN OLD.quantity ELSE 0 END),
@@ -103,10 +143,10 @@ abstract class AppDatabase : RoomDatabase() {
                 AFTER DELETE ON expense_products
                 BEGIN
                     UPDATE products SET
-                        lastPrice = COALESCE((SELECT tp.unitPriceMinor FROM expense_products tp
-                                     JOIN expenses t ON t.id = tp.expenseId
-                                     WHERE tp.productId = OLD.productId
-                                     ORDER BY t.date DESC LIMIT 1), lastPrice),
+                        lastPrice = COALESCE((SELECT ep.unitPriceMinor FROM expense_products ep
+                                     JOIN expenses e ON e.id = ep.expenseId
+                                     WHERE ep.productId = OLD.productId
+                                     ORDER BY e.date DESC LIMIT 1), lastPrice),
                         purchaseCount = purchaseCount - OLD.quantity,
                         updatedAt = (strftime('%s','now') * 1000)
                     WHERE id = OLD.productId;

@@ -14,7 +14,7 @@ fun <T> DropdownPopup(
     items: List<T>,
     selected: T?,
     onSelect: (T?) -> Unit,
-    itemText: (T) -> String,
+    itemText: @Composable (T) -> String,
     itemName: String,
     modifier: Modifier = Modifier
 ) {

@@ -1,4 +1,4 @@
-package com.colgateTotal77.tracker.screens.products
+package com.colgateTotal77.tracker.screens.products.markets
 
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
@@ -15,17 +15,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.colgateTotal77.tracker.R
+import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
 @Composable
-fun AddProductModal(
+fun EditMarketModal(
+    market: MarketEntity,
     onDismiss: () -> Unit,
-    onAdd: (name: String) -> Unit,
+    onUpdate: (name: String) -> Unit,
 ) {
-    var nameInput by remember { mutableStateOf("") }
+    var nameInput by remember { mutableStateOf(market.name ?: "") }
 
     val dimensions = LocalDimensions.current
 
@@ -33,23 +35,23 @@ fun AddProductModal(
         CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
                 Text(
-                    stringResource(R.string.add_product),
+                    text = market.name.orEmpty().ifBlank { stringResource(R.string.unnamed_market, market.id) },
                     style = MaterialTheme.typography.titleLarge,
                 )
 
                 OutlinedTextField(
                     value = nameInput,
                     onValueChange = { nameInput = it },
-                    label = { Text(stringResource(R.string.product_name)) },
+                    label = { Text(stringResource(R.string.market_name)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
 
                 CustomButton(
                     onClick = {
                         val name = nameInput.trim()
-                        if (name.isNotEmpty()) onAdd(name)
+                        if (name.isNotEmpty()) onUpdate(name)
                     },
-                    buttonText = stringResource(R.string.save_product),
+                    buttonText = stringResource(R.string.save_market),
                     enabled = nameInput.isNotBlank(),
                     modifier = Modifier.fillMaxWidth(),
                 )

@@ -16,10 +16,10 @@ import kotlinx.coroutines.flow.stateIn
 import com.colgateTotal77.tracker.core.database.AppDatabase
 import com.colgateTotal77.tracker.core.database.income.IncomeEntity
 import com.colgateTotal77.tracker.core.database.operation.CurrencyBalance
-import com.colgateTotal77.tracker.core.enums.DateFilter
 import com.colgateTotal77.tracker.core.enums.IncomeType
 import com.colgateTotal77.tracker.core.enums.toTimeRange
 import com.colgateTotal77.tracker.core.ui.ProgressBarState
+import com.colgateTotal77.tracker.core.ui.vico.ChartData
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
