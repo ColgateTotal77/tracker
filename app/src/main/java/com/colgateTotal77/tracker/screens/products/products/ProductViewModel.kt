@@ -16,13 +16,15 @@ import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
 import com.colgateTotal77.tracker.core.database.product.ProductFromQuery
 import com.colgateTotal77.tracker.core.enums.ProductSort
-import com.colgateTotal77.tracker.core.enums.toTimeRange
+import com.colgateTotal77.tracker.core.enums.startMillis
+import com.colgateTotal77.tracker.core.enums.endMillis
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.ui.AppToast
 import com.colgateTotal77.tracker.core.ui.ToastFailure
 import com.colgateTotal77.tracker.core.ui.launchWithToast
 import androidx.room.withTransaction
 import com.colgateTotal77.tracker.core.database.product.ProductDao.PricePoint
+import com.colgateTotal77.tracker.core.enums.TimeRange
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -48,30 +50,28 @@ class ProductViewModel(
     private val _filters = MutableStateFlow(ProductFilters())
     val filters: StateFlow<ProductFilters> = _filters.asStateFlow()
 
+    private val _timeRange = MutableStateFlow(TimeRange(null, null))
+    val timeRange: StateFlow<TimeRange> = _timeRange.asStateFlow()
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val productFlow: Flow<PagingData<ProductFromQuery>> = combine(
-        _searchQuery,
-        _sortBy,
-        _filters,
-    ) { query, sort, filters ->
-        Triple(query, sort, filters)
-    }.flatMapLatest { (query, sort, filters) ->
-        val range = filters.date.toTimeRange()
+        _searchQuery, _sortBy, _filters, _timeRange,
+    ) { query, sort, filters, range ->
         Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
                 database.productDao().query(
                     query = query,
                     sortBy = sort,
-                    startTime = range.start,
-                    endTime = range.end,
+                    startTime = range.start?.startMillis(),
+                    endTime = range.end?.endMillis(),
                     minPrice = filters.minPrice,
                     maxPrice = filters.maxPrice,
                     marketIds = filters.marketIds.toList().ifEmpty { null },
                 )
             }
         ).flow
-    }.cachedIn(viewModelScope)
+    }.flatMapLatest { it }.cachedIn(viewModelScope)
 
     fun onSearchQueryChanged(query: String) {
         _searchQuery.value = query
@@ -83,6 +83,10 @@ class ProductViewModel(
 
     fun onFiltersChanged(filters: ProductFilters) {
         _filters.value = filters
+    }
+
+    fun onTimeRangeChanged(timeRange: TimeRange) {
+        _timeRange.value = timeRange
     }
 
     fun insertProduct(product: ProductEntity) {

@@ -14,6 +14,8 @@ import com.colgateTotal77.tracker.TrackerApplication
 import com.colgateTotal77.tracker.core.database.AppDatabase
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.R
+import com.colgateTotal77.tracker.core.enums.TimeRange
+import com.colgateTotal77.tracker.core.enums.shortDateFormatter
 import com.colgateTotal77.tracker.core.ui.ToastFailure
 import com.colgateTotal77.tracker.core.ui.launchWithToast
 import com.colgateTotal77.tracker.core.ui.vico.ChartData
@@ -74,11 +76,9 @@ class MarketViewModel(
     }
 
     fun getMarketHistoryFlow(id: Int): Flow<ChartData> {
-        val formatter = DateTimeFormatter.ofPattern("dd.MM.yy")
-
         return database.marketDao().getHistoryById(id).map { points ->
             ChartData(
-                labels = points.map { LocalDate.parse(it.day).format(formatter) },
+                labels = points.map { LocalDate.parse(it.day).format(shortDateFormatter) },
                 values = points.map { (it.amountMinor / 100).toInt() }
             )
         }

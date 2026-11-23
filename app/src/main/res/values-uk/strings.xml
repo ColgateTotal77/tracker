@@ -105,6 +105,10 @@
     <string name="screen_name">Екран «%1$s»</string>
     <string name="search_accessibility">Пошук</string>
     <string name="date_all_time">За весь час</string>
+    <string name="date_from">З %1$s</string>
+    <string name="date_until">До %1$s</string>
+    <string name="previous_period">Попередній період</string>
+    <string name="next_period">Наступний період</string>
     <string name="date_current_month">Поточний місяць</string>
     <string name="date_previous_month">Попередній місяць</string>
     <string name="date_last_six_months">Останні 6 місяців</string>

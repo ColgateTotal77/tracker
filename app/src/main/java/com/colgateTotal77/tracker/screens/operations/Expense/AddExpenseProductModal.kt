@@ -57,7 +57,7 @@ fun AddExpenseProductModal(
         onDismissRequest = onDismiss,
         sheetGesturesEnabled = !dropdownTouched,
     ) {
-        CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
+        CardWrapper(modifier = Modifier.padding(dimensions.screenHorizontalPadding)) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
                 Text(
                     stringResource(R.string.add_product),

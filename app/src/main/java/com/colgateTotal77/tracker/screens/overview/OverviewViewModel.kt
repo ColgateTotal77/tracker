@@ -18,6 +18,8 @@ import com.colgateTotal77.tracker.core.database.income.IncomeEntity
 import com.colgateTotal77.tracker.core.database.operation.CurrencyBalance
 import com.colgateTotal77.tracker.core.enums.IncomeType
 import com.colgateTotal77.tracker.core.enums.toTimeRange
+import com.colgateTotal77.tracker.core.enums.startMillis
+import com.colgateTotal77.tracker.core.enums.endMillis
 import com.colgateTotal77.tracker.core.ui.ProgressBarState
 import com.colgateTotal77.tracker.core.ui.vico.ChartData
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -46,7 +48,7 @@ class OverviewViewModel(
     val progressBarState: StateFlow<ProgressBarState> = preferencesRepository.progressBarSettingsFlow
         .flatMapLatest { settings ->
             val range = settings.selectedFilter.toTimeRange()
-            val spendingFlow = database.expenseDao().getTotalSpendingFlow(range.start, range.end)
+            val spendingFlow = database.expenseDao().getTotalSpendingFlow(range.start?.startMillis(), range.end?.endMillis())
             combine(
                 spendingFlow,
                 preferencesRepository.exchangeRateFlow,

@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.colgateTotal77.tracker.core.ui.theme.dimensions
+import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
 @Composable
 fun CustomButton(
@@ -26,7 +26,7 @@ fun CustomButton(
     enabled: Boolean = true,
     color: Color = MaterialTheme.colorScheme.primary,
 ) {
-    val dimensions = MaterialTheme.dimensions
+    val dimensions = LocalDimensions.current
 
     Button(
         onClick = onClick,

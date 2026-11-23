@@ -26,7 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import com.colgateTotal77.tracker.core.filterDecimal
-import com.colgateTotal77.tracker.core.ui.theme.dimensions
+import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
 @Composable
 fun <T> InputWithDropdown(
@@ -40,7 +40,7 @@ fun <T> InputWithDropdown(
     dropdownContentDescription: String,
     modifier: Modifier = Modifier,
 ) {
-    val dimensions = MaterialTheme.dimensions
+    val dimensions = LocalDimensions.current
     var isDropdownExpanded by remember { mutableStateOf(false) }
 
     OutlinedTextField(

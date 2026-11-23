@@ -39,7 +39,10 @@ import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductDr
 import com.colgateTotal77.tracker.core.database.market_tins.MarketTinEntity
 import com.colgateTotal77.tracker.core.database.operation.OperationWithDetails
 import com.colgateTotal77.tracker.core.enums.OperationType
+import com.colgateTotal77.tracker.core.enums.TimeRange
 import com.colgateTotal77.tracker.core.enums.toTimeRange
+import com.colgateTotal77.tracker.core.enums.startMillis
+import com.colgateTotal77.tracker.core.enums.endMillis
 import com.colgateTotal77.tracker.screens.overview.OverviewPreferences
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -60,14 +63,17 @@ class OperationsViewModel(
     private val _filters = MutableStateFlow(OperationFilters())
     val filters: StateFlow<OperationFilters> = _filters.asStateFlow()
 
+    private val _timeRange = MutableStateFlow(TimeRange(null, null))
+    val timeRange: StateFlow<TimeRange> = _timeRange.asStateFlow()
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val operationsFlow: Flow<PagingData<OperationWithDetails>> = combine(
         _searchQuery,
         _filters,
-    ) { query, filters ->
-        Pair(query, filters)
-    }.flatMapLatest { (query, filters) ->
-        val range = filters.date.toTimeRange()
+        _timeRange
+    ) { query, filters, timeRange ->
+        Triple(query, filters, timeRange)
+    }.flatMapLatest { (query, filters, timeRange) ->
         Pager(
             config = PagingConfig(
                 pageSize = 20,
@@ -76,8 +82,8 @@ class OperationsViewModel(
             pagingSourceFactory = {
                 database.operationDao().query(
                     query,
-                    startTime = range.start,
-                    endTime = range.end,
+                    startTime = timeRange.start?.startMillis(),
+                    endTime = timeRange.end?.endMillis(),
                     minPrice = filters.minPrice,
                     maxPrice = filters.maxPrice,
                     marketIds = filters.marketIds.toList().ifEmpty { null },
@@ -104,6 +110,10 @@ class OperationsViewModel(
 
     fun onFiltersChanged(filters: OperationFilters) {
         _filters.value = filters
+    }
+
+    fun onTimeRangeChanged(timeRange: TimeRange) {
+        _timeRange.value = timeRange
     }
 
     private suspend fun getMarketIdFromMarketChoice(market: MarketChoice): Int? {
@@ -412,14 +422,14 @@ class OperationsViewModel(
         type: OperationType,
     ): Int? {
         val filter = filters.value
-        val range = filter.date.toTimeRange()
+        val timeRange = timeRange.value
 
         return database.operationDao().getPosition(
             id,
             type,
             searchQuery.value,
-            startTime = range.start,
-            endTime = range.end,
+            startTime = timeRange.start?.startMillis(),
+            endTime = timeRange.end?.endMillis(),
             minPrice = filter.minPrice,
             maxPrice = filter.maxPrice,
             marketIds = filter.marketIds.toList().ifEmpty { null },

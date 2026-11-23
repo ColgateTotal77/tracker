@@ -39,7 +39,6 @@ import com.colgateTotal77.tracker.core.ui.DropdownMultiSelect
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
 data class OperationFilters(
-    val date: DateFilter = DateFilter.AllTime,
     val marketIds: Set<Int> = emptySet(),
     val operations: Set<OperationType> = emptySet(),
     val maxPrice: Long? = null,
@@ -54,21 +53,19 @@ fun FilterModal(
     onApply: (filters: OperationFilters) -> Unit,
 ) {
     var dropdownTouched by remember { mutableStateOf(false) }
-    var date by remember { mutableStateOf(filters.date) }
     var selectedMarketIds by remember { mutableStateOf(filters.marketIds) }
     var selectedOperations by remember { mutableStateOf(filters.operations) }
     var minPrice by remember { mutableStateOf(filters.minPrice?.let { formatMoney(it) }.orEmpty()) }
     var maxPrice by remember { mutableStateOf(filters.maxPrice?.let { formatMoney(it) }.orEmpty()) }
 
     val dimensions = LocalDimensions.current
-    val context = LocalContext.current
     val resources = LocalResources.current
 
     AppModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetGesturesEnabled = !dropdownTouched,
     ) {
-        CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
+        CardWrapper(modifier = Modifier.padding(dimensions.screenHorizontalPadding)) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -81,7 +78,6 @@ fun FilterModal(
                     )
                     CustomIconButton(
                         onClick = {
-                            date = DateFilter.AllTime
                             selectedMarketIds = emptySet()
                             selectedOperations = emptySet()
                             minPrice = filters.minPrice?.let { formatMoney(it) }.orEmpty()
@@ -97,7 +93,7 @@ fun FilterModal(
                     items = OperationType.entries,
                     selectedKeys = selectedOperations,
                     key = { it },
-                    itemText = { context.getString(it.labelRes) },
+                    itemText = { resources.getString(it.labelRes) },
                     itemName = stringResource(R.string.tab_operations),
                     onSelectionChange = { selectedOperations = it },
                 )
@@ -130,21 +126,9 @@ fun FilterModal(
                     )
                 }
 
-                Dropdown(
-                    onTouchChange = { dropdownTouched = it },
-                    items = DateFilter.entries,
-                    selected = date,
-                    onSelect = { selectedDateFilter ->
-                        selectedDateFilter?.let { date = it }
-                    },
-                    itemText = { dateFilter -> context.getString(dateFilter.labelRes) },
-                    itemName = stringResource(R.string.date_filter),
-                )
-
                 CustomButton(
                     onClick = {
                         val newFilters = OperationFilters(
-                            date = date,
                             marketIds = selectedMarketIds,
                             operations = selectedOperations,
                             minPrice = parseInputToMinor(minPrice),

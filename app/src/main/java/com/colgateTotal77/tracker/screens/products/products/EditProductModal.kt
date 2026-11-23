@@ -32,7 +32,7 @@ fun EditProductModal(
     val dimensions = LocalDimensions.current
 
     AppModalBottomSheet(onDismissRequest = onDismiss) {
-        CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
+        CardWrapper(modifier = Modifier.padding(dimensions.screenHorizontalPadding)) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
                 Text(
                     text = product.alias,

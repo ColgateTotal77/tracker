@@ -37,7 +37,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import com.colgateTotal77.tracker.R
-import com.colgateTotal77.tracker.core.ui.theme.dimensions
+import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -116,7 +116,7 @@ fun FiscalCaptcha(gate: CaptchaGate, modifier: Modifier = Modifier) {
         gate.resolve(null)
     }
 
-    val dimensions = MaterialTheme.dimensions
+    val dimensions = LocalDimensions.current
     Card(modifier.padding(dimensions.spacingMedium).zIndex(if (gate.needsUser) 1f else -1f)) {
         Column(Modifier.padding(dimensions.contentPadding), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(stringResource(R.string.captcha_hint), style = MaterialTheme.typography.bodyMedium)

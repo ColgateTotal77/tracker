@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CurrencyExchange
 import androidx.compose.material.icons.filled.FilterAlt
@@ -63,7 +64,10 @@ import com.colgateTotal77.tracker.core.database.market.MarketChoice
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.core.enums.OperationId
 import com.colgateTotal77.tracker.core.enums.OperationType
+import com.colgateTotal77.tracker.core.enums.ProductSort
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
+import com.colgateTotal77.tracker.core.ui.DropdownOnIconButton
+import com.colgateTotal77.tracker.core.ui.Toolbar
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.core.ui.theme.addPadding
 import com.colgateTotal77.tracker.screens.operations.Exchange.AddExchangeModal
@@ -123,6 +127,8 @@ fun Operations(
     val exchangeRates by viewModel.exchangeRates.collectAsStateWithLifecycle(
         initialValue = ExchangeRatesPreferences(),
     )
+
+    val timeRange by viewModel.timeRange.collectAsStateWithLifecycle()
 
     val listState = rememberLazyListState()
     LaunchedEffect(expendedOperationId) {
@@ -249,7 +255,9 @@ fun Operations(
                     val operation = operations[index]
 
                     if (operation == null) {
-                        Box(Modifier.fillMaxWidth().height(80.dp))
+                        Box(Modifier
+                            .fillMaxWidth()
+                            .height(80.dp))
                         return@items
                     }
 
@@ -328,38 +336,20 @@ fun Operations(
             }
         }
 
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { viewModel.onSearchQueryChanged(it) },
+        Toolbar(
+            searchQuery = searchQuery,
+            onSearchChange = { viewModel.onSearchQueryChanged(it) },
+            placeholder = stringResource(R.string.search_operations),
+            timeRange = timeRange,
+            onTimeRangeChange = { viewModel.onTimeRangeChanged(it) },
+            onFilterClick = { isFilterModalOpen = true },
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(horizontal = dimensions.screenHorizontalPadding, vertical = dimensions.spacingMedium)
-                .shadow(12.dp, RoundedCornerShape(dimensions.cornerRadius))
-                .background(
-                    MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f),
-                    RoundedCornerShape(dimensions.cornerRadius)
+                .padding(
+                    horizontal = dimensions.screenHorizontalPadding,
+                    vertical = dimensions.spacingSmall
                 ),
-            placeholder = { Text(stringResource(R.string.search_operations)) },
-            singleLine = true,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent,
-                disabledBorderColor = Color.Transparent,
-                errorBorderColor = Color.Transparent,
-            ),
-            trailingIcon = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    VerticalDivider(modifier = Modifier.height(dimensions.verticalDividerHeight))
-                    CustomIconButton(onClick = { isFilterModalOpen = true }) {
-                        Icon(
-                            imageVector = Icons.Default.FilterAlt,
-                            contentDescription = stringResource(R.string.filter),
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
-            },
         )
 
         when (operationToAdd) {

@@ -99,7 +99,7 @@ fun AddExpenseModal(
         onDismissRequest = onDismiss,
         sheetGesturesEnabled = !dropdownTouched,
     ) {
-        CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
+        CardWrapper(modifier = Modifier.padding(dimensions.screenHorizontalPadding)) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),

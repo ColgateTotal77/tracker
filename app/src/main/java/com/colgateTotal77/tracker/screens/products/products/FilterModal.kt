@@ -38,7 +38,6 @@ import com.colgateTotal77.tracker.core.ui.DropdownMultiSelect
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
 data class ProductFilters(
-    val date: DateFilter = DateFilter.AllTime,
     val marketIds: Set<Int> = emptySet(),
     val maxPrice: Long? = null,
     val minPrice: Long? = null,
@@ -52,20 +51,18 @@ fun FilterModal(
     onApply: (filters: ProductFilters) -> Unit,
 ) {
     var dropdownTouched by remember { mutableStateOf(false) }
-    var date by remember { mutableStateOf(filters.date) }
     var selectedMarketIds by remember { mutableStateOf(filters.marketIds) }
     var minPrice by remember { mutableStateOf(filters.minPrice?.let { formatMoney(it) }.orEmpty()) }
     var maxPrice by remember { mutableStateOf(filters.maxPrice?.let { formatMoney(it) }.orEmpty()) }
 
     val dimensions = LocalDimensions.current
-    val context = LocalContext.current
     val resources = LocalResources.current
 
     AppModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetGesturesEnabled = !dropdownTouched,
     ) {
-        CardWrapper(modifier = Modifier.padding(dimensions.screenPadding)) {
+        CardWrapper(modifier = Modifier.padding(dimensions.screenHorizontalPadding)) {
             Column(verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -78,7 +75,6 @@ fun FilterModal(
                     )
                     CustomIconButton(
                         onClick = {
-                            date = DateFilter.AllTime
                             selectedMarketIds = emptySet()
                             minPrice = filters.minPrice?.let { formatMoney(it) }.orEmpty()
                             maxPrice = filters.maxPrice?.let { formatMoney(it) }.orEmpty()
@@ -116,21 +112,9 @@ fun FilterModal(
                     )
                 }
 
-                Dropdown(
-                    onTouchChange = { dropdownTouched = it },
-                    items = DateFilter.entries,
-                    selected = date,
-                    onSelect = { selectedDateFilter ->
-                        selectedDateFilter?.let { date = it }
-                    },
-                    itemText = { dateFilter -> context.getString(dateFilter.labelRes) },
-                    itemName = stringResource(R.string.date_filter),
-                )
-
                 CustomButton(
                     onClick = {
                         val newFilters = ProductFilters(
-                            date = date,
                             marketIds = selectedMarketIds,
                             minPrice = parseInputToMinor(minPrice),
                             maxPrice = parseInputToMinor(maxPrice)

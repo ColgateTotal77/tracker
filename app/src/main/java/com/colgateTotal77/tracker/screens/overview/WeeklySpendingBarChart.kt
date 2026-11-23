@@ -5,6 +5,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.colgateTotal77.tracker.core.database.expense.ExpenseDao
+import com.colgateTotal77.tracker.core.enums.dayFormatter
+import com.colgateTotal77.tracker.core.enums.monthDayFormatter
 import com.colgateTotal77.tracker.core.ui.vico.BarChart
 import com.colgateTotal77.tracker.core.ui.vico.ChartData
 import com.colgateTotal77.tracker.core.ui.vico.MaxValueKey
@@ -28,8 +30,6 @@ fun buildWeeklyChartData(weeklySums: List<ExpenseDao.WeeklySum>): ChartData {
     val lastWeek = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
 
     var previousMonth = -1
-    val monthDayFormatter = DateTimeFormatter.ofPattern("MMM. dd")
-    val dayFormatter = DateTimeFormatter.ofPattern("dd")
 
     var weekStart = firstWeek
     while(weekStart <= lastWeek) {
@@ -37,7 +37,7 @@ fun buildWeeklyChartData(weeklySums: List<ExpenseDao.WeeklySum>): ChartData {
 
         val currentMonth = weekStart.monthValue
 
-        if (currentMonth != previousMonth) labels.add(weekStart.format(monthDayFormatter))
+        if (currentMonth != previousMonth) labels.add(weekStart.monthDayFormatter())
         else labels.add("${weekStart.format(dayFormatter)} - ${weekEnd.format(dayFormatter)}")
         values.add(((sumByWeek[weekStart] ?: 0) / 100).toInt())
 

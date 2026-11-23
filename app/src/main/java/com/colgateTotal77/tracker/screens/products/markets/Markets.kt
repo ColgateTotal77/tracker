@@ -27,6 +27,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
+import com.colgateTotal77.tracker.core.enums.TimeRange
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.core.ui.theme.addPadding
 
@@ -43,7 +44,6 @@ fun Markets(
     val dimensions = LocalDimensions.current
 
     val markets = viewModel.marketsFlow.collectAsLazyPagingItems()
-    val searchQuery by viewModel.searchQuery.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(

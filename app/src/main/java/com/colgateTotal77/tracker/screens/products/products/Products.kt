@@ -34,6 +34,7 @@ import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.ProductNameNormalizer
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
 import com.colgateTotal77.tracker.core.enums.ProductSort
+import com.colgateTotal77.tracker.core.enums.TimeRange
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.DropdownPopup
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
@@ -104,9 +105,10 @@ fun Products(
                     }
                 }
             }
+
             LazyColumn(
                 contentPadding = paddingValues.addPadding(
-                    top = dimensions.searchBarHeightAndPadding * 2 + dimensions.segmentedButtonHeight,
+                    top = dimensions.searchBarHeightAndPadding + dimensions.segmentedButtonHeight,
                     bottom = dimensions.screenBottomPadding + dimensions.navigationBarHeightAndPadding
                 ),
                 verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)

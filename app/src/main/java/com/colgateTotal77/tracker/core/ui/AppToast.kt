@@ -46,7 +46,7 @@ import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.savedstate.findViewTreeSavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
-import com.colgateTotal77.tracker.core.ui.theme.dimensions
+import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -106,7 +106,7 @@ fun AppToastHost() {
 
 @Composable
 private fun ToastContent(message: AppToast.Message) {
-    val dimensions = MaterialTheme.dimensions
+    val dimensions = LocalDimensions.current
     val accessibility = LocalAccessibilityManager.current
     var visible by remember { mutableStateOf(false) }
     val error = message.type == ToastType.Error

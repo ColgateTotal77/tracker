@@ -19,8 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.screens.overview.ProgressBarPreferences
-import com.colgateTotal77.tracker.core.ui.theme.dimensions
 import com.colgateTotal77.tracker.screens.overview.ProgressBarModal
 
 data class ProgressBarState(
@@ -37,7 +37,7 @@ fun ProgressBar(
     trackColor: Color = MaterialTheme.colorScheme.surfaceVariant,
     updateProgressBarPreferences: (settings: ProgressBarPreferences) -> Unit,
 ) {
-    val dimensions = MaterialTheme.dimensions
+    val dimensions = LocalDimensions.current
     var isModalOpen by remember { mutableStateOf(false) }
     val rawProgress =
         if (progressState.target > 0.0) {

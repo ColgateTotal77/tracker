@@ -45,7 +45,3 @@ fun PaddingValues.addPadding(
 
 val LocalDimensions: ProvidableCompositionLocal<Dimensions> =
     staticCompositionLocalOf { Dimensions() }
-
-val MaterialTheme.dimensions: Dimensions
-    @Composable
-    get() = LocalDimensions.current

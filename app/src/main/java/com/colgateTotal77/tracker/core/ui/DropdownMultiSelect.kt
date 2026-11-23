@@ -48,7 +48,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.colgateTotal77.tracker.R
-import com.colgateTotal77.tracker.core.ui.theme.dimensions
+import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
 private val DropdownItemHeight = 48.dp
 private const val MaxVisibleDropdownItems = 6
@@ -67,7 +67,7 @@ fun <T, K> DropdownMultiSelect(
     onTouchChange: (Boolean) -> Unit = {},
 ) {
     val currentOnTouchChange by rememberUpdatedState(onTouchChange)
-    val dimensions = MaterialTheme.dimensions
+    val dimensions = LocalDimensions.current
     val panelShape = RoundedCornerShape(dimensions.cornerRadius)
 
     var isExpanded by remember { mutableStateOf(false) }

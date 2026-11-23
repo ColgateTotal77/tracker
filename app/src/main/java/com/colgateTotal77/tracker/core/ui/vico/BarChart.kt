@@ -7,7 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
-import com.colgateTotal77.tracker.core.ui.theme.dimensions
+import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.Scroll
 import com.patrykandpatrick.vico.compose.cartesian.Zoom
@@ -46,7 +46,7 @@ fun BarChart(
     modifier: Modifier = Modifier,
     targetLineValue: Double? = null,
 ) {
-    val dimensions = MaterialTheme.dimensions
+    val dimensions = LocalDimensions.current
 
     val normalColumn = rememberLineComponent(fill = Fill(
         Brush.verticalGradient(
