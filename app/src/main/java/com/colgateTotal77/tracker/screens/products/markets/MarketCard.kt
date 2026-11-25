@@ -37,6 +37,7 @@ import com.colgateTotal77.tracker.core.database.market.MarketEntity
 import com.colgateTotal77.tracker.core.formatTimestamp
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
+import com.colgateTotal77.tracker.core.ui.IconAnchorBox
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.core.ui.vico.ChartData
 import kotlinx.coroutines.flow.Flow
@@ -68,13 +69,7 @@ fun MarketCard(
                 horizontalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(dimensions.leadingIconSize)
-                        .clip(RoundedCornerShape(dimensions.cornerRadius))
-                        .background(MaterialTheme.colorScheme.secondaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
+                IconAnchorBox(bgColor =  MaterialTheme.colorScheme.secondaryContainer) {
                     Icon(
                         imageVector = Icons.Rounded.ShoppingCart,
                         contentDescription = null,

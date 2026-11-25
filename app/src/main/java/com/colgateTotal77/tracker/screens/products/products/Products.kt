@@ -1,29 +1,20 @@
 package com.colgateTotal77.tracker.screens.products.products
 
-import androidx.compose.foundation.background
 import androidx.compose.ui.res.stringResource
 import com.colgateTotal77.tracker.core.ui.OneActionModal
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.ProductionQuantityLimits
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -33,13 +24,8 @@ import androidx.paging.compose.itemKey
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.ProductNameNormalizer
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
-import com.colgateTotal77.tracker.core.enums.ProductSort
-import com.colgateTotal77.tracker.core.enums.TimeRange
-import com.colgateTotal77.tracker.core.ui.CustomIconButton
-import com.colgateTotal77.tracker.core.ui.DropdownPopup
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.core.ui.theme.addPadding
-import com.colgateTotal77.tracker.screens.products.markets.Markets
 
 @Composable
 fun Products(

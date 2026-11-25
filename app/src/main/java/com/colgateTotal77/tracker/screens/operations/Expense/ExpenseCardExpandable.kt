@@ -38,6 +38,7 @@ import com.colgateTotal77.tracker.core.getMeasureUnit
 import com.colgateTotal77.tracker.core.ui.ActionDropdownMenu
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
+import com.colgateTotal77.tracker.core.ui.IconAnchorBox
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import java.text.DecimalFormat
 
@@ -76,13 +77,7 @@ fun ExpenseCardExpandable(
                 horizontalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(dimensions.leadingIconSize)
-                        .clip(RoundedCornerShape(36.dp))
-                        .background(MaterialTheme.colorScheme.secondaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
+                IconAnchorBox {
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.ReceiptLong,
                         contentDescription = null,

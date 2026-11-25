@@ -16,6 +16,7 @@ import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductWi
 import com.colgateTotal77.tracker.core.formatMoney
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
+import com.colgateTotal77.tracker.core.ui.IconAnchorBox
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
 @Composable

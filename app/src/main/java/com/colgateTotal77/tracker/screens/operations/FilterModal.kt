@@ -20,12 +20,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.text.input.KeyboardType
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
-import com.colgateTotal77.tracker.core.enums.DateFilter
 import com.colgateTotal77.tracker.core.enums.OperationType
 import com.colgateTotal77.tracker.core.filterDecimal
 import com.colgateTotal77.tracker.core.formatMoney
@@ -34,7 +32,6 @@ import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
-import com.colgateTotal77.tracker.core.ui.Dropdown
 import com.colgateTotal77.tracker.core.ui.DropdownMultiSelect
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 

@@ -41,6 +41,7 @@ import com.colgateTotal77.tracker.core.formatMoney
 import com.colgateTotal77.tracker.core.getMeasureUnit
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
+import com.colgateTotal77.tracker.core.ui.IconAnchorBox
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -93,13 +94,7 @@ fun ProductCard(
                 horizontalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(dimensions.leadingIconSize)
-                        .clip(RoundedCornerShape(dimensions.cornerRadius))
-                        .background(MaterialTheme.colorScheme.secondaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
+                IconAnchorBox(bgColor = MaterialTheme.colorScheme.secondaryContainer) {
                     Icon(
                         imageVector = Icons.Rounded.ShoppingBag,
                         contentDescription = null,

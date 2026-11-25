@@ -3,6 +3,7 @@ package com.colgateTotal77.tracker.core.ui
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,8 +23,8 @@ fun <T> DropdownOnIconButton(
         modifier = modifier
     ) {
         CustomIconButton(
-            onClick = { expanded = !expanded },
-            bgColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f)
+            onClick = {},
+            modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
         ) { icon() }
 
         ExposedDropdownMenu(

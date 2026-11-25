@@ -35,14 +35,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.expense.ExpenseDraft
-import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.AppToast
+import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.ToastType
 import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.CaptchaRequiredException
 import com.colgateTotal77.tracker.screens.operations.Camera.fiscal.FetchedCheck
@@ -69,6 +70,8 @@ fun ScannerPreview(
     onClose: () -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
+
     val lifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
     val executor = remember { Executors.newSingleThreadExecutor() }
@@ -229,7 +232,7 @@ fun ScannerPreview(
                 }
                 Icon(
                     Icons.Default.Refresh,
-                    contentDescription = context.getString(R.string.processing),
+                    contentDescription = resources.getString(R.string.processing),
                     tint = Color(0xFF70BF73),
                     modifier = Modifier.padding(end = 4.dp).size(22.dp).rotate(angle),
                 )
@@ -242,7 +245,7 @@ fun ScannerPreview(
             ) {
                 Icon(
                     if (isTorchOn) Icons.Default.FlashlightOn else Icons.Default.FlashlightOff,
-                    contentDescription = context.getString(R.string.toggle_flashlight),
+                    contentDescription = resources.getString(R.string.toggle_flashlight),
                     tint = MaterialTheme.colorScheme.onPrimary,
                 )
             }
@@ -252,7 +255,7 @@ fun ScannerPreview(
             onClick = onClose,
             modifier = Modifier.align(Alignment.TopStart),
         ) {
-            Icon(Icons.Default.Close, contentDescription = context.getString(R.string.close), tint = MaterialTheme.colorScheme.onPrimary)
+            Icon(Icons.Default.Close, contentDescription = resources.getString(R.string.close), tint = MaterialTheme.colorScheme.onPrimary)
         }
 
         FiscalCaptcha(captchaGate, Modifier.align(Alignment.BottomCenter))

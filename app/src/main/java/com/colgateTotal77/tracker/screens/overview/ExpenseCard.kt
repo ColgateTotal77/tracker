@@ -29,6 +29,7 @@ import com.colgateTotal77.tracker.core.database.expense.ExpenseWithMarket
 import com.colgateTotal77.tracker.core.formatMoney
 import com.colgateTotal77.tracker.core.formatTimestamp
 import com.colgateTotal77.tracker.core.ui.CardWrapper
+import com.colgateTotal77.tracker.core.ui.IconAnchorBox
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
 @Composable
@@ -49,13 +50,7 @@ fun ExpenseCard(
             horizontalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(
-                modifier = Modifier
-                    .size(dimensions.leadingIconSize)
-                    .clip(RoundedCornerShape(dimensions.cornerRadius))
-                    .background(MaterialTheme.colorScheme.secondaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
+            IconAnchorBox {
                 Icon(
                     imageVector = Icons.AutoMirrored.Rounded.ReceiptLong,
                     contentDescription = null,

@@ -19,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.colgateTotal77.tracker.R
@@ -38,7 +39,8 @@ fun Settings(
     BackHandler(onBack = onBack)
 
     val dimensions = LocalDimensions.current
-    val context = LocalContext.current
+    val resources = LocalResources.current
+
     val settings by viewModel.settings.collectAsStateWithLifecycle()
 
     Column(
@@ -52,10 +54,7 @@ fun Settings(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall),
         ) {
-            CustomIconButton(
-                onClick = onBack,
-                modifier = Modifier.size(dimensions.leadingIconSize),
-            ) {
+            CustomIconButton(onClick = onBack) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = stringResource(R.string.tab_overview),
@@ -75,7 +74,7 @@ fun Settings(
                         viewModel.applyLanguage(it)
                     }
                 },
-                itemText = { context.getString(it.labelRes) },
+                itemText = { resources.getString(it.labelRes) },
                 itemName = stringResource(R.string.language),
                 modifier = Modifier.fillMaxWidth(),
                 enableResetButton = false
@@ -89,7 +88,7 @@ fun Settings(
                         viewModel.updateSettings(settings.copy(theme = it))
                     }
                 },
-                itemText = { context.getString(it.themeRes) },
+                itemText = { resources.getString(it.themeRes) },
                 itemName = stringResource(R.string.theme),
                 modifier = Modifier.fillMaxWidth(),
                 enableResetButton = false

@@ -1,0 +1,32 @@
+package com.colgateTotal77.tracker.core.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
+
+@Composable
+fun IconAnchorBox(
+    modifier: Modifier = Modifier,
+    bgColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    content: @Composable () -> Unit,
+) {
+    val dimensions = LocalDimensions.current
+
+    Box(
+        modifier = modifier
+            .size(dimensions.leadingIconSize)
+            .clip(RoundedCornerShape(dimensions.cornerRadius))
+            .background(bgColor),
+        contentAlignment = Alignment.Center,
+    ) {
+        content()
+    }
+}

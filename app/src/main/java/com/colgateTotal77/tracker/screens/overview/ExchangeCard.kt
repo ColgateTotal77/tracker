@@ -31,6 +31,7 @@ import com.colgateTotal77.tracker.core.formatMoney
 import com.colgateTotal77.tracker.core.formatTimestamp
 import com.colgateTotal77.tracker.core.ui.ActionDropdownMenu
 import com.colgateTotal77.tracker.core.ui.CardWrapper
+import com.colgateTotal77.tracker.core.ui.IconAnchorBox
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
 @Composable
@@ -50,13 +51,7 @@ fun ExchangeCard(
             horizontalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(
-                modifier = Modifier
-                    .size(dimensions.leadingIconSize)
-                    .clip(RoundedCornerShape(dimensions.cornerRadius))
-                    .background(MaterialTheme.colorScheme.tertiaryContainer),
-                contentAlignment = Alignment.Center,
-            ) {
+            IconAnchorBox(bgColor = MaterialTheme.colorScheme.tertiaryContainer) {
                 Icon(
                     Icons.Rounded.CurrencyExchange,
                     contentDescription = null,
