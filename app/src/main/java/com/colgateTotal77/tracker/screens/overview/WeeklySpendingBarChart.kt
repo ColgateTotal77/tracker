@@ -6,7 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.colgateTotal77.tracker.core.database.expense.ExpenseDao
 import com.colgateTotal77.tracker.core.enums.dayFormatter
-import com.colgateTotal77.tracker.core.enums.monthDayFormatter
+import com.colgateTotal77.tracker.core.enums.monthShortFormatter
 import com.colgateTotal77.tracker.core.ui.vico.BarChart
 import com.colgateTotal77.tracker.core.ui.vico.ChartData
 import com.colgateTotal77.tracker.core.ui.vico.MaxValueKey
@@ -15,7 +15,6 @@ import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProdu
 import com.patrykandpatrick.vico.compose.cartesian.data.columnModel
 import com.patrykandpatrick.vico.compose.cartesian.marker.DefaultCartesianMarker
 import java.time.DayOfWeek
-import java.time.format.DateTimeFormatter
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
 
@@ -37,8 +36,10 @@ fun buildWeeklyChartData(weeklySums: List<ExpenseDao.WeeklySum>): ChartData {
 
         val currentMonth = weekStart.monthValue
 
-        if (currentMonth != previousMonth) labels.add(weekStart.monthDayFormatter())
-        else labels.add("${weekStart.format(dayFormatter)} - ${weekEnd.format(dayFormatter)}")
+        val range = "${weekStart.format(dayFormatter)} - ${weekEnd.format(dayFormatter)}"
+        if (currentMonth != previousMonth) labels.add("$range\n${weekStart.format(monthShortFormatter)}")
+        else labels.add(range)
+
         values.add(((sumByWeek[weekStart] ?: 0) / 100).toInt())
 
         previousMonth = currentMonth

@@ -8,15 +8,16 @@ import com.patrykandpatrick.vico.compose.cartesian.CartesianMeasuringContext
 import com.patrykandpatrick.vico.compose.cartesian.axis.Axis
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisLabelComponent
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.compose.cartesian.layer.CartesianLayerDimensions
 import com.patrykandpatrick.vico.compose.common.Fill
+import com.patrykandpatrick.vico.compose.common.component.TextComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
 
 @Composable
 fun startAxis(
-    valueFormatter: CartesianValueFormatter =
-        CartesianValueFormatter.decimal(),
+    valueFormatter: CartesianValueFormatter = CartesianValueFormatter.decimal(),
 ): VerticalAxis<Axis.Position.Vertical.Start> {
     return VerticalAxis.rememberStart(
         line = null,
@@ -31,14 +32,15 @@ fun startAxis(
 
 @Composable
 fun bottomAxis(
-    valueFormatter: CartesianValueFormatter =
-        CartesianValueFormatter.decimal(),
-    addExtremeLabelPadding: Boolean = false
+    valueFormatter: CartesianValueFormatter = CartesianValueFormatter.decimal(),
+    addExtremeLabelPadding: Boolean = false,
+    label: TextComponent = rememberAxisLabelComponent(),
 ): HorizontalAxis<Axis.Position.Horizontal.Bottom> {
     return HorizontalAxis.rememberBottom(
         line = rememberLineComponent(
             fill = Fill(MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
         ),
+        label = label,
         tick = null,
         guideline = null,
         valueFormatter = valueFormatter,

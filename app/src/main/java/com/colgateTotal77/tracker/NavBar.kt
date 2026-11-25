@@ -35,11 +35,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import com.colgateTotal77.tracker.core.enums.OperationId
+import com.colgateTotal77.tracker.core.ui.outerShadow
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.screens.operations.Operations
 import com.colgateTotal77.tracker.screens.overview.Overview
@@ -110,7 +109,7 @@ fun NavBar() {
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
                 .padding(horizontal = dimensions.screenHorizontalPadding, vertical = dimensions.spacingSmall)
-                .shadow(12.dp, RoundedCornerShape(dimensions.cornerRadius))
+                .outerShadow(RoundedCornerShape(dimensions.cornerRadius))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f), RoundedCornerShape(dimensions.cornerRadius)),
         ) {
             items.forEachIndexed { index, item ->

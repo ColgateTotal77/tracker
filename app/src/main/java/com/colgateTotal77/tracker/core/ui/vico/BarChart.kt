@@ -11,6 +11,7 @@ import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.Scroll
 import com.patrykandpatrick.vico.compose.cartesian.Zoom
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisLabelComponent
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
@@ -112,6 +113,8 @@ fun BarChart(
                         valueFormatter = { _, index, _ ->
                             data.labels.getOrElse(index.toInt()) { "" }
                         },
+                        label = rememberAxisLabelComponent(lineCount = 2)
+
                     ),
                     marker = rememberMarker(markerValueFormatter),
                     markerController = CartesianMarkerController.rememberToggleOnTap(),
