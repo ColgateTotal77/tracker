@@ -31,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -62,15 +64,14 @@ fun <T> Dropdown(
     itemText: (T) -> String,
     itemName: String,
     modifier: Modifier = Modifier,
-    leadingIcon: (@Composable () -> Unit)? = null,
     onTouchChange: (Boolean) -> Unit = {},
     enableResetButton: Boolean = true,
+    initialItem: T? = remember { selected },
+    additionalBottomContent: (@Composable () -> Unit)? = null,
 ) {
     val currentOnTouchChange by rememberUpdatedState(onTouchChange)
     val dimensions = LocalDimensions.current
     val panelShape = RoundedCornerShape(dimensions.cornerRadius)
-
-    val initialItem = remember { selected }
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
     var isExpanded by remember { mutableStateOf(false) }
@@ -124,7 +125,6 @@ fun <T> Dropdown(
                 singleLine = true,
                 interactionSource = interactionSource,
                 label = { Text(stringResource(R.string.select_item, itemName)) },
-                leadingIcon = leadingIcon,
                 trailingIcon = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         if (enableResetButton && selected != initialItem) {
@@ -168,12 +168,13 @@ fun <T> Dropdown(
                             OutlinedTextField(
                                 value = searchQuery,
                                 onValueChange = { searchQuery = it },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(
-                                        horizontal = dimensions.contentPadding,
-                                        vertical = dimensions.spacingSmall,
-                                    ),
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color.Transparent,
+                                    unfocusedBorderColor = Color.Transparent,
+                                    disabledBorderColor = Color.Transparent,
+                                    errorBorderColor = Color.Transparent,
+                                ),
                                 placeholder = { Text(stringResource(R.string.search)) },
                                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search)) },
                                 singleLine = true
@@ -190,6 +191,14 @@ fun <T> Dropdown(
                                 collapse()
                             },
                         )
+                    }
+
+                    if (additionalBottomContent != null) {
+                        item {
+                            Box(modifier = Modifier.padding(dimensions.contentPadding)) {
+                                additionalBottomContent()
+                            }
+                        }
                     }
                 }
             }

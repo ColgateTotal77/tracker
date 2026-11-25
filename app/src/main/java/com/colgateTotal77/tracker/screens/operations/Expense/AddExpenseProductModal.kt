@@ -7,9 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Icon
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -24,8 +22,6 @@ import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.MeasureUnit
 import com.colgateTotal77.tracker.core.ProductNameNormalizer
 import com.colgateTotal77.tracker.core.convertQuantityString
-import com.colgateTotal77.tracker.core.ui.AppToast
-import com.colgateTotal77.tracker.core.ui.ToastType
 import com.colgateTotal77.tracker.core.database.product.ProductChoice
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
 import com.colgateTotal77.tracker.core.filterDecimal
@@ -49,9 +45,9 @@ fun AddExpenseProductModal(
     var unitPriceInput by remember { mutableStateOf("") }
     var selectedUnit by remember { mutableStateOf(MeasureUnit.PIECE) }
     var quantityInput by remember { mutableStateOf("1") }
+    var isProductInputOpen by remember { mutableStateOf(false) }
 
     val dimensions = LocalDimensions.current
-    val duplicateProductMessage = stringResource(R.string.duplicate_name, stringResource(R.string.product))
 
     AppModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -76,40 +72,32 @@ fun AddExpenseProductModal(
                         if (unitPriceInput == "") unitPriceInput = selectedProduct!!.lastPrice.toString()
                    },
                     modifier = Modifier.fillMaxWidth(),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = if (selectedProduct == null) Icons.Default.Add else Icons.Default.Edit,
-                            contentDescription = stringResource(
-                                if (selectedProduct == null) R.string.create_product else R.string.rename_product
-                            )
-                        )
-                    },
                     onInputDone = { newName ->
                         val normalizedName = ProductNameNormalizer.normalize(newName)
-                        val duplicate = products.any {
-                            it.id != selectedProduct?.id &&
-                                (it.normalizedName == normalizedName ||
-                                    ProductNameNormalizer.normalize(it.alias) == normalizedName)
-                        }
-                        if (duplicate) {
-                            AppToast.show(duplicateProductMessage, ToastType.Error)
-                            false
-                        } else {
-                            selectedProduct = selectedProduct?.let {
-                                it.copy(
-                                    alias = newName,
-                                    normalizedName = if (it.id == 0) normalizedName else it.normalizedName,
-                                )
-                            } ?: ProductEntity(
-                                    normalizedName = normalizedName,
-                                    alias = newName,
-                                    lastPrice = 0,
-                                    createdAt = 0,
-                                    updatedAt = 0,
-                                )
-                            true
-                        }
-                    }
+
+                        selectedProduct = products.find {
+                            it.normalizedName == normalizedName ||
+                                    ProductNameNormalizer.normalize(it.alias) == normalizedName
+                        } ?: ProductEntity(
+                            normalizedName = normalizedName,
+                            alias = newName,
+                            lastPrice = 0,
+                            createdAt = 0,
+                            updatedAt = 0,
+                        )
+
+                        true
+                    },
+                    isInputOpen = isProductInputOpen,
+                    onIsInputOpenChange = { isProductInputOpen = it },
+                    additionalBottomContent = {
+                        CustomButton(
+                            onClick = { isProductInputOpen = true },
+                            buttonText = stringResource(R.string.add_product),
+                            icon = Icons.Rounded.Add,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
                 )
 
                 InputWithDropdown(
@@ -136,8 +124,6 @@ fun AddExpenseProductModal(
 
                 CustomButton(
                     onClick = {
-                        if (selectedProduct?.alias.isNullOrBlank()) return@CustomButton
-
                         val productChoice =
                             if (selectedProduct?.id == 0) ProductChoice.New(selectedProduct!!.alias)
                             else ProductChoice.Existing(selectedProduct!!)
@@ -154,7 +140,7 @@ fun AddExpenseProductModal(
                         onAdd(productChoice, quantity, unitPriceMinor)
                     },
                     buttonText = stringResource(R.string.save_product),
-                    enabled = !selectedProduct?.alias.isNullOrBlank(),
+                    enabled = !selectedProduct?.alias.isNullOrBlank() && !isProductInputOpen,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

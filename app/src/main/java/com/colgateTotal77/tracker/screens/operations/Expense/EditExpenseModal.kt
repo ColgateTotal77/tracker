@@ -11,9 +11,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Icon
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,11 +35,10 @@ import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.core.formatMoney
 import com.colgateTotal77.tracker.core.ui.DateTimeInputField
 import com.colgateTotal77.tracker.core.ui.DropdownInput
-import com.colgateTotal77.tracker.core.ui.AppToast
-import com.colgateTotal77.tracker.core.ui.ToastType
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.ui.platform.LocalLocale
 
 @Composable
 fun EditExpenseModal(
@@ -54,6 +51,7 @@ fun EditExpenseModal(
     var amountInput by remember { mutableStateOf(formatMoney(expense.amountMinor)) }
     var currency by remember { mutableStateOf(expense.currency) }
     var selectedMarket by remember { mutableStateOf(markets.find { it.id == expense.marketId}) }
+    var isMarketInputOpen by remember { mutableStateOf(false) }
 
     val displayMarkets = remember(markets, selectedMarket) {
         val updatedMarkets = markets.map { if (it.id == selectedMarket?.id) selectedMarket!! else it }
@@ -63,7 +61,7 @@ fun EditExpenseModal(
         else validMarkets
     }
 
-    val formatter = SimpleDateFormat("ddMMyyyyHHmm", Locale.getDefault())
+    val formatter = SimpleDateFormat("ddMMyyyyHHmm", LocalLocale.current.platformLocale)
     var dateTimeInput by remember { mutableStateOf(formatter.format(Date(expense.date))) }
     val isDateValid = remember(dateTimeInput) {
         dateTimeInput.length == 12 && try {
@@ -77,7 +75,6 @@ fun EditExpenseModal(
 
     val dimensions = LocalDimensions.current
     val context = LocalContext.current
-    val duplicateMarketMessage = stringResource(R.string.duplicate_name, stringResource(R.string.market))
 
     AppModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -115,39 +112,31 @@ fun EditExpenseModal(
                     onTouchChange = { dropdownTouched = it },
                     items = displayMarkets,
                     itemName = stringResource(R.string.market),
-                    inputLabel = stringResource(R.string.rename_market),
+                    inputLabel = stringResource(R.string.market_name),
                     itemText = { it?.name ?: "" },
                     selected = selectedMarket,
                     onSelect = { selectedMarket = it },
                     modifier = Modifier.fillMaxWidth(),
                     onInputDone = { newName ->
-                        val duplicate = markets.any {
-                            it.id != selectedMarket?.id &&
-                                it.name.orEmpty().trim().equals(newName, ignoreCase = true)
-                        }
-                        if (duplicate) {
-                            AppToast.show(duplicateMarketMessage, ToastType.Error)
-                            false
-                        } else {
-                            selectedMarket = selectedMarket?.copy(name = newName)
-                                ?: run {
-                                    val now = System.currentTimeMillis()
+                        val now = System.currentTimeMillis()
 
-                                    MarketEntity(
-                                        name = newName,
-                                        createdAt = now,
-                                        updatedAt = now,
-                                    )
-                                }
-                            true
-                        }
+                        selectedMarket = markets.find {
+                            it.name.orEmpty().trim().equals(newName, ignoreCase = true)
+                        } ?: MarketEntity(
+                            name = newName,
+                            createdAt = now,
+                            updatedAt = now,
+                        )
+                        true
                     },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = if (selectedMarket == null) Icons.Default.Add else Icons.Default.Edit,
-                            contentDescription = stringResource(
-                                if (selectedMarket == null) R.string.create_market else R.string.rename_market
-                            )
+                    isInputOpen = isMarketInputOpen,
+                    onIsInputOpenChange = { isMarketInputOpen = it },
+                    additionalBottomContent = {
+                        CustomButton(
+                            onClick = { isMarketInputOpen = true },
+                            buttonText = stringResource(R.string.add_market),
+                            icon = Icons.Rounded.Add,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     },
                 )
@@ -174,7 +163,7 @@ fun EditExpenseModal(
                         onUpdate(amountMinor, currency, market, parsedDateMillis)
                     },
                     buttonText = stringResource(R.string.save_expense),
-                    enabled = isDateValid && amountInput.isNotBlank(),
+                    enabled = isDateValid && isMarketInputOpen,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

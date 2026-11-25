@@ -6,9 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Icon
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.res.stringResource
@@ -22,11 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Dialog
 import com.colgateTotal77.tracker.core.database.market.MarketChoice
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
-import com.colgateTotal77.tracker.core.ui.AppToast
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.DropdownInput
-import com.colgateTotal77.tracker.core.ui.ToastType
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
 @Composable
@@ -38,6 +34,7 @@ fun AddMarketNameModal(
     val dimensions = LocalDimensions.current
 
     var selectedMarket by remember { mutableStateOf<MarketEntity?>(null) }
+    var isMarketInputOpen by remember { mutableStateOf(false) }
 
     val displayMarkets = remember(markets, selectedMarket) {
         val updatedMarkets = markets.map {
@@ -52,8 +49,6 @@ fun AddMarketNameModal(
             validMarkets + selectedMarket!!
         } else validMarkets
     }
-
-    val duplicateMarketMessage = stringResource(R.string.duplicate_name, stringResource(R.string.market))
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -79,33 +74,25 @@ fun AddMarketNameModal(
                     onSelect = { selectedMarket = it },
                     modifier = Modifier.fillMaxWidth(),
                     onInputDone = { newName ->
-                        val duplicate = markets.any {
-                            it.id != selectedMarket?.id &&
-                                    it.name.orEmpty().trim().equals(newName, ignoreCase = true)
-                        }
-                        if (duplicate) {
-                            AppToast.show(duplicateMarketMessage, ToastType.Error)
-                            false
-                        } else {
-                            selectedMarket = selectedMarket?.copy(name = newName)
-                                ?: run {
-                                    val now = System.currentTimeMillis()
+                        val now = System.currentTimeMillis()
 
-                                    MarketEntity(
-                                        name = newName,
-                                        createdAt = now,
-                                        updatedAt = now,
-                                    )
-                                }
-                            true
-                        }
+                        selectedMarket = markets.find {
+                            it.name.orEmpty().trim().equals(newName, ignoreCase = true)
+                        } ?: MarketEntity(
+                            name = newName,
+                            createdAt = now,
+                            updatedAt = now,
+                        )
+                        true
                     },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = if (selectedMarket == null) Icons.Default.Add else Icons.Default.Edit,
-                            contentDescription = stringResource(
-                                if (selectedMarket == null) R.string.create_market else R.string.rename_market
-                            )
+                    isInputOpen = isMarketInputOpen,
+                    onIsInputOpenChange = { isMarketInputOpen = it },
+                    additionalBottomContent = {
+                        CustomButton(
+                            onClick = { isMarketInputOpen = true },
+                            buttonText = stringResource(R.string.add_market),
+                            icon = Icons.Rounded.Add,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     },
                 )
@@ -116,7 +103,7 @@ fun AddMarketNameModal(
                             val market = selectedMarket!!
                             onSave(if (market.id != 0) MarketChoice.Existing(market) else MarketChoice.New(market.name!!))
                         },
-                        enabled = selectedMarket != null && !selectedMarket?.name.isNullOrBlank(),
+                        enabled = !isMarketInputOpen && !selectedMarket?.name.isNullOrBlank(),
                         buttonText = stringResource(R.string.save_market_name),
                         modifier = Modifier.weight(1f),
                     )

@@ -11,8 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -37,7 +36,6 @@ import com.colgateTotal77.tracker.core.parseInputToMinor
 import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
-import com.colgateTotal77.tracker.core.ui.IconAnchorBox
 import com.colgateTotal77.tracker.core.ui.Dropdown
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
@@ -46,13 +44,12 @@ import com.colgateTotal77.tracker.core.database.expense.ExpenseDraft
 import com.colgateTotal77.tracker.core.enums.ExpenseSource
 import com.colgateTotal77.tracker.core.ui.DateTimeInputField
 import com.colgateTotal77.tracker.core.ui.DropdownInput
-import com.colgateTotal77.tracker.core.ui.AppToast
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
-import com.colgateTotal77.tracker.core.ui.ToastType
 import com.colgateTotal77.tracker.screens.operations.Camera.Camera
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.ui.platform.LocalLocale
 
 @Composable
 fun AddExpenseModal(
@@ -65,6 +62,7 @@ fun AddExpenseModal(
     var amountInput by remember { mutableStateOf("0") }
     var currency by remember { mutableStateOf(Currency.UAH) }
     var selectedMarket by remember { mutableStateOf<MarketEntity?>(null) }
+    var isMarketInputOpen by remember { mutableStateOf(false) }
 
     val displayMarkets = remember(markets, selectedMarket) {
         val updatedMarkets = markets.map {
@@ -75,12 +73,11 @@ fun AddExpenseModal(
             it.id == selectedMarket?.id || !it.name.isNullOrBlank()
         }
 
-        if (selectedMarket?.id == 0 && updatedMarkets.none { it.id == 0 }) {
-            validMarkets + selectedMarket!!
-        } else validMarkets
+        if (selectedMarket?.id == 0 && updatedMarkets.none { it.id == 0 }) validMarkets + selectedMarket!!
+        else validMarkets
     }
 
-    val formatter = SimpleDateFormat("ddMMyyyyHHmm", Locale.getDefault())
+    val formatter = SimpleDateFormat("ddMMyyyyHHmm", LocalLocale.current.platformLocale)
     var dateTimeInput by remember { mutableStateOf(formatter.format(Date())) }
     val isDateValid = remember(dateTimeInput) {
         dateTimeInput.length == 12 && try {
@@ -94,7 +91,6 @@ fun AddExpenseModal(
 
     val dimensions = LocalDimensions.current
     val context = LocalContext.current
-    val duplicateMarketMessage = stringResource(R.string.duplicate_name, stringResource(R.string.market))
 
     AppModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -140,39 +136,31 @@ fun AddExpenseModal(
                     onTouchChange = { dropdownTouched = it },
                     items = displayMarkets,
                     itemName = stringResource(R.string.market),
-                    inputLabel = stringResource(R.string.rename_market),
+                    inputLabel = stringResource(R.string.market_name),
                     itemText = { it?.name ?: "" },
                     selected = selectedMarket,
                     onSelect = { selectedMarket = it },
                     modifier = Modifier.fillMaxWidth(),
                     onInputDone = { newName ->
-                        val duplicate = markets.any {
-                            it.id != selectedMarket?.id &&
-                            it.name.orEmpty().trim().equals(newName, ignoreCase = true)
-                        }
-                        if (duplicate) {
-                            AppToast.show(duplicateMarketMessage, ToastType.Error)
-                            false
-                        } else {
-                            selectedMarket = selectedMarket?.copy(name = newName)
-                                ?: run {
-                                    val now = System.currentTimeMillis()
+                        val now = System.currentTimeMillis()
 
-                                    MarketEntity(
-                                        name = newName,
-                                        createdAt = now,
-                                        updatedAt = now,
-                                    )
-                                }
-                            true
-                        }
+                        selectedMarket = markets.find {
+                            it.name.orEmpty().trim().equals(newName, ignoreCase = true)
+                        } ?: MarketEntity(
+                            name = newName,
+                            createdAt = now,
+                            updatedAt = now,
+                        )
+                        true
                     },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = if (selectedMarket == null) Icons.Default.Add else Icons.Default.Edit,
-                            contentDescription = stringResource(
-                                if (selectedMarket == null) R.string.create_market else R.string.rename_market
-                            )
+                    isInputOpen = isMarketInputOpen,
+                    onIsInputOpenChange = { isMarketInputOpen = it },
+                    additionalBottomContent = {
+                        CustomButton(
+                            onClick = { isMarketInputOpen = true },
+                            buttonText = stringResource(R.string.add_market),
+                            icon = Icons.Rounded.Add,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     },
                 )
@@ -201,6 +189,7 @@ fun AddExpenseModal(
 
                         onAdd(expenseDraft)
                     },
+                    enabled = !isMarketInputOpen && isDateValid,
                     buttonText = stringResource(R.string.save_expense),
                     modifier = Modifier.fillMaxWidth(),
                 )

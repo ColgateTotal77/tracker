@@ -23,8 +23,6 @@
     <string name="quantity">Кількість</string>
     <string name="currency">Валюта</string>
     <string name="market">Магазин</string>
-    <string name="rename_market">Перейменувати магазин</string>
-    <string name="create_market">Створити магазин</string>
     <string name="add_market_name">Що це за магазин?</string>
     <string name="add_market_name_description">Ми ще не знаємо цього магазину. Оберіть його зі списку або введіть нову назву. Наступні чеки саме з цього магазину підпишуться автоматично.</string>
     <string name="market_name">Назва магазину</string>
@@ -39,8 +37,6 @@
     <string name="product_name">Назва товару</string>
     <string name="unit_price">Ціна за одиницю</string>
     <string name="new_product_name">Назва нового товару</string>
-    <string name="create_product">Створити товар</string>
-    <string name="rename_product">Перейменувати товар</string>
     <string name="change_target">Змінити ціль</string>
     <string name="time_period">Період часу</string>
     <string name="save_progress">Зберегти ціль</string>
@@ -78,9 +74,7 @@
     <string name="reset_selection">Скинути вибір</string>
     <string name="add_item">Додати</string>
     <string name="save_name">Зберегти назву</string>
-    <string name="cancel_renaming">Скасувати перейменування</string>
-    <string name="name_unchanged">Назва не змінена</string>
-    <string name="duplicate_name">%1$s із такою назвою вже існує</string>
+    <string name="field_required">Поле не може бути порожнім</string>
     <string name="options">Параметри</string>
     <string name="select_unit">Вибрати одиницю</string>
     <string name="point_at_qr">Наведіть камеру на QR-код</string>
