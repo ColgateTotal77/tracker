@@ -27,7 +27,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -43,7 +42,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.exchange.ExchangeEntity
 import com.colgateTotal77.tracker.core.database.expense.ExpenseEntity
@@ -107,7 +105,7 @@ fun Operations(
     val markets by viewModel.marketsFlow.collectAsStateWithLifecycle()
     val products by viewModel.productFlow.collectAsStateWithLifecycle()
     val filters by viewModel.filters.collectAsStateWithLifecycle()
-    val searchQuery by viewModel.searchQuery.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
 
     var isFilterModalOpen by remember { mutableStateOf(false) }
 
@@ -118,6 +116,11 @@ fun Operations(
     val timeRange by viewModel.timeRange.collectAsStateWithLifecycle()
 
     val listState = rememberLazyListState()
+
+    LaunchedEffect(filters, searchQuery, timeRange) {
+        listState.scrollToItem(0)
+    }
+
     LaunchedEffect(expendedOperationId) {
         if (expendedOperationId == null) return@LaunchedEffect
         val index = viewModel.getOperationPosition(expendedOperationId.id, expendedOperationId.type) ?: return@LaunchedEffect
@@ -125,8 +128,7 @@ fun Operations(
         snapshotFlow { operations.itemCount }
             .first { it > index }
 
-        val targetKey = "${expendedOperationId.type}:${expendedOperationId.id}"
-        if (!listState.layoutInfo.visibleItemsInfo.any { it.key == targetKey }) {
+        if (!listState.layoutInfo.visibleItemsInfo.any { it.index == index }) {
             listState.scrollToItem(index)
         }
     }
@@ -233,12 +235,7 @@ fun Operations(
                 ),
                 verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
             ) {
-                items(
-                    count = operations.itemCount,
-                    key = operations.itemKey {
-                        "${it.operation.type}:${it.operation.expenseId ?: it.operation.incomeId ?: it.operation.exchangeId}"
-                    },
-                ) { index ->
+                items(count = operations.itemCount) { index ->
                     val operation = operations[index]
 
                     if (operation == null) {

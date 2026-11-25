@@ -1,33 +1,29 @@
 package com.colgateTotal77.tracker.screens.products.markets
 
-import androidx.compose.foundation.background
 import androidx.compose.ui.res.stringResource
 import com.colgateTotal77.tracker.core.ui.OneActionModal
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ProductionQuantityLimits
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
-import com.colgateTotal77.tracker.core.enums.TimeRange
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.core.ui.theme.addPadding
 
@@ -44,6 +40,13 @@ fun Markets(
     val dimensions = LocalDimensions.current
 
     val markets = viewModel.marketsFlow.collectAsLazyPagingItems()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(searchQuery) {
+        listState.scrollToItem(0)
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -91,16 +94,14 @@ fun Markets(
                 }
             }
             LazyColumn(
+                state = listState,
                 contentPadding = paddingValues.addPadding(
                     top = dimensions.searchBarHeightAndPadding + dimensions.segmentedButtonHeight,
                     bottom = dimensions.screenBottomPadding + dimensions.navigationBarHeightAndPadding
                 ),
                 verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
             ) {
-                items(
-                    count = markets.itemCount,
-                    key = markets.itemKey { it.id }
-                ) { index ->
+                items(count = markets.itemCount) { index ->
                     val market = markets[index] ?: return@items
 
                     MarketCard(

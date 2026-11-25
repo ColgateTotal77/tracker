@@ -4,14 +4,17 @@ import androidx.compose.ui.res.stringResource
 import com.colgateTotal77.tracker.core.ui.OneActionModal
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ProductionQuantityLimits
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +29,7 @@ import com.colgateTotal77.tracker.core.ProductNameNormalizer
 import com.colgateTotal77.tracker.core.database.product.ProductEntity
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.core.ui.theme.addPadding
+import kotlinx.coroutines.launch
 
 @Composable
 fun Products(
@@ -43,8 +47,18 @@ fun Products(
 
     val markets by viewModel.marketsFlow.collectAsStateWithLifecycle()
     val filters by viewModel.filters.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val sortBy by viewModel.sortBy.collectAsStateWithLifecycle()
+    val timeRange by viewModel.timeRange.collectAsStateWithLifecycle()
 
     val products = viewModel.productFlow.collectAsLazyPagingItems()
+
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(filters, searchQuery, sortBy, timeRange) {
+        listState.scrollToItem(0)
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -93,16 +107,14 @@ fun Products(
             }
 
             LazyColumn(
+                state = listState,
                 contentPadding = paddingValues.addPadding(
                     top = dimensions.searchBarHeightAndPadding + dimensions.segmentedButtonHeight,
                     bottom = dimensions.screenBottomPadding + dimensions.navigationBarHeightAndPadding
                 ),
                 verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
             ) {
-                items(
-                    count = products.itemCount,
-                    key = products.itemKey { it.product.id }
-                ) { index ->
+                items(count = products.itemCount) { index ->
                     val productFromQuery = products[index] ?: return@items
 
                     ProductCard(
