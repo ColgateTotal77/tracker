@@ -38,7 +38,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -153,7 +152,7 @@ fun Toolbar(
 
     Row(
         modifier = modifier
-            .shadow(12.dp, RoundedCornerShape(dimensions.cornerRadius))
+            .outerShadow(RoundedCornerShape(dimensions.cornerRadius))
             .background(
                 MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f),
                 RoundedCornerShape(dimensions.cornerRadius)
