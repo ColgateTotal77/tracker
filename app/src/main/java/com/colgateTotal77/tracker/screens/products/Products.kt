@@ -36,6 +36,7 @@ import com.colgateTotal77.tracker.core.enums.ProductSort
 import com.colgateTotal77.tracker.core.ui.DropdownOnIconButton
 import com.colgateTotal77.tracker.core.ui.Toolbar
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
+import com.colgateTotal77.tracker.screens.operations.OperationsViewModel
 import com.colgateTotal77.tracker.screens.products.markets.MarketViewModel
 import com.colgateTotal77.tracker.screens.products.markets.Markets
 import com.colgateTotal77.tracker.screens.products.products.ProductViewModel
@@ -43,6 +44,7 @@ import com.colgateTotal77.tracker.screens.products.products.Products
 
 @Composable
 fun ProductsScreen(
+    changeTab: (index: Int) -> Unit,
     modifier: Modifier = Modifier,
     productViewModel: ProductViewModel = viewModel(factory = ProductViewModel.Factory),
     marketViewModel: MarketViewModel = viewModel(factory = MarketViewModel.Factory)
@@ -58,13 +60,22 @@ fun ProductsScreen(
 
     val timeRange by productViewModel.timeRange.collectAsStateWithLifecycle()
 
+    val operationsViewModel: OperationsViewModel = viewModel(factory = OperationsViewModel.Factory)
+
     Box(modifier.fillMaxSize()) {
         if (selected == 0) Products(
             isFilterModalOpen,
             { it: Boolean -> isFilterModalOpen = it },
             viewModel = productViewModel
         )
-        else Markets(viewModel = marketViewModel)
+        else Markets(
+            onBarLongPress = { timeRange, marketId ->
+                operationsViewModel.onTimeRangeChanged(timeRange)
+                operationsViewModel.onFiltersChanged(operationsViewModel.filters.value.copy(marketIds = setOf(marketId)))
+                changeTab(1)
+            },
+            viewModel = marketViewModel
+        )
 
         Column(
             modifier = Modifier

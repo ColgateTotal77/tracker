@@ -2,16 +2,13 @@ package com.colgateTotal77.tracker.screens.products.markets
 
 import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
@@ -34,29 +31,31 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
+import com.colgateTotal77.tracker.core.enums.TimeRange
 import com.colgateTotal77.tracker.core.formatTimestamp
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
 import com.colgateTotal77.tracker.core.ui.IconAnchorBox
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
-import com.colgateTotal77.tracker.core.ui.vico.ChartData
+import com.colgateTotal77.tracker.core.ui.vico.DailySum
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
 @Composable
 fun MarketCard(
     market: MarketEntity,
-    onGetMarketHistory: (id: Int) -> Flow<ChartData>,
+    onGetMarketHistory: (id: Int) -> Flow<List<DailySum>>,
+    onBarLongPress: ((TimeRange) -> Unit),
     onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val dimensions = LocalDimensions.current
 
-    val marketBarChartData by remember(expanded, market.id) {
+    val marketDailySum by remember(expanded, market.id) {
         if (expanded) onGetMarketHistory(market.id)
-        else flowOf(ChartData(emptyList(), emptyList()))
-    }.collectAsStateWithLifecycle(initialValue = ChartData(emptyList(), emptyList()))
+        else flowOf(emptyList())
+    }.collectAsStateWithLifecycle(initialValue = emptyList())
 
     CardWrapper(contentPadding = PaddingValues(0.dp)) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -105,7 +104,10 @@ fun MarketCard(
                         color = MaterialTheme.colorScheme.surfaceVariant
                     )
 
-                    if (marketBarChartData.values.isNotEmpty()) MarketBarChart(marketBarChartData)
+                    if (marketDailySum.isNotEmpty()) MarketBarChart(
+                        marketDailySum,
+                        onBarLongPress = onBarLongPress
+                    )
 
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall),

@@ -90,7 +90,7 @@
     <string name="bought_times">Bought %1$dx times</string>
     <string name="receipt">Receipt</string>
     <string name="created_manually">Created manually</string>
-    <string name="budget">Budget (%1$s): %2$s / %3$s</string>
+    <string name="budget">Budget (%1$s): %2$s</string>
     <string name="tab_overview">Overview</string>
     <string name="tab_operations">Operations</string>
     <string name="tab_products">Products</string>
@@ -103,12 +103,9 @@
     <string name="date_until">Until %1$s</string>
     <string name="previous_period">Previous period</string>
     <string name="next_period">Next period</string>
-    <string name="date_current_month">Current month</string>
-    <string name="date_previous_month">Previous month</string>
-    <string name="date_last_six_months">Last 6 months</string>
-    <string name="date_previous_six_months">Previous 6 months</string>
-    <string name="date_current_year">Current year</string>
-    <string name="date_previous_year">Previous year</string>
+    <string name="date_switcher_day">Day</string>
+    <string name="date_switcher_week">Week</string>
+    <string name="date_switcher_month">Month</string>
     <string name="sort_last_price_asc">Last Price (Low to High)</string>
     <string name="sort_last_price_desc">Last Price (High to Low)</string>
     <string name="sort_most_purchased">Most Purchased</string>

@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.colgateTotal77.tracker.core.ui.vico.DailySum
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -35,19 +36,14 @@ interface MarketDao {
     @Query("DELETE FROM `markets` WHERE id = :id")
     suspend fun deleteById(id: Int)
 
-    data class MarketPricePoint(
-        val amountMinor: Long,
-        val day: String
-    )
-
     @Query("""
         SELECT 
-            SUM(amountMinor * currencyChangeRate) as amountMinor,
-            DATE(e.date / 1000, 'unixepoch', 'localtime') AS day
+            DATE(e.date / 1000, 'unixepoch', 'localtime') AS day,
+            SUM(amountMinor * currencyChangeRate) as amount
         FROM expenses e
         WHERE e.marketId = :id
         GROUP BY day
         ORDER BY day ASC
     """)
-    fun getHistoryById(id: Int): Flow<List<MarketPricePoint>>
+    fun getHistoryById(id: Int): Flow<List<DailySum>>
 }

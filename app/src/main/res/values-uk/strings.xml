@@ -90,7 +90,7 @@
     <string name="bought_times">Куплено %1$d разів</string>
     <string name="receipt">Чек</string>
     <string name="created_manually">Додано вручну</string>
-    <string name="budget">Бюджет (%1$s): %2$s / %3$s</string>
+    <string name="budget">Бюджет (%1$s): %2$s</string>
     <string name="tab_overview">Огляд</string>
     <string name="tab_operations">Операції</string>
     <string name="tab_products">Товари</string>
@@ -103,12 +103,9 @@
     <string name="date_until">До %1$s</string>
     <string name="previous_period">Попередній період</string>
     <string name="next_period">Наступний період</string>
-    <string name="date_current_month">Поточний місяць</string>
-    <string name="date_previous_month">Попередній місяць</string>
-    <string name="date_last_six_months">Останні 6 місяців</string>
-    <string name="date_previous_six_months">Попередні 6 місяців</string>
-    <string name="date_current_year">Поточний рік</string>
-    <string name="date_previous_year">Попередній рік</string>
+    <string name="date_switcher_day">День</string>
+    <string name="date_switcher_week">Тиждень</string>
+    <string name="date_switcher_month">Місяць</string>
     <string name="sort_last_price_asc">За останньою ціною (від меншої до більшої)</string>
     <string name="sort_last_price_desc">За останньою ціною (від більшої до меншої)</string>
     <string name="sort_most_purchased">Найчастіше куповані</string>

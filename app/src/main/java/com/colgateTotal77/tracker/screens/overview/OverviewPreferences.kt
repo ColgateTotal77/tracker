@@ -5,7 +5,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.colgateTotal77.tracker.core.enums.Currency
-import com.colgateTotal77.tracker.core.enums.DateFilter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
@@ -13,8 +12,7 @@ import kotlinx.serialization.json.Json
 
 @Serializable
 data class ProgressBarPreferences(
-    var targetBudget: Double = 1000.0,
-    val selectedFilter: DateFilter = DateFilter.Month
+    var target: Double = 1000.0,
 )
 
 @Serializable
@@ -61,16 +59,3 @@ class OverviewPreferences(
         }
     }
 }
-
-fun calculateTargetBudget (selectedFilter: DateFilter, rawTargetBudget: Double): Double {
-    return when(selectedFilter) {
-        DateFilter.AllTime -> -1.0
-        DateFilter.Month,
-        DateFilter.PrevMonth -> rawTargetBudget
-        DateFilter.SixMonth,
-        DateFilter.PrevSixMonth -> rawTargetBudget * 6
-        DateFilter.Year,
-        DateFilter.PrevYear -> rawTargetBudget * 12
-    }
-}
-

@@ -26,7 +26,6 @@ import com.colgateTotal77.tracker.screens.overview.ProgressBarModal
 data class ProgressBarState(
     val settings: ProgressBarPreferences = ProgressBarPreferences(),
     val currentSpending: Long = 0L,
-    val target: Double = 0.0
 )
 
 @Composable
@@ -40,8 +39,8 @@ fun ProgressBar(
     val dimensions = LocalDimensions.current
     var isModalOpen by remember { mutableStateOf(false) }
     val rawProgress =
-        if (progressState.target > 0.0) {
-            (progressState.currentSpending / progressState.target).toFloat().coerceIn(0.0f, 1.0f)
+        if (progressState.settings.target > 0.0) {
+            (progressState.currentSpending / progressState.settings.target).toFloat().coerceIn(0.0f, 1.0f)
         } else 0.0f
 
     val animatedProgress by animateFloatAsState(

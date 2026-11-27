@@ -3,6 +3,9 @@ package com.colgateTotal77.tracker.core.ui.vico
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.State
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -10,7 +13,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
 import com.patrykandpatrick.vico.compose.cartesian.marker.CartesianMarker
+import com.patrykandpatrick.vico.compose.cartesian.marker.CartesianMarkerController
 import com.patrykandpatrick.vico.compose.cartesian.marker.DefaultCartesianMarker
+import com.patrykandpatrick.vico.compose.cartesian.marker.Interaction
 import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
 import com.patrykandpatrick.vico.compose.common.Fill
 import com.patrykandpatrick.vico.compose.common.Insets
@@ -80,4 +85,47 @@ fun rememberMarker(
         indicatorSize = 36.dp,
         guideline = guideline,
     )
+}
+
+val MarkerValueFormatter = DefaultCartesianMarker.ValueFormatter { context, targets ->
+    "${context.model.extraStore[ValuesKey][targets.first().x.toInt()]} \u20b4"
+}
+
+ private class ToggleOnTapMarkerController(
+     private val onLongPress: State<(Int) -> Unit>,
+ ) : CartesianMarkerController {
+    private var lastTargets: List<CartesianMarker.Target>? = null
+
+    override val acceptsLongPress = true
+
+    override fun shouldAcceptInteraction(
+        interaction: Interaction,
+        targets: List<CartesianMarker.Target>,
+    ) = (interaction is Interaction.Tap || interaction is Interaction.LongPress) && targets.isNotEmpty()
+
+    override fun shouldShowMarker(
+        interaction: Interaction,
+        targets: List<CartesianMarker.Target>,
+    ): Boolean {
+        if (interaction is Interaction.LongPress) {
+            onLongPress.value(targets.first().x.toInt())
+            lastTargets = targets
+            return true
+        } else {
+            val show = targets != lastTargets
+            lastTargets = if (show) targets else null
+            return show
+        }
+    }
+
+    override fun hashCode() = 31
+
+    override fun equals(other: Any?) = other === this || other is ToggleOnTapMarkerController
+}
+
+@Composable
+fun rememberToggleOnTapLongPress(onLongPress: ((Int) -> Unit)? = null): CartesianMarkerController {
+    if (onLongPress == null) return CartesianMarkerController.rememberToggleOnTap()
+    val callback = rememberUpdatedState(onLongPress)
+    return remember { ToggleOnTapMarkerController(callback) }
 }

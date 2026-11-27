@@ -6,6 +6,7 @@ import androidx.room.Query
 import androidx.room.Update
 import androidx.room.OnConflictStrategy
 import com.colgateTotal77.tracker.core.database.operation.CurrencyBalance
+import com.colgateTotal77.tracker.core.ui.vico.DailySum
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -32,25 +33,19 @@ interface ExpenseDao {
         SELECT currency, SUM(amountMinor) AS amountMinor                                                                                              
         FROM expenses
         WHERE (:startTime IS NULL OR date >= :startTime)
-            AND (:endTime IS NULL OR date <= :endTime)
         GROUP BY currency
     """)
-    fun getTotalSpendingFlow(startTime: Long?, endTime: Long?): Flow<List<CurrencyBalance>>
+    fun getTotalSpendingFlow(startTime: Long?): Flow<List<CurrencyBalance>>
 
     @Query("UPDATE expenses SET marketId = :toId WHERE marketId = :fromId")
     suspend fun moveMarket(fromId: Int, toId: Int)
 
-    data class WeeklySum(
-        val weekStartDate: String,
-        val totalAmountMinor: Long,
-    )
-
     @Query("""
         SELECT 
-            date(date / 1000, 'unixepoch', 'localtime', 'weekday 0', '-6 days') AS weekStartDate,
-            SUM(amountMinor * currencyChangeRate) as totalAmountMinor
+            date(date / 1000, 'unixepoch', 'localtime') AS day,
+            SUM(amountMinor * currencyChangeRate) as amount
         FROM expenses
-        GROUP BY weekStartDate
+        GROUP BY day
     """)
-    fun getWeeklySumsFlow(): Flow<List<WeeklySum>>
+    fun getDailySumsFlow(): Flow<List<DailySum>>
 }

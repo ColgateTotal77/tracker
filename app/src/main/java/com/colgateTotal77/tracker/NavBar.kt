@@ -61,8 +61,6 @@ fun NavBar() {
         Icons.Default.Analytics,
     )
 
-    var expendedOperationId by rememberSaveable { mutableStateOf<OperationId?>(null) }
-
     val dimensions = LocalDimensions.current
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -73,22 +71,16 @@ fun NavBar() {
 
             when (selectedItemIndex) {
                 0 -> Overview(
-                    onOperationClick = { id ->
-                        expendedOperationId = id
-                        selectedItemIndex = 1
-                    },
+                    changeTab = { index -> selectedItemIndex = index },
                     modifier = contentModifier
                 )
 
-                1 -> Operations(
-                    expendedOperationId = expendedOperationId,
-                    changeExpendedOperationId = { id ->
-                        expendedOperationId = id
-                    },
+                1 -> Operations(modifier = contentModifier)
+
+                2 -> ProductsScreen(
+                    changeTab = { index -> selectedItemIndex = index },
                     modifier = contentModifier
                 )
-
-                2 -> ProductsScreen(modifier = contentModifier)
 
                 3 -> Box(
                     modifier = contentModifier.fillMaxSize(),

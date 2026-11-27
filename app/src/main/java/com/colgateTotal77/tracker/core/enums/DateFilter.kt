@@ -1,28 +1,11 @@
 package com.colgateTotal77.tracker.core.enums
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.material3.DatePickerDefaults
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DateRangePicker
-import androidx.compose.material3.DateRangePickerDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import com.colgateTotal77.tracker.R
 import java.text.DateFormatSymbols
-import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
@@ -31,8 +14,7 @@ import java.time.temporal.TemporalAdjusters
 import java.time.temporal.WeekFields
 import java.util.Locale
 import androidx.compose.ui.platform.LocalLocale
-import com.colgateTotal77.tracker.core.ui.CustomButton
-import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
+import java.time.DayOfWeek
 
 data class TimeRange(var start: LocalDate?, var end: LocalDate?)
 
@@ -90,14 +72,31 @@ fun TimeRange.move(
 
 val dayFormatter = DateTimeFormatter.ofPattern("dd")
 fun LocalDate.dayMonth(): String =
-    "$dayOfMonth ${format(monthShortFormatter).replaceFirstChar { it.titlecase(Locale.getDefault()) }}"
+    "$dayOfMonth ${format(monthShortFormatter)}"
 val dayMonthNumberFormatter = DateTimeFormatter.ofPattern("dd.MM")
 val monthFormatter = DateTimeFormatter.ofPattern("LLLL")
 val monthShortFormatter: DateTimeFormatter = DateTimeFormatterBuilder()
     .appendText(ChronoField.MONTH_OF_YEAR, DateFormatSymbols.getInstance().shortMonths.withIndex().associate { (i, name) -> i + 1L to name })
     .toFormatter()
 
-fun LocalDate.monthDayFormatter(): String = "${format(monthShortFormatter)}. ${format(dayFormatter)}"
+val monthYearFormatter = DateTimeFormatter.ofPattern("LLLL yyyy")
+
+val yearSmallFormatter = DateTimeFormatter.ofPattern("yy")
+
+fun LocalDate.weekFormatter(): String {
+    val today = LocalDate.now()
+
+    val weekStart = this.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    val weekEnd = weekStart.plusDays(6)
+
+    val range = "${weekStart.format(dayFormatter)} - ${weekEnd.format(dayFormatter)}"
+
+    var label = "$range\n${weekStart.format(monthShortFormatter)}"
+
+    if (this.year != today.year) label += " ${this.format(yearSmallFormatter)}"
+
+    return label
+}
 
 val shortDateFormatter = DateTimeFormatter.ofPattern("dd.MM.yy")
 
@@ -131,25 +130,17 @@ fun TimeRange.yearLabel(): String? {
     }
 }
 
-enum class DateFilter(val labelRes: Int) {
-    AllTime(R.string.date_all_time),
-    Month(R.string.date_current_month),
-    PrevMonth(R.string.date_previous_month),
-    SixMonth(R.string.date_last_six_months),
-    PrevSixMonth(R.string.date_previous_six_months),
-    Year(R.string.date_current_year),
-    PrevYear(R.string.date_previous_year),
+enum class DateSwitchers(val labelRes: Int) {
+    Month(R.string.date_switcher_month),
+    Week(R.string.date_switcher_week),
+    Day(R.string.date_switcher_day),
 }
 
-fun DateFilter.toTimeRange(): TimeRange {
+fun DateSwitchers.getStartDate(): LocalDate {
     val today = LocalDate.now()
     return when (this) {
-        DateFilter.AllTime -> TimeRange(null, null)
-        DateFilter.Month -> today.withDayOfMonth(1).let { TimeRange(it, it.with(TemporalAdjusters.lastDayOfMonth())) }
-        DateFilter.PrevMonth -> today.minusMonths(1).withDayOfMonth(1).let { TimeRange(it, it.with(TemporalAdjusters.lastDayOfMonth())) }
-        DateFilter.SixMonth -> TimeRange(today.minusMonths(6), today)
-        DateFilter.PrevSixMonth -> TimeRange(today.minusMonths(12), today.minusMonths(6))
-        DateFilter.Year -> today.withDayOfYear(1).let { TimeRange(it, it.with(TemporalAdjusters.lastDayOfYear())) }
-        DateFilter.PrevYear -> today.minusYears(1).withDayOfYear(1).let { TimeRange(it, it.with(TemporalAdjusters.lastDayOfYear())) }
+        DateSwitchers.Day -> today.minusDays(1)
+        DateSwitchers.Week -> today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        DateSwitchers.Month -> today.withDayOfMonth(1)
     }
 }

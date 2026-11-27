@@ -41,6 +41,7 @@ import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomIconButton
 import com.colgateTotal77.tracker.core.ui.ProgressBar
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
+import com.colgateTotal77.tracker.screens.operations.OperationsViewModel
 import com.colgateTotal77.tracker.screens.settings.Settings
 
 fun calculateBudget(
@@ -56,7 +57,7 @@ fun calculateBudget(
 
 @Composable
 fun Overview(
-    onOperationClick: (id: OperationId) -> Unit,
+    changeTab: (index: Int) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: OverviewViewModel = viewModel(factory = OverviewViewModel.Factory),
 ) {
@@ -66,12 +67,14 @@ fun Overview(
         return
     }
 
+    val operationsViewModel: OperationsViewModel = viewModel(factory = OperationsViewModel.Factory)
+
     val dimensions = LocalDimensions.current
 
     val operations by viewModel.recentOperations.collectAsStateWithLifecycle()
 
     val progressState by viewModel.progressBarState.collectAsStateWithLifecycle()
-    val barChartData by viewModel.barChartData.collectAsStateWithLifecycle()
+    val barChartDailyData by viewModel.barChartDailyData.collectAsStateWithLifecycle()
     val settings = progressState.settings
     val spending = progressState.currentSpending
 
@@ -99,9 +102,9 @@ fun Overview(
             Box(modifier = Modifier.weight(1f)) {
                 ProgressBar(
                     progressState = progressState,
-                    label = stringResource(R.string.budget, stringResource(settings.selectedFilter.labelRes), formatMoney(spending), formatMoney(progressState.target)),
+                    label = stringResource(R.string.budget, formatMoney(spending), formatMoney(progressState.settings.target)),
                     color =
-                        if (spending > progressState.target) MaterialTheme.colorScheme.error
+                        if (spending > progressState.settings.target) MaterialTheme.colorScheme.error
                         else MaterialTheme.colorScheme.primary,
                     updateProgressBarPreferences = { settings ->
                         viewModel.updateProgressBarPreferences(settings)
@@ -152,9 +155,13 @@ fun Overview(
             }
         }
 
-        WeeklySpendingBarChart(
-            data = barChartData,
-            weeklyTarget = settings.targetBudget * 12 / 52 / 100
+        SpendingBarChart(
+            data = barChartDailyData,
+            monthlyTarget = settings.target / 100,
+            onBarLongPress = { timeRange ->
+                operationsViewModel.onTimeRangeChanged(timeRange)
+                changeTab(1)
+            }
         )
 
         if (operations.isEmpty()) {
@@ -182,12 +189,15 @@ fun Overview(
                         key("${operation.operation.type}:${it.expense.id}") {
                             ExpenseCard(
                                 it,
-                                onClick = {onOperationClick(
-                                    OperationId(
-                                        id = it.expense.id,
-                                        type = operation.operation.type
+                                onClick = {
+                                    operationsViewModel.onExpendedIdChanged(
+                                        OperationId(
+                                            id = it.expense.id,
+                                            type = operation.operation.type
+                                        )
                                     )
-                                )}
+                                    changeTab(1)
+                                }
                             )
                         }
                     }
@@ -195,12 +205,15 @@ fun Overview(
                         key("${operation.operation.type}:${it.id}") {
                             IncomeCard(
                                 it,
-                                onClick = {onOperationClick(
-                                    OperationId(
-                                        id = it.id,
-                                        type = operation.operation.type
+                                onClick = {
+                                    operationsViewModel.onExpendedIdChanged(
+                                        OperationId(
+                                            id = it.id,
+                                            type = operation.operation.type
+                                        )
                                     )
-                                )}
+                                    changeTab(1)
+                                }
                             )
                         }
                     }
@@ -208,12 +221,15 @@ fun Overview(
                         key("${operation.operation.type}:${it.id}") {
                             ExchangeCard(
                                 it,
-                                onClick = {onOperationClick(
-                                    OperationId(
-                                        id = it.id,
-                                        type = operation.operation.type
+                                onClick = {
+                                    operationsViewModel.onExpendedIdChanged(
+                                        OperationId(
+                                            id = it.id,
+                                            type = operation.operation.type
+                                        )
                                     )
-                                )}
+                                    changeTab(1)
+                                }
                             )
                         }
                     }

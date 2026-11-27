@@ -38,9 +38,9 @@ import com.colgateTotal77.tracker.core.database.expense.ExpenseDraft
 import com.colgateTotal77.tracker.core.database.expense_product.ExpenseProductDraft
 import com.colgateTotal77.tracker.core.database.market_tins.MarketTinEntity
 import com.colgateTotal77.tracker.core.database.operation.OperationWithDetails
+import com.colgateTotal77.tracker.core.enums.OperationId
 import com.colgateTotal77.tracker.core.enums.OperationType
 import com.colgateTotal77.tracker.core.enums.TimeRange
-import com.colgateTotal77.tracker.core.enums.toTimeRange
 import com.colgateTotal77.tracker.core.enums.startMillis
 import com.colgateTotal77.tracker.core.enums.endMillis
 import com.colgateTotal77.tracker.screens.overview.OverviewPreferences
@@ -65,6 +65,9 @@ class OperationsViewModel(
 
     private val _timeRange = MutableStateFlow(TimeRange(null, null))
     val timeRange: StateFlow<TimeRange> = _timeRange.asStateFlow()
+
+    private val _expendedId = MutableStateFlow<OperationId?>(null)
+    val expendedId: StateFlow<OperationId?> = _expendedId.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val operationsFlow: Flow<PagingData<OperationWithDetails>> = combine(
@@ -114,6 +117,10 @@ class OperationsViewModel(
 
     fun onTimeRangeChanged(timeRange: TimeRange) {
         _timeRange.value = timeRange
+    }
+
+    fun onExpendedIdChanged(expendedId: OperationId?) {
+        _expendedId.value = expendedId
     }
 
     private suspend fun getMarketIdFromMarketChoice(market: MarketChoice): Int? {

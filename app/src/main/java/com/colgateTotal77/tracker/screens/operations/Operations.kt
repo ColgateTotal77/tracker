@@ -72,8 +72,6 @@ import kotlinx.coroutines.flow.first
 
 @Composable
 fun Operations(
-    expendedOperationId: OperationId?,
-    changeExpendedOperationId: (id: OperationId?) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: OperationsViewModel = viewModel(factory = OperationsViewModel.Factory),
 ) {
@@ -106,6 +104,7 @@ fun Operations(
     val products by viewModel.productFlow.collectAsStateWithLifecycle()
     val filters by viewModel.filters.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val expendedId by viewModel.expendedId.collectAsStateWithLifecycle()
 
     var isFilterModalOpen by remember { mutableStateOf(false) }
 
@@ -121,9 +120,9 @@ fun Operations(
         listState.scrollToItem(0)
     }
 
-    LaunchedEffect(expendedOperationId) {
-        if (expendedOperationId == null) return@LaunchedEffect
-        val index = viewModel.getOperationPosition(expendedOperationId.id, expendedOperationId.type) ?: return@LaunchedEffect
+    LaunchedEffect(expendedId) {
+        if (expendedId == null) return@LaunchedEffect
+        val index = viewModel.getOperationPosition(expendedId!!.id, expendedId!!.type) ?: return@LaunchedEffect
 
         snapshotFlow { operations.itemCount }
             .first { it > index }
@@ -252,14 +251,14 @@ fun Operations(
                                 id = expenseItem.expense.id,
                                 type = OperationType.EXPENSE,
                             )
-                            val isExpanded = expendedOperationId == operationId
+                            val isExpanded = expendedId == operationId
 
                             ExpenseCardExpandable(
                                 expenseItem = expenseItem,
                                 isExpanded = isExpanded,
                                 onExpandedChange = {
-                                    if (isExpanded) changeExpendedOperationId(null)
-                                    else changeExpendedOperationId(operationId)
+                                    if (isExpanded) viewModel.onExpendedIdChanged(null)
+                                    else viewModel.onExpendedIdChanged(operationId)
                                 },
                                 onEdit = {
                                     selectedExpense = expenseItem.expense
@@ -342,7 +341,7 @@ fun Operations(
                 onDismiss = { operationToAdd = null },
                 onAdd = { expense ->
                     viewModel.addExpense(expense) { id, market ->
-                        changeExpendedOperationId(
+                        viewModel.onExpendedIdChanged(
                             OperationId(
                                 id = id,
                                 type = OperationType.EXPENSE
@@ -362,7 +361,7 @@ fun Operations(
                 onDismiss = { operationToAdd = null },
                 onAdd = { amountMinor, currency, date ->
                     viewModel.addIncome(amountMinor, currency, date) { id ->
-                        changeExpendedOperationId(
+                        viewModel.onExpendedIdChanged(
                             OperationId(
                                 id = id,
                                 type = OperationType.INCOME
@@ -384,7 +383,7 @@ fun Operations(
                         toCurrency,
                         date
                     ) { id ->
-                        changeExpendedOperationId(
+                        viewModel.onExpendedIdChanged(
                             OperationId(
                                 id = id,
                                 type = OperationType.EXCHANGE

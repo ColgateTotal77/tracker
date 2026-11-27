@@ -24,11 +24,13 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.colgateTotal77.tracker.R
 import com.colgateTotal77.tracker.core.database.market.MarketEntity
+import com.colgateTotal77.tracker.core.enums.TimeRange
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 import com.colgateTotal77.tracker.core.ui.theme.addPadding
 
 @Composable
 fun Markets(
+    onBarLongPress: ((timeRange: TimeRange, marketId: Int) -> Unit),
     modifier: Modifier = Modifier,
     viewModel: MarketViewModel = viewModel(factory = MarketViewModel.Factory),
 ) {
@@ -109,6 +111,7 @@ fun Markets(
                         onGetMarketHistory = { id ->
                             viewModel.getMarketHistoryFlow(id)
                         },
+                        onBarLongPress = { timeRange -> onBarLongPress(timeRange, market.id) },
                         onEdit = {
                             selectedMarket = market
                             isEditMarketModalOpen = true

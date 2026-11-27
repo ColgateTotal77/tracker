@@ -19,6 +19,7 @@ import com.colgateTotal77.tracker.core.enums.shortDateFormatter
 import com.colgateTotal77.tracker.core.ui.ToastFailure
 import com.colgateTotal77.tracker.core.ui.launchWithToast
 import com.colgateTotal77.tracker.core.ui.vico.ChartData
+import com.colgateTotal77.tracker.core.ui.vico.DailySum
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -75,13 +76,8 @@ class MarketViewModel(
         }
     }
 
-    fun getMarketHistoryFlow(id: Int): Flow<ChartData> {
-        return database.marketDao().getHistoryById(id).map { points ->
-            ChartData(
-                labels = points.map { LocalDate.parse(it.day).format(shortDateFormatter) },
-                values = points.map { (it.amountMinor / 100).toInt() }
-            )
-        }
+    fun getMarketHistoryFlow(id: Int): Flow<List<DailySum>> {
+        return database.marketDao().getHistoryById(id)
     }
 
     companion object {

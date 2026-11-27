@@ -16,20 +16,16 @@ import kotlinx.coroutines.flow.stateIn
 import com.colgateTotal77.tracker.core.database.AppDatabase
 import com.colgateTotal77.tracker.core.database.income.IncomeEntity
 import com.colgateTotal77.tracker.core.database.operation.CurrencyBalance
+import com.colgateTotal77.tracker.core.enums.DateSwitchers
 import com.colgateTotal77.tracker.core.enums.IncomeType
-import com.colgateTotal77.tracker.core.enums.toTimeRange
 import com.colgateTotal77.tracker.core.enums.startMillis
-import com.colgateTotal77.tracker.core.enums.endMillis
+import com.colgateTotal77.tracker.core.enums.getStartDate
 import com.colgateTotal77.tracker.core.ui.ProgressBarState
-import com.colgateTotal77.tracker.core.ui.vico.ChartData
+import com.colgateTotal77.tracker.core.ui.vico.DailySum
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOf
-import java.time.Instant
-import java.time.ZoneId
-import java.time.YearMonth
 import kotlin.math.roundToLong
 
 class OverviewViewModel(
@@ -47,8 +43,7 @@ class OverviewViewModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     val progressBarState: StateFlow<ProgressBarState> = preferencesRepository.progressBarSettingsFlow
         .flatMapLatest { settings ->
-            val range = settings.selectedFilter.toTimeRange()
-            val spendingFlow = database.expenseDao().getTotalSpendingFlow(range.start?.startMillis(), range.end?.endMillis())
+            val spendingFlow = database.expenseDao().getTotalSpendingFlow(DateSwitchers.Month.getStartDate().startMillis())
             combine(
                 spendingFlow,
                 preferencesRepository.exchangeRateFlow,
@@ -59,10 +54,6 @@ class OverviewViewModel(
                         rates.exchangeRatesMap,
                         spending.associate { it.currency to it.amountMinor },
                     ).roundToLong(),
-                    target = calculateTargetBudget(
-                        settings.selectedFilter,
-                        settings.targetBudget,
-                    ),
                 )
             }
         }
@@ -109,15 +100,12 @@ class OverviewViewModel(
         }
     }
 
-    val barChartData: StateFlow<ChartData> =
-        database.expenseDao().getWeeklySumsFlow()
-            .map { weeklySums ->
-                buildWeeklyChartData(weeklySums)
-            }.stateIn(
+    val barChartDailyData: StateFlow<List<DailySum>> = database.expenseDao().getDailySumsFlow().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ChartData(emptyList(), emptyList())
+        initialValue = emptyList()
     )
+
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {

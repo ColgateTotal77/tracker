@@ -19,16 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import com.colgateTotal77.tracker.R
-import com.colgateTotal77.tracker.core.enums.DateFilter
 import com.colgateTotal77.tracker.core.filterDecimal
 import com.colgateTotal77.tracker.core.parseInputToMinor
 import com.colgateTotal77.tracker.core.ui.AppModalBottomSheet
 import com.colgateTotal77.tracker.core.ui.CardWrapper
 import com.colgateTotal77.tracker.core.ui.CustomButton
-import com.colgateTotal77.tracker.core.ui.Dropdown
 import com.colgateTotal77.tracker.core.ui.theme.LocalDimensions
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProgressBarModal(
     settings: ProgressBarPreferences,
@@ -36,8 +33,7 @@ fun ProgressBarModal(
     onProgressBarPreferences: (settings: ProgressBarPreferences) -> Unit,
 ) {
     var dropdownTouched by remember { mutableStateOf(false) }
-    var amountInput by remember { mutableStateOf(if (settings.targetBudget > 0) (settings.targetBudget / 100).toString() else "") }
-    var selectedFilter by remember { mutableStateOf(settings.selectedFilter) }
+    var amountInput by remember { mutableStateOf(if (settings.target > 0) (settings.target / 100).toString() else "") }
 
     val dimensions = LocalDimensions.current
     val context = LocalContext.current
@@ -61,25 +57,10 @@ fun ProgressBarModal(
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                Dropdown(
-                    onTouchChange = { dropdownTouched = it },
-                    items = DateFilter.entries,
-                    selected = selectedFilter,
-                    onSelect = { newFilter ->
-                        selectedFilter = newFilter ?: DateFilter.Month
-                    },
-                    itemText = { filter -> context.getString(filter.labelRes) },
-                    itemName = stringResource(R.string.time_period),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-
                 CustomButton(
                     onClick = {
                         onProgressBarPreferences(
-                            ProgressBarPreferences(
-                                (parseInputToMinor(amountInput) ?: 0L).toDouble(),
-                                selectedFilter
-                            )
+                            ProgressBarPreferences((parseInputToMinor(amountInput) ?: 0L).toDouble(),)
                         )
                     },
                     buttonText = stringResource(R.string.save_progress),
